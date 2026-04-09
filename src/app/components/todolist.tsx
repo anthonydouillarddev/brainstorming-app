@@ -40,8 +40,8 @@ export default function TodoList({ userId }: { userId: string }) {
     setLoading(false);
   }
 
-  async function addTodo(e: React.FormEvent) {
-    e.preventDefault();
+  async function addTodo(e?: React.FormEvent | React.KeyboardEvent | React.MouseEvent) {
+    e?.preventDefault?.();
     if (!newText.trim()) return;
 
     const { data, error } = await supabase
@@ -90,10 +90,11 @@ export default function TodoList({ userId }: { userId: string }) {
       </div>
 
       {/* Add todo */}
-      <form onSubmit={addTodo} className="px-4 py-3 border-b border-border flex gap-2">
+      <div className="px-4 py-3 border-b border-border flex gap-2">
         <input
           value={newText}
           onChange={(e) => setNewText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && addTodo(e)}
           placeholder="Ajouter une tâche..."
           className="flex-1 px-2.5 py-1.5 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-muted/40 outline-none focus:ring-1 focus:ring-accent"
         />
@@ -108,12 +109,13 @@ export default function TodoList({ userId }: { userId: string }) {
           <option value="urgent">🔴 Urgent</option>
         </select>
         <button
-          type="submit"
+          type="button"
+          onClick={addTodo}
           className="px-3 py-1.5 bg-accent text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
         >
           +
         </button>
-      </form>
+      </div>
 
       {/* Active todos */}
       <div className="divide-y divide-border">
