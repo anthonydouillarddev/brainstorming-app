@@ -83,11 +83,12 @@ export default function TodoList({ userId }: { userId: string }) {
   if (loading) return null;
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <h2 className="font-semibold text-sm">📋 To-Do</h2>
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold tracking-tight">📋 To-Do</h2>
         <span className="text-xs text-muted">{activeTodos.length} tâche{activeTodos.length !== 1 ? "s" : ""}</span>
       </div>
+      <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl overflow-hidden">
 
       {/* Add todo */}
       <div className="px-4 py-3 border-b border-border flex gap-2">
@@ -175,6 +176,7 @@ export default function TodoList({ userId }: { userId: string }) {
           )}
         </>
       )}
+      </div>
     </div>
   );
 }

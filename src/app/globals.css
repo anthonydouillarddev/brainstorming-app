@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
-/* Mode clair (défaut) */
+/* Mode clair */
 @theme inline {
-  --color-background: #F5F0EB;
+  --color-background: #E8E0D8;
   --color-foreground: #1a1a1a;
-  --color-card: #FFFFFF;
-  --color-border: #e0d9d0;
-  --color-muted: #8a8078;
+  --color-card: #F2EDE8;
+  --color-border: #d4cbc0;
+  --color-muted: #7a7068;
   --color-accent: #2563EB;
 }
 
@@ -25,6 +25,47 @@ body {
   color: var(--color-foreground);
   font-family: system-ui, -apple-system, sans-serif;
   transition: background-color 0.2s, color 0.2s;
+  position: relative;
+}
+
+/* Motif de fond subtil */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image:
+    radial-gradient(circle at 20% 30%, var(--color-accent) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, #8b5cf6 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, #06b6d4 0%, transparent 60%);
+  filter: blur(100px);
+}
+
+.dark body::before,
+body:is(.dark *)::before {
+  opacity: 0.15;
+}
+
+/* Motif grille subtil */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--color-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.3;
+}
+
+/* Contenu au-dessus du motif */
+body > * {
+  position: relative;
+  z-index: 1;
 }
 
 textarea {
