@@ -1,6 +1,17 @@
 @import "tailwindcss";
 
+/* Mode clair (défaut) */
 @theme inline {
+  --color-background: #F5F0EB;
+  --color-foreground: #1a1a1a;
+  --color-card: #FFFFFF;
+  --color-border: #e0d9d0;
+  --color-muted: #8a8078;
+  --color-accent: #2563EB;
+}
+
+/* Mode sombre */
+.dark {
   --color-background: #0a0a0f;
   --color-foreground: #e5e7eb;
   --color-card: #12121a;
@@ -13,6 +24,7 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
   font-family: system-ui, -apple-system, sans-serif;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 textarea {

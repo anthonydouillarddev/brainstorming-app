@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { SectionDef, Field } from "@/lib/sections";
+import ThemeToggle from "@/app/components/theme-toggle";
 
 interface Project {
   id: string;
@@ -226,6 +227,7 @@ export default function ProjectEditor({
         <div className="flex items-center gap-3 text-xs">
           {saving && <span className="text-muted">Sauvegarde...</span>}
           {lastSaved && !saving && <span className="text-green-500">✓ {lastSaved}</span>}
+          <ThemeToggle />
           {maxScore > 0 && (
             <span className={`font-bold ${totalScore >= maxScore * 0.7 ? "text-green-500" : totalScore >= maxScore * 0.4 ? "text-yellow-500" : "text-red-400"}`}>
               {totalScore}/{maxScore}
@@ -262,7 +264,7 @@ export default function ProjectEditor({
             {/* Section header — clickable to collapse */}
             <button
               onClick={() => toggleCollapse(def.key)}
-              className="w-full px-4 py-3 border-b border-border flex items-center justify-between hover:bg-white/5 transition-colors"
+              className="w-full px-4 py-3 border-b border-border flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
             >
               <div className="text-left">
                 <h2 className="font-semibold text-sm">{def.emoji} {def.title}</h2>

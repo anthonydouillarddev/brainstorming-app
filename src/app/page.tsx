@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import TodoList from "./components/todolist";
+import ThemeToggle from "./components/theme-toggle";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -34,13 +35,14 @@ export default async function Home() {
           <h1 className="text-2xl font-bold">🧠 Mes Projets</h1>
           <p className="text-muted text-sm mt-1">Brainstorming & idées SaaS</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <Link
             href="/new"
             className="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
           >
             + Nouvelle idée
           </Link>
+          <ThemeToggle />
           <form action="/auth/signout" method="post">
             <button className="px-3 py-2 text-muted text-sm hover:text-foreground transition-colors">
               Déco
