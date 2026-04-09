@@ -220,7 +220,7 @@ export default function ProjectEditor({
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 w-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 sticky top-0 bg-background/95 backdrop-blur-sm py-3 z-10">
+      <div className="flex items-center justify-between mb-6 sticky top-0 py-3 z-10" style={{ background: "var(--color-background)" }}>
         <button onClick={() => router.push("/")} className="text-muted hover:text-foreground text-sm transition-colors">
           ← Retour
         </button>
