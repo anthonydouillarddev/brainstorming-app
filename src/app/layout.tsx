@@ -13,6 +13,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="h-full antialiased">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#3b82f6" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
