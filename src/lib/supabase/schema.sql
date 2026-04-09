@@ -58,6 +58,30 @@ create policy "Users can delete own sections"
     project_id in (select id from projects where user_id = auth.uid())
   );
 
+-- Table todolist générale
+create table todos (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  text text not null,
+  done boolean default false,
+  priority text default 'normal' check (priority in ('low', 'normal', 'high', 'urgent')),
+  created_at timestamptz default now()
+);
+
+alter table todos enable row level security;
+
+create policy "Users can view own todos"
+  on todos for select using (auth.uid() = user_id);
+
+create policy "Users can insert own todos"
+  on todos for insert with check (auth.uid() = user_id);
+
+create policy "Users can update own todos"
+  on todos for update using (auth.uid() = user_id);
+
+create policy "Users can delete own todos"
+  on todos for delete using (auth.uid() = user_id);
+
 -- Trigger pour updated_at
 create or replace function update_updated_at()
 returns trigger as $$

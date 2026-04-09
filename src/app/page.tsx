@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import TodoList from "./components/todolist";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -48,6 +49,13 @@ export default async function Home() {
         </div>
       </div>
 
+      {/* Todolist générale */}
+      <div className="mb-8">
+        <TodoList userId={user.id} />
+      </div>
+
+      {/* Projets */}
+      <h2 className="text-lg font-semibold mb-3">📂 Projets</h2>
       {!projects || projects.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">
           <p className="text-4xl mb-4">🚀</p>
