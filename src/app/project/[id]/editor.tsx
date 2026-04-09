@@ -98,6 +98,106 @@ export default function ProjectEditor({
     setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
+  function exportForClaude() {
+    const lines: string[] = [];
+    const date = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+
+    lines.push(`# ${name}`);
+    lines.push(`> Exporté le ${date} — Statut : ${status}`);
+    lines.push("");
+
+    for (const def of sectionDefs) {
+      const data = sections[def.key] || {};
+      const hasContent = def.fields.some((f) => {
+        const v = data[f.key];
+        if (!v) return false;
+        if (typeof v === "string") return v.trim().length > 0;
+        if (Array.isArray(v)) return v.length > 0;
+        if (typeof v === "number") return v > 0;
+        return false;
+      });
+      if (!hasContent) continue;
+
+      lines.push(`---`);
+      lines.push(`## ${def.emoji} ${def.title}`);
+      lines.push("");
+
+      for (const field of def.fields) {
+        const val = data[field.key];
+        if (!val) continue;
+
+        if (field.type === "question" || field.type === "text") {
+          const text = val as string;
+          if (!text.trim()) continue;
+          lines.push(`### ${field.label}`);
+          if (field.hint) lines.push(`_${field.hint}_`);
+          lines.push("");
+          lines.push(text.trim());
+          lines.push("");
+        }
+
+        if (field.type === "choice") {
+          const selected = val as string[];
+          if (selected.length === 0) continue;
+          lines.push(`### ${field.label}`);
+          for (const s of selected) {
+            lines.push(`- [x] ${s}`);
+          }
+          const unselected = (field.options || []).filter((o) => !selected.includes(o));
+          for (const u of unselected) {
+            lines.push(`- [ ] ${u}`);
+          }
+          lines.push("");
+        }
+
+        if (field.type === "links") {
+          const links = val as LinkItem[];
+          if (links.length === 0) continue;
+          lines.push(`### ${field.label}`);
+          for (const link of links) {
+            lines.push(`- [${link.tag}] [${link.title}](${link.url})`);
+          }
+          lines.push("");
+        }
+
+        if (field.type === "score") {
+          const score = val as number;
+          if (score <= 0) continue;
+          lines.push(`- **${field.label}** : ${score}/10`);
+        }
+      }
+      lines.push("");
+    }
+
+    // Score total
+    if (totalScore > 0) {
+      lines.push("---");
+      lines.push(`## Score total : ${totalScore}/${maxScore}`);
+      lines.push("");
+    }
+
+    // Section Claude.md
+    lines.push("---");
+    lines.push("## Instructions pour Claude");
+    lines.push("");
+    lines.push("Ce fichier contient le brainstorming complet du projet. Utilise-le pour :");
+    lines.push("- Créer le CLAUDE.md du projet avec toutes les conventions et infos");
+    lines.push("- Générer la structure de dossiers du projet");
+    lines.push("- Créer les fichiers de base (schema Prisma, config auth, etc.)");
+    lines.push("- Adapter les choix techniques aux réponses de la section Stack");
+    lines.push("- Respecter le business model et les features MVP définies");
+    lines.push("- Ne PAS implémenter ce qui est listé dans 'Ce qu'on ne construit PAS en V1'");
+    lines.push("");
+
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-brainstorming.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   useEffect(() => {
     return () => { if (saveTimeout.current) clearTimeout(saveTimeout.current); };
   }, []);
@@ -188,10 +288,16 @@ export default function ProjectEditor({
         ))}
       </div>
 
-      {/* Delete */}
-      <div className="mt-12 pt-6 border-t border-border">
+      {/* Export + Delete */}
+      <div className="mt-12 pt-6 border-t border-border flex items-center justify-between">
         <button onClick={handleDelete} disabled={deleting} className="text-red-500 text-sm hover:text-red-400 transition-colors">
           {deleting ? "Suppression..." : "🗑️ Supprimer ce projet"}
+        </button>
+        <button
+          onClick={exportForClaude}
+          className="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          📥 Exporter pour Claude
         </button>
       </div>
     </div>
