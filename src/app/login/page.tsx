@@ -2,28 +2,47 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const router = useRouter();
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
 
-    if (error) {
-      setError(error.message);
+    if (mode === "signup") {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        setError(error.message);
+      } else {
+        // Auto-login after signup
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        if (!loginError) {
+          router.push("/");
+          router.refresh();
+          return;
+        }
+        setError("Compte créé ! Connecte-toi maintenant.");
+        setMode("login");
+      }
     } else {
-      setSent(true);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setError(error.message === "Invalid login credentials" ? "Email ou mot de passe incorrect" : error.message);
+      } else {
+        router.push("/");
+        router.refresh();
+        return;
+      }
     }
     setLoading(false);
   }
@@ -36,42 +55,52 @@ export default function LoginPage() {
           Tes idées SaaS, accessibles partout
         </p>
 
-        {sent ? (
-          <div className="bg-card border border-border rounded-xl p-6 text-center">
-            <p className="text-lg mb-2">📧 Email envoyé !</p>
-            <p className="text-muted text-sm">
-              Clique sur le lien dans l&apos;email envoyé à <strong className="text-foreground">{email}</strong> pour te connecter.
-            </p>
+        <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-6 space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium mb-1.5">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="ton@email.com"
+              required
+              className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+            />
           </div>
-        ) : (
-          <form onSubmit={handleLogin} className="bg-card border border-border rounded-xl p-6 space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1.5">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="ton@email.com"
-                required
-                className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-              />
-            </div>
-            {error && <p className="text-red-400 text-sm">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-accent text-white font-medium rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
-            >
-              {loading ? "Envoi..." : "Se connecter avec un magic link"}
-            </button>
-            <p className="text-muted text-xs text-center">
-              Pas besoin de mot de passe — un lien de connexion sera envoyé par email.
-            </p>
-          </form>
-        )}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium mb-1.5">
+              Mot de passe
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              minLength={6}
+              className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+            />
+          </div>
+          {error && <p className="text-red-400 text-sm">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 bg-accent text-white font-medium rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+          >
+            {loading ? "Chargement..." : mode === "login" ? "Se connecter" : "Créer mon compte"}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}
+            className="w-full text-muted text-sm hover:text-foreground transition-colors"
+          >
+            {mode === "login" ? "Pas encore de compte ? Créer un compte" : "Déjà un compte ? Se connecter"}
+          </button>
+        </form>
       </div>
     </div>
   );
