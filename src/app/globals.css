@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #0a0a0f;
+  --color-foreground: #e5e7eb;
+  --color-card: #12121a;
+  --color-border: #1e1e2e;
+  --color-muted: #6b7280;
+  --color-accent: #3b82f6;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
