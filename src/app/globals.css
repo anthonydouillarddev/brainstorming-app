@@ -31,10 +31,37 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: system-ui, -apple-system, sans-serif;
-  transition: background-color 0.2s, color 0.2s;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Gradient de fond */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse at 15% 20%, var(--ac) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 60%, #8b5cf6 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, #06b6d4 0%, transparent 50%);
+  filter: blur(120px);
+  opacity: 0.25;
+}
+
+.dark body::before { opacity: 0.1; }
+
+body > * {
+  position: relative;
+  z-index: 1;
 }
 
 textarea {
   min-height: 80px;
   resize: vertical;
+}
+
+/* Smooth page transitions */
+@view-transition {
+  navigation: auto;
 }

@@ -241,16 +241,16 @@ export default function ProjectEditor({
         value={name}
         onChange={(e) => setName(e.target.value)}
         onBlur={handleNameChange}
-        className="text-2xl font-bold bg-transparent border-none outline-none w-full mb-3 focus:ring-0"
+        className="text-3xl font-extrabold tracking-tight bg-transparent border-none outline-none w-full mb-4 focus:ring-0"
       />
 
       {/* Status */}
-      <div className="flex gap-2 mb-8 flex-wrap">
+      <div className="flex gap-2 mb-10 flex-wrap">
         {statuses.map((s) => (
           <button
             key={s.value}
             onClick={() => handleStatusChange(s.value)}
-            className={`text-xs px-3 py-1.5 rounded-full transition-all ${status === s.value ? `${s.bg} text-white` : "bg-card border border-border text-muted hover:text-foreground"}`}
+            className={`text-xs px-4 py-2 rounded-xl font-medium transition-all ${status === s.value ? `${s.bg} text-white shadow-sm` : "bg-card border border-border text-muted hover:text-foreground"}`}
           >
             {s.label}
           </button>
@@ -258,48 +258,70 @@ export default function ProjectEditor({
       </div>
 
       {/* Sections */}
-      <div className="space-y-4">
-        {sectionDefs.map((def) => (
-          <div key={def.key} className={`bg-card border-l-4 ${def.color} border border-border rounded-xl overflow-hidden`}>
-            {/* Section header — clickable to collapse */}
-            <button
-              onClick={() => toggleCollapse(def.key)}
-              className="w-full px-4 py-3 border-b border-border flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-            >
-              <div className="text-left">
-                <h2 className="font-semibold text-sm">{def.emoji} {def.title}</h2>
-                <p className="text-xs text-muted mt-0.5">{def.description}</p>
-              </div>
-              <span className="text-muted text-xs">{collapsed[def.key] ? "▸" : "▾"}</span>
-            </button>
+      <div className="space-y-5">
+        {sectionDefs.map((def) => {
+          const data = sections[def.key] || {};
+          const filledCount = def.fields.filter((f) => {
+            const v = data[f.key];
+            if (!v) return false;
+            if (typeof v === "string") return v.trim().length > 0;
+            if (Array.isArray(v)) return v.length > 0;
+            if (typeof v === "number") return v > 0;
+            return false;
+          }).length;
 
-            {/* Fields */}
-            {!collapsed[def.key] && (
-              <div className="px-4 py-3 space-y-4">
-                {def.fields.map((field) => (
-                  <FieldRenderer
-                    key={field.key}
-                    field={field}
-                    value={sections[def.key]?.[field.key]}
-                    onChange={(val) => updateField(def.key, field.key, val)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+          return (
+            <div key={def.key} className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl overflow-hidden shadow-sm">
+              {/* Section header */}
+              <button
+                onClick={() => toggleCollapse(def.key)}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              >
+                <div className="text-left flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">{def.emoji}</span>
+                    <h2 className="font-bold text-base">{def.title}</h2>
+                  </div>
+                  <p className="text-xs text-muted mt-1 ml-8">{def.description}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {filledCount > 0 && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent font-medium">
+                      {filledCount}/{def.fields.length}
+                    </span>
+                  )}
+                  <span className="text-muted text-sm">{collapsed[def.key] ? "▸" : "▾"}</span>
+                </div>
+              </button>
+
+              {/* Fields */}
+              {!collapsed[def.key] && (
+                <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border">
+                  {def.fields.map((field) => (
+                    <FieldRenderer
+                      key={field.key}
+                      field={field}
+                      value={sections[def.key]?.[field.key]}
+                      onChange={(val) => updateField(def.key, field.key, val)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Export + Delete */}
-      <div className="mt-12 pt-6 border-t border-border flex items-center justify-between">
-        <button onClick={handleDelete} disabled={deleting} className="text-red-500 text-sm hover:text-red-400 transition-colors">
-          {deleting ? "Suppression..." : "🗑️ Supprimer ce projet"}
-        </button>
+      <div className="mt-12 pt-6 border-t border-border space-y-4">
         <button
           onClick={exportForClaude}
-          className="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+          className="w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm"
         >
           📥 Exporter pour Claude
+        </button>
+        <button onClick={handleDelete} disabled={deleting} className="w-full py-2 text-red-500 text-sm hover:text-red-400 transition-colors">
+          {deleting ? "Suppression..." : "🗑️ Supprimer ce projet"}
         </button>
       </div>
     </div>
@@ -329,14 +351,17 @@ function FieldRenderer({ field, value, onChange }: { field: Field; value: unknow
 
 function QuestionField({ field, value, onChange }: { field: Field; value: string; onChange: (val: string) => void }) {
   return (
-    <div>
-      <label className="block text-sm font-medium mb-1">{field.label}</label>
-      {field.hint && <p className="text-xs text-muted mb-1.5">{field.hint}</p>}
+    <div className="group">
+      <label className="block text-sm font-semibold mb-1">{field.label}</label>
+      {field.hint && (
+        <p className="text-xs text-muted mb-2 pl-0.5 border-l-2 border-accent/30 ml-0.5 px-2">{field.hint}</p>
+      )}
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={field.placeholder}
-        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-muted/40 outline-none focus:ring-1 focus:ring-accent resize-y min-h-[60px]"
+        rows={2}
+        className="w-full px-4 py-3 bg-background/60 border border-border rounded-xl text-sm text-foreground placeholder:text-muted/30 outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 resize-y min-h-[60px] transition-all"
       />
     </div>
   );
@@ -347,13 +372,16 @@ function QuestionField({ field, value, onChange }: { field: Field; value: string
 function TextField({ field, value, onChange }: { field: Field; value: string; onChange: (val: string) => void }) {
   return (
     <div>
-      <label className="block text-sm font-medium mb-1">{field.label}</label>
-      {field.hint && <p className="text-xs text-muted mb-1.5">{field.hint}</p>}
+      <label className="block text-sm font-semibold mb-1">{field.label}</label>
+      {field.hint && (
+        <p className="text-xs text-muted mb-2 pl-0.5 border-l-2 border-accent/30 ml-0.5 px-2">{field.hint}</p>
+      )}
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={field.placeholder}
-        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-muted/40 outline-none focus:ring-1 focus:ring-accent resize-y min-h-[120px]"
+        rows={4}
+        className="w-full px-4 py-3 bg-background/60 border border-border rounded-xl text-sm text-foreground placeholder:text-muted/30 outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 resize-y min-h-[120px] transition-all"
       />
     </div>
   );
@@ -372,18 +400,20 @@ function ChoiceField({ field, value, onChange }: { field: Field; value: string[]
 
   return (
     <div>
-      <label className="block text-sm font-medium mb-2">{field.label}</label>
-      {field.hint && <p className="text-xs text-muted mb-2">{field.hint}</p>}
+      <label className="block text-sm font-semibold mb-2">{field.label}</label>
+      {field.hint && (
+        <p className="text-xs text-muted mb-2 pl-0.5 border-l-2 border-accent/30 ml-0.5 px-2">{field.hint}</p>
+      )}
       <div className="flex flex-wrap gap-2">
         {field.options?.map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => toggle(option)}
-            className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
+            className={`text-sm px-3.5 py-2 rounded-xl border transition-all ${
               value.includes(option)
-                ? "bg-accent/20 border-accent text-accent"
-                : "bg-background border-border text-muted hover:text-foreground hover:border-muted"
+                ? "bg-accent/15 border-accent/50 text-accent font-medium shadow-sm"
+                : "bg-background/60 border-border text-muted hover:text-foreground hover:border-muted"
             }`}
           >
             {value.includes(option) ? "✓ " : ""}{option}
@@ -499,8 +529,8 @@ function ScoreField({ field, value, onChange }: { field: Field; value: number; o
   const max = field.max || 10;
 
   return (
-    <div className="flex items-center gap-3">
-      <label className="text-sm flex-1">{field.label}</label>
+    <div className="flex items-center gap-3 py-1">
+      <label className="text-sm font-medium flex-1">{field.label}</label>
       <div className="flex gap-1">
         {Array.from({ length: max }, (_, i) => i + 1).map((n) => (
           <button
