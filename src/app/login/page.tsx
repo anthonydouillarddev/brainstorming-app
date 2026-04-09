@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [success, setSuccess] = useState("");
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -20,19 +21,17 @@ export default function LoginPage() {
     const supabase = createClient();
 
     if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
       if (error) {
         setError(error.message);
       } else {
-        // Auto-login after signup
-        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-        if (!loginError) {
-          router.push("/");
-          router.refresh();
-          return;
-        }
-        setError("Compte créé ! Connecte-toi maintenant.");
-        setMode("login");
+        setSuccess("📧 Un email de confirmation a été envoyé à " + email + ". Clique sur le lien pour activer ton compte, puis reviens te connecter.");
+        setLoading(false);
+        return;
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -85,6 +84,11 @@ export default function LoginPage() {
               className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             />
           </div>
+          {success && (
+            <div className="bg-green-900/30 border border-green-700 rounded-lg p-3">
+              <p className="text-green-400 text-sm">{success}</p>
+            </div>
+          )}
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <button
             type="submit"
