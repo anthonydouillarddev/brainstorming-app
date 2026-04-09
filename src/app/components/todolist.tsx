@@ -44,11 +44,17 @@ export default function TodoList({ userId }: { userId: string }) {
     e.preventDefault();
     if (!newText.trim()) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("todos")
       .insert({ text: newText.trim(), priority: newPriority, user_id: userId })
       .select()
       .single();
+
+    if (error) {
+      console.error("Todo insert error:", error);
+      alert("Erreur : " + error.message);
+      return;
+    }
 
     if (data) {
       setTodos((prev) => [data, ...prev]);
