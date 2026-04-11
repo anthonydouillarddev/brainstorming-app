@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { SECTIONS } from "@/lib/sections";
-import ProjectEditor from "./editor";
+import type { Project, Todo, Decision } from "@/lib/types";
+import ProjectDashboard from "./dashboard";
 
 export default async function ProjectPage({
   params,
@@ -10,7 +11,9 @@ export default async function ProjectPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: project } = await supabase
@@ -21,10 +24,11 @@ export default async function ProjectPage({
 
   if (!project) redirect("/");
 
-  const { data: sections } = await supabase
-    .from("sections")
-    .select("*")
-    .eq("project_id", id);
+  const [{ data: sections }, { data: todos }, { data: decisions }] = await Promise.all([
+    supabase.from("sections").select("*").eq("project_id", id),
+    supabase.from("todos").select("*").eq("project_id", id),
+    supabase.from("decisions").select("*").eq("project_id", id).order("decided_at", { ascending: false }),
+  ]);
 
   const sectionMap: Record<string, string> = {};
   sections?.forEach((s) => {
@@ -32,10 +36,13 @@ export default async function ProjectPage({
   });
 
   return (
-    <ProjectEditor
-      project={project}
+    <ProjectDashboard
+      userId={user.id}
+      project={project as Project}
       initialSections={sectionMap}
       sectionDefs={SECTIONS}
+      initialTodos={(todos ?? []) as Todo[]}
+      initialDecisions={(decisions ?? []) as Decision[]}
     />
   );
 }

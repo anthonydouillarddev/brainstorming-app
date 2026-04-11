@@ -1,16 +1,10 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import type { SectionDef, Field } from "@/lib/sections";
-import ThemeToggle from "@/app/components/theme-toggle";
-
-interface Project {
-  id: string;
-  name: string;
-  status: string;
-}
+import { getActiveSections } from "@/lib/sections";
+import type { Project } from "@/lib/types";
 
 interface LinkItem {
   title: string;
@@ -20,33 +14,55 @@ interface LinkItem {
 
 type SectionData = Record<string, unknown>;
 
-export default function ProjectEditor({
+function parseInitial(initial: Record<string, string>): Record<string, SectionData> {
+  const out: Record<string, SectionData> = {};
+  for (const [key, raw] of Object.entries(initial)) {
+    try {
+      out[key] = JSON.parse(raw);
+    } catch {
+      out[key] = {};
+    }
+  }
+  return out;
+}
+
+function isFieldFilled(value: unknown): boolean {
+  if (value == null) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "number") return value > 0;
+  return false;
+}
+
+function countFilled(def: SectionDef, data: SectionData): number {
+  return def.fields.filter((f) => isFieldFilled(data[f.key])).length;
+}
+
+export default function BrainstormEditor({
   project,
   initialSections,
   sectionDefs,
+  onProjectUpdate,
 }: {
   project: Project;
   initialSections: Record<string, string>;
   sectionDefs: SectionDef[];
+  onProjectUpdate: (patch: Partial<Project>) => Promise<void>;
 }) {
-  // Parse stored JSON content
-  const parsedInitial: Record<string, SectionData> = {};
-  for (const [key, raw] of Object.entries(initialSections)) {
-    try {
-      parsedInitial[key] = JSON.parse(raw);
-    } catch {
-      parsedInitial[key] = {};
-    }
-  }
-
+  const parsedInitial = useMemo(() => parseInitial(initialSections), [initialSections]);
   const [sections, setSections] = useState<Record<string, SectionData>>(parsedInitial);
-  const [status, setStatus] = useState(project.status);
-  const [name, setName] = useState(project.name);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const router = useRouter();
+  const [userOpened, setUserOpened] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const stored = localStorage.getItem(`brainstorm:opened:${project.id}`);
+      return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+  const [showModulePicker, setShowModulePicker] = useState(false);
   const saveTimeout = useRef<NodeJS.Timeout | null>(null);
   const supabase = createClient();
 
@@ -62,240 +78,248 @@ export default function ProjectEditor({
 
   function updateField(sectionKey: string, fieldKey: string, value: unknown) {
     setSections((prev) => {
-      const updated = { ...prev, [sectionKey]: { ...(prev[sectionKey] || {}), [fieldKey]: value } };
-
+      const updated = {
+        ...prev,
+        [sectionKey]: { ...(prev[sectionKey] || {}), [fieldKey]: value },
+      };
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
       saveTimeout.current = setTimeout(async () => {
         setSaving(true);
         await saveSection(sectionKey, updated[sectionKey]);
         await supabase.from("projects").update({ updated_at: new Date().toISOString() }).eq("id", project.id);
         setSaving(false);
-        setLastSaved(new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }));
+        setLastSaved(
+          new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+        );
       }, 800);
-
       return updated;
     });
   }
 
-  async function handleStatusChange(newStatus: string) {
-    setStatus(newStatus);
-    await supabase.from("projects").update({ status: newStatus }).eq("id", project.id);
+  useEffect(() => {
+    return () => {
+      if (saveTimeout.current) clearTimeout(saveTimeout.current);
+    };
+  }, []);
+
+  const activeSections = useMemo(
+    () => getActiveSections(project.type, project.disabled_sections),
+    [project.type, project.disabled_sections]
+  );
+
+  function toggleManual(key: string, currentlyOpen: boolean) {
+    setUserOpened((prev) => {
+      const next = new Set(prev);
+      if (currentlyOpen) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`brainstorm:opened:${project.id}`, JSON.stringify(Array.from(next)));
+      }
+      return next;
+    });
   }
 
-  async function handleNameChange() {
-    if (name.trim() && name !== project.name) {
-      await supabase.from("projects").update({ name: name.trim() }).eq("id", project.id);
-    }
+  async function toggleSectionDisabled(sectionKey: string) {
+    const disabled = project.disabled_sections.includes(sectionKey)
+      ? project.disabled_sections.filter((k) => k !== sectionKey)
+      : [...project.disabled_sections, sectionKey];
+    await onProjectUpdate({ disabled_sections: disabled });
   }
 
-  async function handleDelete() {
-    if (!confirm(`Supprimer "${project.name}" et tout son contenu ?`)) return;
-    setDeleting(true);
-    await supabase.from("projects").delete().eq("id", project.id);
-    router.push("/");
-  }
-
-  function toggleCollapse(key: string) {
-    setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
-  }
+  const scoreDef = sectionDefs.find((s) => s.key === "score");
+  const scoreData = sections["score"] || {};
+  const scoreFields = scoreDef?.fields.filter((f) => f.type === "score") ?? [];
+  const totalScore = scoreFields.reduce((sum, f) => sum + (Number(scoreData[f.key]) || 0), 0);
+  const maxScore = scoreFields.length * 10;
 
   function exportForClaude() {
     const lines: string[] = [];
     const date = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-
-    lines.push(`# ${name}`);
-    lines.push(`> Exporté le ${date} — Statut : ${status}`);
+    lines.push(`# ${project.name}`);
+    lines.push(`> Exporté le ${date} — Statut : ${project.status}`);
     lines.push("");
 
-    for (const def of sectionDefs) {
+    for (const def of activeSections) {
       const data = sections[def.key] || {};
-      const hasContent = def.fields.some((f) => {
-        const v = data[f.key];
-        if (!v) return false;
-        if (typeof v === "string") return v.trim().length > 0;
-        if (Array.isArray(v)) return v.length > 0;
-        if (typeof v === "number") return v > 0;
-        return false;
-      });
-      if (!hasContent) continue;
+      if (!def.fields.some((f) => isFieldFilled(data[f.key]))) continue;
 
-      lines.push(`---`);
+      lines.push("---");
       lines.push(`## ${def.emoji} ${def.title}`);
       lines.push("");
 
       for (const field of def.fields) {
         const val = data[field.key];
-        if (!val) continue;
+        if (!isFieldFilled(val)) continue;
 
         if (field.type === "question" || field.type === "text") {
-          const text = val as string;
-          if (!text.trim()) continue;
           lines.push(`### ${field.label}`);
           if (field.hint) lines.push(`_${field.hint}_`);
           lines.push("");
-          lines.push(text.trim());
+          lines.push((val as string).trim());
           lines.push("");
         }
-
         if (field.type === "choice") {
           const selected = val as string[];
-          if (selected.length === 0) continue;
           lines.push(`### ${field.label}`);
-          for (const s of selected) {
-            lines.push(`- [x] ${s}`);
-          }
-          const unselected = (field.options || []).filter((o) => !selected.includes(o));
-          for (const u of unselected) {
+          for (const s of selected) lines.push(`- [x] ${s}`);
+          for (const u of (field.options ?? []).filter((o) => !selected.includes(o))) {
             lines.push(`- [ ] ${u}`);
           }
           lines.push("");
         }
-
         if (field.type === "links") {
           const links = val as LinkItem[];
-          if (links.length === 0) continue;
           lines.push(`### ${field.label}`);
-          for (const link of links) {
-            lines.push(`- [${link.tag}] [${link.title}](${link.url})`);
-          }
+          for (const link of links) lines.push(`- [${link.tag}] [${link.title}](${link.url})`);
           lines.push("");
         }
-
         if (field.type === "score") {
-          const score = val as number;
-          if (score <= 0) continue;
-          lines.push(`- **${field.label}** : ${score}/10`);
+          lines.push(`- **${field.label}** : ${val}/${field.max ?? 10}`);
         }
       }
       lines.push("");
     }
 
-    // Score total
     if (totalScore > 0) {
       lines.push("---");
       lines.push(`## Score total : ${totalScore}/${maxScore}`);
       lines.push("");
     }
 
-    // Section Claude.md
-    lines.push("---");
-    lines.push("## Instructions pour Claude");
-    lines.push("");
-    lines.push("Ce fichier contient le brainstorming complet du projet. Utilise-le pour :");
-    lines.push("- Créer le CLAUDE.md du projet avec toutes les conventions et infos");
-    lines.push("- Générer la structure de dossiers du projet");
-    lines.push("- Créer les fichiers de base (schema Prisma, config auth, etc.)");
-    lines.push("- Adapter les choix techniques aux réponses de la section Stack");
-    lines.push("- Respecter le business model et les features MVP définies");
-    lines.push("- Ne PAS implémenter ce qui est listé dans 'Ce qu'on ne construit PAS en V1'");
-    lines.push("");
-
     const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-brainstorming.md`;
+    a.download = `${project.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-brainstorming.md`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
-  useEffect(() => {
-    return () => { if (saveTimeout.current) clearTimeout(saveTimeout.current); };
-  }, []);
-
-  const statuses = [
-    { value: "idea", label: "💭 Idée", bg: "bg-gray-700" },
-    { value: "validating", label: "🔍 Validation", bg: "bg-yellow-700" },
-    { value: "building", label: "🛠️ En dev", bg: "bg-blue-700" },
-    { value: "launched", label: "🚀 Lancé", bg: "bg-green-700" },
-  ];
-
-  // Calculate total score
-  const scoreDef = sectionDefs.find((s) => s.key === "score");
-  const scoreData = sections["score"] || {};
-  const scoreFields = scoreDef?.fields.filter((f) => f.type === "score") || [];
-  const totalScore = scoreFields.reduce((sum, f) => sum + (Number(scoreData[f.key]) || 0), 0);
-  const maxScore = scoreFields.length * 10;
-
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 w-full">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6 sticky top-0 py-3 z-10" style={{ background: "var(--color-background)" }}>
-        <button onClick={() => router.push("/")} className="text-muted hover:text-foreground text-sm transition-colors">
-          ← Retour
+    <div className="space-y-5">
+      {/* Save indicator + modules picker toggle */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => setShowModulePicker((v) => !v)}
+          className="text-xs px-3 py-1.5 rounded-xl bg-card border border-border text-muted hover:text-foreground hover:border-muted transition-colors"
+        >
+          ⚙️ Modules {showModulePicker ? "▾" : "▸"}
         </button>
         <div className="flex items-center gap-3 text-xs">
           {saving && <span className="text-muted">Sauvegarde...</span>}
           {lastSaved && !saving && <span className="text-green-500">✓ {lastSaved}</span>}
-          <ThemeToggle />
           {maxScore > 0 && (
-            <span className={`font-bold ${totalScore >= maxScore * 0.7 ? "text-green-500" : totalScore >= maxScore * 0.4 ? "text-yellow-500" : "text-red-400"}`}>
+            <span
+              className={`font-bold ${
+                totalScore >= maxScore * 0.7
+                  ? "text-green-500"
+                  : totalScore >= maxScore * 0.4
+                  ? "text-yellow-500"
+                  : "text-red-400"
+              }`}
+            >
               {totalScore}/{maxScore}
             </span>
           )}
         </div>
       </div>
 
-      {/* Project name */}
-      <input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        onBlur={handleNameChange}
-        className="text-3xl font-extrabold tracking-tight bg-transparent border-none outline-none w-full mb-4 focus:ring-0"
-      />
-
-      {/* Status */}
-      <div className="flex gap-2 mb-10 flex-wrap">
-        {statuses.map((s) => (
-          <button
-            key={s.value}
-            onClick={() => handleStatusChange(s.value)}
-            className={`text-xs px-4 py-2 rounded-xl font-medium transition-all ${status === s.value ? `${s.bg} text-white shadow-sm` : "bg-card border border-border text-muted hover:text-foreground"}`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
+      {/* Module picker */}
+      {showModulePicker && (
+        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted mb-3">
+            Activer / désactiver les modules
+          </h3>
+          <p className="text-xs text-muted mb-4">
+            Par défaut, seules les sections pertinentes pour un projet de type{" "}
+            <span className="font-semibold text-foreground">{project.type}</span> sont affichées.
+            Tu peux ajouter ou retirer des modules manuellement.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {sectionDefs.map((def) => {
+              const isDefault = def.defaultForTypes.includes(project.type);
+              const isDisabled = project.disabled_sections.includes(def.key);
+              const isActive = isDefault && !isDisabled;
+              return (
+                <label
+                  key={def.key}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all ${
+                    isActive
+                      ? "bg-accent/10 border-accent/40"
+                      : "bg-background/60 border-border hover:border-muted"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isActive}
+                    onChange={() => toggleSectionDisabled(def.key)}
+                    className="accent-accent"
+                  />
+                  <span className="text-base">{def.emoji}</span>
+                  <span className="text-sm flex-1 truncate">{def.title}</span>
+                  {!isDefault && (
+                    <span className="text-[9px] uppercase tracking-wider text-muted">override</span>
+                  )}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Sections */}
-      <div className="space-y-5">
-        {sectionDefs.map((def) => {
+      <div className="space-y-4">
+        {activeSections.map((def) => {
           const data = sections[def.key] || {};
-          const filledCount = def.fields.filter((f) => {
-            const v = data[f.key];
-            if (!v) return false;
-            if (typeof v === "string") return v.trim().length > 0;
-            if (Array.isArray(v)) return v.length > 0;
-            if (typeof v === "number") return v > 0;
-            return false;
-          }).length;
+          const filledCount = countFilled(def, data);
+          const isComplete = filledCount === def.fields.length && def.fields.length > 0;
+          const userHasOpened = userOpened.has(def.key);
+          // Auto-collapse if complete & user hasn't manually opened
+          const isOpen = !isComplete || userHasOpened;
 
           return (
-            <div key={def.key} className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl overflow-hidden shadow-sm">
-              {/* Section header */}
+            <div
+              key={def.key}
+              className={`bg-card/80 backdrop-blur-sm border rounded-2xl overflow-hidden shadow-sm transition-all ${
+                isComplete ? "border-green-500/40" : "border-border"
+              }`}
+            >
               <button
-                onClick={() => toggleCollapse(def.key)}
+                onClick={() => toggleManual(def.key, isOpen)}
                 className="w-full px-5 py-4 flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               >
                 <div className="text-left flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{def.emoji}</span>
                     <h2 className="font-bold text-base">{def.title}</h2>
+                    {isComplete && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/15 text-green-500 font-semibold uppercase tracking-wider">
+                        ✓ complet
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-muted mt-1 ml-8">{def.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {filledCount > 0 && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent font-medium">
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        isComplete
+                          ? "bg-green-500/15 text-green-500"
+                          : "bg-accent/15 text-accent"
+                      }`}
+                    >
                       {filledCount}/{def.fields.length}
                     </span>
                   )}
-                  <span className="text-muted text-sm">{collapsed[def.key] ? "▸" : "▾"}</span>
+                  <span className="text-muted text-sm">{isOpen ? "▾" : "▸"}</span>
                 </div>
               </button>
 
-              {/* Fields */}
-              {!collapsed[def.key] && (
+              {isOpen && (
                 <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border">
                   {def.fields.map((field) => (
                     <FieldRenderer
@@ -312,16 +336,13 @@ export default function ProjectEditor({
         })}
       </div>
 
-      {/* Export + Delete */}
-      <div className="mt-12 pt-6 border-t border-border space-y-4">
+      {/* Export */}
+      <div className="pt-4">
         <button
           onClick={exportForClaude}
           className="w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm"
         >
           📥 Exporter pour Claude
-        </button>
-        <button onClick={handleDelete} disabled={deleting} className="w-full py-2 text-red-500 text-sm hover:text-red-400 transition-colors">
-          {deleting ? "Suppression..." : "🗑️ Supprimer ce projet"}
         </button>
       </div>
     </div>
@@ -330,7 +351,15 @@ export default function ProjectEditor({
 
 // ─── FIELD RENDERER ──────────────────────────
 
-function FieldRenderer({ field, value, onChange }: { field: Field; value: unknown; onChange: (val: unknown) => void }) {
+function FieldRenderer({
+  field,
+  value,
+  onChange,
+}: {
+  field: Field;
+  value: unknown;
+  onChange: (val: unknown) => void;
+}) {
   switch (field.type) {
     case "question":
       return <QuestionField field={field} value={(value as string) || ""} onChange={onChange} />;
@@ -347,14 +376,22 @@ function FieldRenderer({ field, value, onChange }: { field: Field; value: unknow
   }
 }
 
-// ─── QUESTION FIELD ──────────────────────────
-
-function QuestionField({ field, value, onChange }: { field: Field; value: string; onChange: (val: string) => void }) {
+function QuestionField({
+  field,
+  value,
+  onChange,
+}: {
+  field: Field;
+  value: string;
+  onChange: (val: string) => void;
+}) {
   return (
-    <div className="group">
+    <div>
       <label className="block text-sm font-semibold mb-1">{field.label}</label>
       {field.hint && (
-        <p className="text-xs text-muted mb-2 pl-0.5 border-l-2 border-accent/30 ml-0.5 px-2">{field.hint}</p>
+        <p className="text-xs text-muted mb-2 pl-0.5 border-l-2 border-accent/30 ml-0.5 px-2">
+          {field.hint}
+        </p>
       )}
       <textarea
         value={value}
@@ -367,14 +404,22 @@ function QuestionField({ field, value, onChange }: { field: Field; value: string
   );
 }
 
-// ─── TEXT FIELD (large) ──────────────────────
-
-function TextField({ field, value, onChange }: { field: Field; value: string; onChange: (val: string) => void }) {
+function TextField({
+  field,
+  value,
+  onChange,
+}: {
+  field: Field;
+  value: string;
+  onChange: (val: string) => void;
+}) {
   return (
     <div>
       <label className="block text-sm font-semibold mb-1">{field.label}</label>
       {field.hint && (
-        <p className="text-xs text-muted mb-2 pl-0.5 border-l-2 border-accent/30 ml-0.5 px-2">{field.hint}</p>
+        <p className="text-xs text-muted mb-2 pl-0.5 border-l-2 border-accent/30 ml-0.5 px-2">
+          {field.hint}
+        </p>
       )}
       <textarea
         value={value}
@@ -387,22 +432,26 @@ function TextField({ field, value, onChange }: { field: Field; value: string; on
   );
 }
 
-// ─── CHOICE FIELD (checkboxes) ───────────────
-
-function ChoiceField({ field, value, onChange }: { field: Field; value: string[]; onChange: (val: string[]) => void }) {
+function ChoiceField({
+  field,
+  value,
+  onChange,
+}: {
+  field: Field;
+  value: string[];
+  onChange: (val: string[]) => void;
+}) {
   function toggle(option: string) {
-    if (value.includes(option)) {
-      onChange(value.filter((v) => v !== option));
-    } else {
-      onChange([...value, option]);
-    }
+    if (value.includes(option)) onChange(value.filter((v) => v !== option));
+    else onChange([...value, option]);
   }
-
   return (
     <div>
       <label className="block text-sm font-semibold mb-2">{field.label}</label>
       {field.hint && (
-        <p className="text-xs text-muted mb-2 pl-0.5 border-l-2 border-accent/30 ml-0.5 px-2">{field.hint}</p>
+        <p className="text-xs text-muted mb-2 pl-0.5 border-l-2 border-accent/30 ml-0.5 px-2">
+          {field.hint}
+        </p>
       )}
       <div className="flex flex-wrap gap-2">
         {field.options?.map((option) => (
@@ -416,7 +465,8 @@ function ChoiceField({ field, value, onChange }: { field: Field; value: string[]
                 : "bg-background/60 border-border text-muted hover:text-foreground hover:border-muted"
             }`}
           >
-            {value.includes(option) ? "✓ " : ""}{option}
+            {value.includes(option) ? "✓ " : ""}
+            {option}
           </button>
         ))}
       </div>
@@ -424,19 +474,32 @@ function ChoiceField({ field, value, onChange }: { field: Field; value: string[]
   );
 }
 
-// ─── LINKS FIELD ─────────────────────────────
-
-function LinksField({ field, value, onChange }: { field: Field; value: LinkItem[]; onChange: (val: LinkItem[]) => void }) {
+function LinksField({
+  field,
+  value,
+  onChange,
+}: {
+  field: Field;
+  value: LinkItem[];
+  onChange: (val: LinkItem[]) => void;
+}) {
   const [newUrl, setNewUrl] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [newTag, setNewTag] = useState("Autre");
-
   const tags = ["TikTok", "YouTube", "Article", "Produit", "Design", "Doc", "Autre"];
 
   function addLink() {
     if (!newUrl.trim()) return;
-    const title = newTitle.trim() || new URL(newUrl.startsWith("http") ? newUrl : `https://${newUrl}`).hostname;
-    onChange([...value, { title, url: newUrl.startsWith("http") ? newUrl : `https://${newUrl}`, tag: newTag }]);
+    const safeUrl = newUrl.startsWith("http") ? newUrl : `https://${newUrl}`;
+    let title = newTitle.trim();
+    if (!title) {
+      try {
+        title = new URL(safeUrl).hostname;
+      } catch {
+        title = safeUrl;
+      }
+    }
+    onChange([...value, { title, url: safeUrl, tag: newTag }]);
     setNewUrl("");
     setNewTitle("");
     setNewTag("Autre");
@@ -447,25 +510,27 @@ function LinksField({ field, value, onChange }: { field: Field; value: LinkItem[
   }
 
   const tagColors: Record<string, string> = {
-    TikTok: "bg-pink-900/40 text-pink-400",
-    YouTube: "bg-red-900/40 text-red-400",
-    Article: "bg-blue-900/40 text-blue-400",
-    Produit: "bg-green-900/40 text-green-400",
-    Design: "bg-purple-900/40 text-purple-400",
-    Doc: "bg-cyan-900/40 text-cyan-400",
-    Autre: "bg-gray-800 text-gray-400",
+    TikTok: "bg-pink-500/15 text-pink-500",
+    YouTube: "bg-red-500/15 text-red-500",
+    Article: "bg-blue-500/15 text-blue-500",
+    Produit: "bg-green-500/15 text-green-500",
+    Design: "bg-purple-500/15 text-purple-500",
+    Doc: "bg-cyan-500/15 text-cyan-500",
+    Autre: "bg-muted/15 text-muted",
   };
 
   return (
     <div>
-      <label className="block text-sm font-medium mb-1">{field.label}</label>
+      <label className="block text-sm font-semibold mb-1">{field.label}</label>
       {field.hint && <p className="text-xs text-muted mb-2">{field.hint}</p>}
 
-      {/* Link list */}
       {value.length > 0 && (
         <div className="space-y-2 mb-3">
           {value.map((link, i) => (
-            <div key={i} className="flex items-center gap-2 bg-background border border-border rounded-lg px-3 py-2">
+            <div
+              key={i}
+              className="flex items-center gap-2 bg-background/60 border border-border rounded-xl px-3 py-2"
+            >
               <span className={`text-xs px-2 py-0.5 rounded-full ${tagColors[link.tag] || tagColors.Autre}`}>
                 {link.tag}
               </span>
@@ -477,43 +542,47 @@ function LinksField({ field, value, onChange }: { field: Field; value: LinkItem[
               >
                 {link.title}
               </a>
-              <button onClick={() => removeLink(i)} className="text-muted hover:text-red-400 text-xs">✕</button>
+              <button
+                onClick={() => removeLink(i)}
+                className="text-muted hover:text-red-400 text-xs"
+              >
+                ✕
+              </button>
             </div>
           ))}
         </div>
       )}
 
-      {/* Add link form */}
-      <div className="space-y-2 bg-background border border-border rounded-lg p-3">
-        <div className="flex gap-2">
-          <input
-            value={newUrl}
-            onChange={(e) => setNewUrl(e.target.value)}
-            placeholder="Coller le lien ici..."
-            className="flex-1 px-2 py-1.5 bg-card border border-border rounded text-sm text-foreground placeholder:text-muted/40 outline-none focus:ring-1 focus:ring-accent"
-            onKeyDown={(e) => e.key === "Enter" && addLink()}
-          />
-        </div>
+      <div className="space-y-2 bg-background/60 border border-border rounded-xl p-3">
+        <input
+          value={newUrl}
+          onChange={(e) => setNewUrl(e.target.value)}
+          placeholder="Coller le lien ici..."
+          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted/40 outline-none focus:ring-1 focus:ring-accent"
+          onKeyDown={(e) => e.key === "Enter" && addLink()}
+        />
         <div className="flex gap-2">
           <input
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="Titre (optionnel)"
-            className="flex-1 px-2 py-1.5 bg-card border border-border rounded text-sm text-foreground placeholder:text-muted/40 outline-none focus:ring-1 focus:ring-accent"
+            className="flex-1 px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted/40 outline-none focus:ring-1 focus:ring-accent"
           />
           <select
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
-            className="px-2 py-1.5 bg-card border border-border rounded text-sm text-foreground outline-none"
+            className="px-2 py-2 bg-card border border-border rounded-lg text-sm text-foreground outline-none"
           >
             {tags.map((t) => (
-              <option key={t} value={t}>{t}</option>
+              <option key={t} value={t}>
+                {t}
+              </option>
             ))}
           </select>
           <button
             type="button"
             onClick={addLink}
-            className="px-3 py-1.5 bg-accent text-white text-sm rounded hover:bg-blue-600 transition-colors"
+            className="px-3 py-2 bg-accent text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
           >
             +
           </button>
@@ -523,11 +592,16 @@ function LinksField({ field, value, onChange }: { field: Field; value: LinkItem[
   );
 }
 
-// ─── SCORE FIELD ─────────────────────────────
-
-function ScoreField({ field, value, onChange }: { field: Field; value: number; onChange: (val: number) => void }) {
+function ScoreField({
+  field,
+  value,
+  onChange,
+}: {
+  field: Field;
+  value: number;
+  onChange: (val: number) => void;
+}) {
   const max = field.max || 10;
-
   return (
     <div className="flex items-center gap-3 py-1">
       <label className="text-sm font-medium flex-1">{field.label}</label>
@@ -539,15 +613,23 @@ function ScoreField({ field, value, onChange }: { field: Field; value: number; o
             onClick={() => onChange(n === value ? 0 : n)}
             className={`w-7 h-7 rounded text-xs font-medium transition-all ${
               n <= value
-                ? n <= 3 ? "bg-red-600 text-white" : n <= 6 ? "bg-yellow-600 text-white" : "bg-green-600 text-white"
-                : "bg-background border border-border text-muted hover:text-foreground"
+                ? n <= 3
+                  ? "bg-red-600 text-white"
+                  : n <= 6
+                  ? "bg-yellow-600 text-white"
+                  : "bg-green-600 text-white"
+                : "bg-background/60 border border-border text-muted hover:text-foreground"
             }`}
           >
             {n}
           </button>
         ))}
       </div>
-      <span className={`text-sm font-bold w-8 text-right ${value <= 3 ? "text-red-400" : value <= 6 ? "text-yellow-400" : "text-green-400"}`}>
+      <span
+        className={`text-sm font-bold w-8 text-right ${
+          value <= 3 ? "text-red-400" : value <= 6 ? "text-yellow-400" : "text-green-400"
+        }`}
+      >
         {value > 0 ? value : "—"}
       </span>
     </div>
