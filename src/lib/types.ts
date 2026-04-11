@@ -44,10 +44,6 @@ export interface Todo {
   deadline: string | null;
   phase: Phase | null;
   score_method: ScoreMethod;
-  rice_reach: number | null;
-  rice_impact: number | null;
-  rice_confidence: number | null;
-  rice_effort: number | null;
   ice_impact: number | null;
   ice_confidence: number | null;
   ice_ease: number | null;

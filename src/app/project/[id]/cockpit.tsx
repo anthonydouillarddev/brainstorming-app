@@ -1,34 +1,11 @@
 "use client";
 
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
-import type { SectionDef } from "@/lib/sections";
-import { getActiveSections } from "@/lib/sections";
+import { getActiveSections, parseSections, isFieldFilled, type SectionData } from "@/lib/sections";
 import type { Project, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
 import { PROJECT_STATUSES, PHASES, statusIndex, statusPhase } from "@/lib/types";
 import RisksPanel from "./risks";
 import RoadmapPanel from "./roadmap";
-
-type SectionData = Record<string, unknown>;
-
-function parseSections(raw: Record<string, string>): Record<string, SectionData> {
-  const out: Record<string, SectionData> = {};
-  for (const [key, content] of Object.entries(raw)) {
-    try {
-      out[key] = JSON.parse(content);
-    } catch {
-      out[key] = {};
-    }
-  }
-  return out;
-}
-
-function isFieldFilled(value: unknown): boolean {
-  if (value == null) return false;
-  if (typeof value === "string") return value.trim().length > 0;
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "number") return value > 0;
-  return false;
-}
 
 function firstString(data: SectionData, key: string): string | null {
   const v = data[key];
@@ -62,7 +39,6 @@ export default function Cockpit({
 }: {
   project: Project;
   sections: Record<string, string>;
-  sectionDefs: SectionDef[];
   todos: Todo[];
   decisions: Decision[];
   roadmap: RoadmapItem[];
@@ -144,35 +120,22 @@ export default function Cockpit({
   const persona = firstString(targetData, "persona_who");
   const tagline = firstString(identityData, "tagline");
 
-  // Next action critique = 1ère todo P1 (urgent) non-done
-  const nextActionTask = useMemo(
-    () => todos.find((t) => t.priority === "urgent" && t.status !== "done") ?? null,
-    [todos]
-  );
+  const nextActionTask =
+    todos.find((t) => t.priority === "urgent" && t.status !== "done") ?? null;
+  const blockers = todos.filter((t) => t.status === "blocked");
 
-  // Blocages = todos avec status=blocked
-  const blockers = useMemo(() => todos.filter((t) => t.status === "blocked"), [todos]);
+  const techData = parsed["tech"] ?? {};
+  const stackChips = STACK_FIELDS.map((field) => ({
+    ...field,
+    value: firstString(techData, field.key),
+  })).filter((c) => c.value != null);
 
-  // Stack chips (depuis section tech)
-  const stackChips = useMemo(() => {
-    const techData = parsed["tech"] ?? {};
-    return STACK_FIELDS.map((field) => ({
-      ...field,
-      value: firstString(techData, field.key),
-    })).filter((c) => c.value != null);
-  }, [parsed]);
-
-  // Dernière entrée journal (dernière ligne non-vide)
-  const journalLastLine = useMemo(() => {
-    const journalData = parsed["journal"] ?? {};
-    const entries = firstString(journalData, "journal_entries");
+  const journalLastLine = (() => {
+    const entries = firstString(parsed["journal"] ?? {}, "journal_entries");
     if (!entries) return null;
-    const lines = entries
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
+    const lines = entries.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
     return lines[lines.length - 1] ?? null;
-  }, [parsed]);
+  })();
 
   // 3 dernières décisions
   const recentDecisions = decisions.slice(0, 3);

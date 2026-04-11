@@ -191,7 +191,6 @@ export default function ProjectDashboard({
         <Cockpit
           project={project}
           sections={sections}
-          sectionDefs={sectionDefs}
           todos={todos}
           decisions={decisions}
           roadmap={roadmap}

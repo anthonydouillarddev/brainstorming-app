@@ -3,22 +3,8 @@
 import { createClient } from "@/lib/supabase/client";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import type { Project } from "@/lib/types";
-import { SECTIONS } from "@/lib/sections";
+import { SECTIONS, parseSections, type SectionData } from "@/lib/sections";
 import { FieldRenderer } from "./field-renderer";
-
-type SectionData = Record<string, unknown>;
-
-function parseInitial(initial: Record<string, string>): Record<string, SectionData> {
-  const out: Record<string, SectionData> = {};
-  for (const [key, raw] of Object.entries(initial)) {
-    try {
-      out[key] = JSON.parse(raw);
-    } catch {
-      out[key] = {};
-    }
-  }
-  return out;
-}
 
 export default function SingleSectionPanel({
   project,
@@ -33,7 +19,7 @@ export default function SingleSectionPanel({
   onProjectUpdate: (patch: Partial<Project>) => Promise<void>;
   onSectionsChange?: (sections: Record<string, string>) => void;
 }) {
-  const parsedInitial = useMemo(() => parseInitial(initialSections), [initialSections]);
+  const parsedInitial = useMemo(() => parseSections(initialSections), [initialSections]);
   const [sections, setSections] = useState<Record<string, SectionData>>(parsedInitial);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
@@ -63,12 +49,11 @@ export default function SingleSectionPanel({
         setSaving(true);
         await saveSection(key, updated[key]);
         await onProjectUpdate({ updated_at: new Date().toISOString() });
-        onSectionsChange?.({
-          ...initialSections,
-          ...Object.fromEntries(
+        onSectionsChange?.(
+          Object.fromEntries(
             Object.entries(updated).map(([k, v]) => [k, JSON.stringify(v)])
-          ),
-        });
+          )
+        );
         setSaving(false);
         setLastSaved(
           new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })

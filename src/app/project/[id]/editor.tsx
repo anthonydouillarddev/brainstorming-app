@@ -3,12 +3,17 @@
 import { createClient } from "@/lib/supabase/client";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import type { SectionDef } from "@/lib/sections";
-import { getActiveSections } from "@/lib/sections";
+import {
+  getActiveSections,
+  parseSections,
+  isFieldFilled,
+  type SectionData,
+} from "@/lib/sections";
 import type { Project } from "@/lib/types";
 import { FieldRenderer, type LinkItem } from "./field-renderer";
 
 function syncFromBrainstorm(
-  parsed: Record<string, Record<string, unknown>>
+  parsed: Record<string, SectionData>
 ): { patch: Partial<Project>; updates: string[] } {
   const identity = parsed["identity"] ?? {};
   const score = parsed["score"] ?? {};
@@ -31,28 +36,6 @@ function syncFromBrainstorm(
   return { patch, updates };
 }
 
-type SectionData = Record<string, unknown>;
-
-function parseInitial(initial: Record<string, string>): Record<string, SectionData> {
-  const out: Record<string, SectionData> = {};
-  for (const [key, raw] of Object.entries(initial)) {
-    try {
-      out[key] = JSON.parse(raw);
-    } catch {
-      out[key] = {};
-    }
-  }
-  return out;
-}
-
-function isFieldFilled(value: unknown): boolean {
-  if (value == null) return false;
-  if (typeof value === "string") return value.trim().length > 0;
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "number") return value > 0;
-  return false;
-}
-
 function countFilled(def: SectionDef, data: SectionData): number {
   return def.fields.filter((f) => isFieldFilled(data[f.key])).length;
 }
@@ -70,7 +53,7 @@ export default function BrainstormEditor({
   onProjectUpdate: (patch: Partial<Project>) => Promise<void>;
   onSectionsChange?: (sections: Record<string, string>) => void;
 }) {
-  const parsedInitial = useMemo(() => parseInitial(initialSections), [initialSections]);
+  const parsedInitial = useMemo(() => parseSections(initialSections), [initialSections]);
   const [sections, setSections] = useState<Record<string, SectionData>>(parsedInitial);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
@@ -115,12 +98,11 @@ export default function BrainstormEditor({
         setSaving(true);
         await saveSection(sectionKey, updated[sectionKey]);
         await onProjectUpdate({ updated_at: new Date().toISOString() });
-        onSectionsChange?.({
-          ...initialSections,
-          ...Object.fromEntries(
+        onSectionsChange?.(
+          Object.fromEntries(
             Object.entries(updated).map(([k, v]) => [k, JSON.stringify(v)])
-          ),
-        });
+          )
+        );
         setSaving(false);
         setLastSaved(
           new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })

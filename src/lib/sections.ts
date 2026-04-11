@@ -24,6 +24,30 @@ export interface SectionDef {
 
 export const RESOURCES_SECTION_KEYS = ["tech", "resources"] as const;
 
+export type SectionData = Record<string, unknown>;
+
+export function parseSections(
+  raw: Record<string, string>
+): Record<string, SectionData> {
+  const out: Record<string, SectionData> = {};
+  for (const [key, content] of Object.entries(raw)) {
+    try {
+      out[key] = JSON.parse(content);
+    } catch {
+      out[key] = {};
+    }
+  }
+  return out;
+}
+
+export function isFieldFilled(value: unknown): boolean {
+  if (value == null) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "number") return value > 0;
+  return false;
+}
+
 export function getActiveSections(type: ProjectType, disabledKeys: string[] = []): SectionDef[] {
   const disabled = new Set(disabledKeys);
   const resourcesKeys = new Set<string>(RESOURCES_SECTION_KEYS);
@@ -33,16 +57,6 @@ export function getActiveSections(type: ProjectType, disabledKeys: string[] = []
       !disabled.has(s.key) &&
       !resourcesKeys.has(s.key)
   );
-}
-
-export function getResourcesSections(): SectionDef[] {
-  const resourcesKeys = new Set<string>(RESOURCES_SECTION_KEYS);
-  return SECTIONS.filter((s) => resourcesKeys.has(s.key));
-}
-
-export function isSectionDefaultFor(key: string, type: ProjectType): boolean {
-  const section = SECTIONS.find((s) => s.key === key);
-  return section ? section.defaultForTypes.includes(type) : false;
 }
 
 export const SECTIONS: SectionDef[] = [
