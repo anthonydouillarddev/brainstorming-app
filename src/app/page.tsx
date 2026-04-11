@@ -32,7 +32,7 @@ export default async function Home({
   const typeMap = new Map(PROJECT_TYPES.map((t) => [t.value, t]));
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 w-full">
+    <div className="max-w-6xl mx-auto px-4 py-8 w-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
