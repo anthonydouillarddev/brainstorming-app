@@ -1,3 +1,5 @@
+import type { ProjectType } from "./types";
+
 export type FieldType = "text" | "question" | "choice" | "links" | "score";
 
 export interface Field {
@@ -16,7 +18,20 @@ export interface SectionDef {
   emoji: string;
   color: string;
   description: string;
+  defaultForTypes: ProjectType[];
   fields: Field[];
+}
+
+export function getActiveSections(type: ProjectType, disabledKeys: string[] = []): SectionDef[] {
+  const disabled = new Set(disabledKeys);
+  return SECTIONS.filter(
+    (s) => s.defaultForTypes.includes(type) && !disabled.has(s.key)
+  );
+}
+
+export function isSectionDefaultFor(key: string, type: ProjectType): boolean {
+  const section = SECTIONS.find((s) => s.key === key);
+  return section ? section.defaultForTypes.includes(type) : false;
 }
 
 export const SECTIONS: SectionDef[] = [
@@ -29,6 +44,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "🏷️",
     color: "border-blue-500",
     description: "Les infos de base de ton projet",
+    defaultForTypes: ["outil", "saas", "appli", "logiciel", "business"],
     fields: [
       { key: "tagline", type: "question", label: "Tagline — 1 phrase qui résume le produit", placeholder: "[Produit] permet à [qui] de [quoi]" },
       { key: "market_type", type: "choice", label: "Type de marché", options: ["B2C", "B2B", "B2B2C", "Marketplace", "Outil interne", "Autre"] },
@@ -45,6 +61,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "🔴",
     color: "border-red-500",
     description: "42% des SaaS échouent car ils résolvent un problème qui n'existe pas",
+    defaultForTypes: ["saas", "appli", "logiciel", "business"],
     fields: [
       { key: "problem_statement", type: "question", label: "Quel problème concret est résolu ?", hint: "Format : [Qui] a du mal à [quoi] parce que [pourquoi]", placeholder: "Ex: Les freelances perdent 3h/semaine à relancer leurs factures impayées car ils n'ont pas d'outil automatisé" },
       { key: "frequency", type: "choice", label: "Fréquence du problème", options: ["Plusieurs fois/jour", "Quotidien", "Hebdomadaire", "Mensuel", "Occasionnel"] },
@@ -65,6 +82,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "💡",
     color: "border-yellow-500",
     description: "Ce qu'on construit — et surtout ce qu'on ne construit PAS",
+    defaultForTypes: ["outil", "saas", "appli", "logiciel", "business"],
     fields: [
       { key: "solution_desc", type: "question", label: "Comment ton produit résout le problème ? (2-3 phrases)", placeholder: "Description claire de la solution" },
       { key: "unique_value", type: "question", label: "Pourquoi choisir TON produit plutôt qu'un autre ?", hint: "C'est ta valeur unique — ce qui te différencie", placeholder: "Plus simple, moins cher, spécialisé pour [niche], IA intégrée..." },
@@ -84,6 +102,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "🎯",
     color: "border-blue-500",
     description: "À qui tu vends — être précis ici change tout",
+    defaultForTypes: ["saas", "appli", "logiciel", "business"],
     fields: [
       { key: "persona_who", type: "question", label: "Qui est ton client idéal ?", placeholder: "Ex: Freelance développeur web, 25-35 ans, 2-5 ans d'expérience" },
       { key: "persona_pain", type: "question", label: "Quelle est sa douleur principale ?", placeholder: "Ce qui l'énerve au quotidien par rapport à ce problème" },
@@ -103,6 +122,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "⚔️",
     color: "border-purple-500",
     description: "'Pas de concurrent' = le marché n'existe peut-être pas",
+    defaultForTypes: ["saas", "appli", "logiciel", "business"],
     fields: [
       { key: "competitors", type: "question", label: "Concurrents directs (nom, URL, prix, faiblesse)", placeholder: "1. [Nom] — [url] — [prix] — Faiblesse: ...\n2. [Nom] — [url] — [prix] — Faiblesse: ...\n3. [Nom] — [url] — [prix] — Faiblesse: ..." },
       { key: "indirect", type: "question", label: "Concurrents indirects (solutions de contournement)", placeholder: "Excel, processus manuels, outils gratuits, ne rien faire..." },
@@ -121,6 +141,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "💰",
     color: "border-orange-500",
     description: "Comment tu gagnes de l'argent — décider avant de coder",
+    defaultForTypes: ["saas", "appli", "logiciel", "business"],
     fields: [
       { key: "revenue_model", type: "choice", label: "Modèle de revenus", options: ["Abonnement mensuel/annuel", "Usage-based (pay per use)", "One-time payment", "Freemium → conversion payante", "Marketplace / commission", "Autre"] },
       { key: "pricing_free", type: "question", label: "Plan Gratuit — limites et ce qui est inclus", placeholder: "Ex: 3 projets, 100 requêtes/mois, pas de support" },
@@ -141,6 +162,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "🚀",
     color: "border-cyan-500",
     description: "Comment atteindre les 10 premiers clients payants",
+    defaultForTypes: ["saas", "appli", "business"],
     fields: [
       { key: "channels", type: "choice", label: "Canaux d'acquisition envisagés (coche les prioritaires)", options: ["SEO / Blog / Content", "Publicités (Google, Meta)", "Cold outreach (emails, LinkedIn)", "Communautés (Reddit, Discord, Slack)", "Bouche à oreille / Referral", "Partenariats / Intégrations", "Product Hunt / AppSumo", "TikTok / YouTube / Réseaux sociaux", "Conférences / Networking"] },
       { key: "first_10", type: "question", label: "Comment obtenir tes 10 premiers clients ? Plan concret.", hint: "Sois très précis — 'LinkedIn' n'est pas suffisant", placeholder: "1. Lister 50 prospects sur LinkedIn qui matchent le persona\n2. Message personnalisé avec démo\n3. Offre early-adopter à -50%" },
@@ -158,6 +180,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "✅",
     color: "border-emerald-500",
     description: "Les signaux qui prouvent que tu es sur la bonne voie",
+    defaultForTypes: ["saas", "appli", "logiciel", "business"],
     fields: [
       { key: "hypotheses", type: "question", label: "Hypothèses à valider AVANT de coder", placeholder: "1. Les freelances perdent vraiment du temps sur les relances\n2. Ils sont prêts à payer 20€/mois\n3. L'automatisation email suffit (pas besoin de téléphone)" },
       { key: "pre_signals", type: "choice", label: "Signaux pré-lancement obtenus", options: ["Des gens ont demandé à acheter avant que je propose", "Des gens proposent de payer pour un accès anticipé", "50+ inscrits waitlist de manière organique", "Les prospects posent des questions détaillées", "Quelqu'un a dit 'je cherchais exactement ça'", "Aucun signal pour l'instant"] },
@@ -176,6 +199,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "⚙️",
     color: "border-slate-500",
     description: "Décisions techniques avant de coder",
+    defaultForTypes: ["outil", "saas", "appli", "logiciel"],
     fields: [
       { key: "framework", type: "question", label: "Framework frontend", placeholder: "Ex: Next.js 15 App Router" },
       { key: "ui", type: "question", label: "UI / Styles", placeholder: "Ex: Tailwind CSS v4 + shadcn/ui" },
@@ -200,6 +224,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "📜",
     color: "border-red-400",
     description: "Amendes RGPD : jusqu'à 20M€ — à penser dès le départ",
+    defaultForTypes: ["saas", "logiciel", "business"],
     fields: [
       { key: "structure", type: "choice", label: "Structure juridique", options: ["Auto-entrepreneur", "SASU", "SAS", "EURL/SARL", "Pas encore décidé", "Autre"] },
       { key: "legal_docs", type: "choice", label: "Documents légaux nécessaires", options: ["CGU (Conditions Générales d'Utilisation)", "Politique de confidentialité", "Mentions légales", "Politique de cookies", "CGV (si facturation)", "Contrat traitement données (DPA)"] },
@@ -218,6 +243,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "🎨",
     color: "border-pink-500",
     description: "L'identité visuelle de ton produit",
+    defaultForTypes: ["saas", "appli", "business"],
     fields: [
       { key: "domain", type: "question", label: "Nom de domaine retenu", placeholder: "Ex: monoutil.com, monoutil.fr, monoutil.io" },
       { key: "domain_backup", type: "question", label: "Noms de domaine alternatifs", placeholder: "Ex: getmonoutil.com, trymonoutil.com" },
@@ -237,6 +263,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "🔗",
     color: "border-indigo-500",
     description: "TikTok, YouTube, articles, inspirations — tout centraliser ici",
+    defaultForTypes: ["outil", "saas", "appli", "logiciel", "business"],
     fields: [
       { key: "links", type: "links", label: "Liens sauvegardés", hint: "Ajoute tes liens TikTok, YouTube, articles, inspirations..." },
       { key: "inspirations", type: "text", label: "Inspirations (produits, designs)", placeholder: "Produits similaires qui t'inspirent, captures d'écran, designs..." },
@@ -253,6 +280,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "📓",
     color: "border-amber-500",
     description: "Décisions importantes, pivots, apprentissages",
+    defaultForTypes: ["outil", "saas", "appli", "logiciel", "business"],
     fields: [
       { key: "journal_entries", type: "text", label: "Journal", placeholder: "[09/04/2026] Création du projet\n[10/04/2026] Première interview client → ...\n[15/04/2026] Pivot : changé la cible de ... à ..." },
     ],
@@ -267,6 +295,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "🧠",
     color: "border-violet-500",
     description: "Toutes les idées sans filtre — à trier plus tard",
+    defaultForTypes: ["outil", "saas", "appli", "logiciel", "business"],
     fields: [
       { key: "ideas", type: "text", label: "Dump d'idées", placeholder: "Toutes tes idées, fonctionnalités, pivots possibles, noms, tout ce qui te passe par la tête..." },
     ],
@@ -281,6 +310,7 @@ export const SECTIONS: SectionDef[] = [
     emoji: "📊",
     color: "border-green-500",
     description: "Auto-évaluation avant de lancer le développement",
+    defaultForTypes: ["saas", "appli", "logiciel", "business"],
     fields: [
       { key: "score_problem", type: "score", label: "Problème validé (interviews faites)", max: 10 },
       { key: "score_market", type: "score", label: "Marché quantifié", max: 10 },
