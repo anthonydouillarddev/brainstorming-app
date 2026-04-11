@@ -3,11 +3,20 @@
 import { useState } from "react";
 import type { Field } from "@/lib/sections";
 
+export type LinkStatus = "unread" | "in_progress" | "done";
+
 export interface LinkItem {
   title: string;
   url: string;
   tag: string;
+  status?: LinkStatus;
 }
+
+export const LINK_STATUSES: { value: LinkStatus; label: string; emoji: string; color: string }[] = [
+  { value: "unread", label: "Pas ouvert", emoji: "⚪", color: "text-muted" },
+  { value: "in_progress", label: "En cours", emoji: "🔵", color: "text-blue-500" },
+  { value: "done", label: "Traité", emoji: "✅", color: "text-green-500" },
+];
 
 export function FieldRenderer({
   field,
@@ -144,27 +153,50 @@ function LinksField({
   const [newUrl, setNewUrl] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [newTag, setNewTag] = useState("Autre");
+  const [isDragOver, setIsDragOver] = useState(false);
   const tags = ["TikTok", "YouTube", "Article", "Produit", "Design", "Doc", "Autre"];
 
-  function addLink() {
-    if (!newUrl.trim()) return;
-    const safeUrl = newUrl.startsWith("http") ? newUrl : `https://${newUrl}`;
+  function addLinkFromUrl(rawUrl: string) {
+    const trimmed = rawUrl.trim();
+    if (!trimmed) return;
+    const safeUrl = trimmed.startsWith("http") ? trimmed : `https://${trimmed}`;
     let title = newTitle.trim();
     if (!title) {
       try {
-        title = new URL(safeUrl).hostname;
+        title = new URL(safeUrl).hostname.replace(/^www\./, "");
       } catch {
         title = safeUrl;
       }
     }
-    onChange([...value, { title, url: safeUrl, tag: newTag }]);
+    onChange([...value, { title, url: safeUrl, tag: newTag, status: "unread" }]);
     setNewUrl("");
     setNewTitle("");
     setNewTag("Autre");
   }
 
+  function addLink() {
+    addLinkFromUrl(newUrl);
+  }
+
   function removeLink(index: number) {
     onChange(value.filter((_, i) => i !== index));
+  }
+
+  function updateLink(index: number, patch: Partial<LinkItem>) {
+    onChange(value.map((l, i) => (i === index ? { ...l, ...patch } : l)));
+  }
+
+  function cycleStatus(current: LinkStatus | undefined): LinkStatus {
+    const order: LinkStatus[] = ["unread", "in_progress", "done"];
+    const idx = order.indexOf(current ?? "unread");
+    return order[(idx + 1) % order.length];
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragOver(false);
+    const uri = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain");
+    if (uri) addLinkFromUrl(uri);
   }
 
   const tagColors: Record<string, string> = {
@@ -177,45 +209,95 @@ function LinksField({
     Autre: "bg-muted/15 text-muted",
   };
 
+  // Sort: unread → in_progress → done
+  const statusOrder: Record<LinkStatus, number> = { unread: 0, in_progress: 1, done: 2 };
+  const sortedValue = [...value]
+    .map((link, originalIndex) => ({ link, originalIndex }))
+    .sort((a, b) => {
+      const sa = statusOrder[a.link.status ?? "unread"];
+      const sb = statusOrder[b.link.status ?? "unread"];
+      return sa - sb;
+    });
+
   return (
     <div>
       <label className="block text-sm font-semibold mb-1">{field.label}</label>
       {field.hint && <p className="text-xs text-muted mb-2">{field.hint}</p>}
 
-      {value.length > 0 && (
+      {sortedValue.length > 0 && (
         <div className="space-y-2 mb-3">
-          {value.map((link, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2 bg-background/60 border border-border rounded-xl px-3 py-2"
-            >
-              <span className={`text-xs px-2 py-0.5 rounded-full ${tagColors[link.tag] || tagColors.Autre}`}>
-                {link.tag}
-              </span>
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-accent hover:underline truncate flex-1"
+          {sortedValue.map(({ link, originalIndex }) => {
+            const status = link.status ?? "unread";
+            const statusInfo = LINK_STATUSES.find((s) => s.value === status) ?? LINK_STATUSES[0];
+            const isDone = status === "done";
+            return (
+              <div
+                key={originalIndex}
+                className={`flex items-center gap-2 bg-background/60 border border-border rounded-xl px-3 py-2 transition-opacity ${
+                  isDone ? "opacity-60" : ""
+                }`}
               >
-                {link.title}
-              </a>
-              <button
-                onClick={() => removeLink(i)}
-                className="text-muted hover:text-red-400 text-xs"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+                <button
+                  type="button"
+                  onClick={() => updateLink(originalIndex, { status: cycleStatus(status) })}
+                  className={`text-sm shrink-0 ${statusInfo.color} hover:scale-110 transition-transform`}
+                  title={`${statusInfo.label} — clic pour changer`}
+                  aria-label={`Statut : ${statusInfo.label}`}
+                >
+                  {statusInfo.emoji}
+                </button>
+                <span
+                  className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
+                    tagColors[link.tag] || tagColors.Autre
+                  }`}
+                >
+                  {link.tag}
+                </span>
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-sm text-accent hover:underline truncate flex-1 ${
+                    isDone ? "line-through" : ""
+                  }`}
+                >
+                  {link.title}
+                </a>
+                <button
+                  onClick={() => removeLink(originalIndex)}
+                  className="text-muted hover:text-red-400 text-xs shrink-0"
+                  aria-label="Supprimer"
+                >
+                  ✕
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      <div className="space-y-2 bg-background/60 border border-border rounded-xl p-3">
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragOver(true);
+        }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={handleDrop}
+        className={`space-y-2 rounded-xl p-3 border transition-all ${
+          isDragOver
+            ? "bg-accent/10 border-accent/60 border-dashed"
+            : "bg-background/60 border-border"
+        }`}
+      >
+        {isDragOver && (
+          <p className="text-xs text-accent text-center font-medium py-1">
+            Déposer le lien ici
+          </p>
+        )}
         <input
           value={newUrl}
           onChange={(e) => setNewUrl(e.target.value)}
-          placeholder="Coller le lien ici..."
+          placeholder="Coller ou glisser-déposer un lien..."
           className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted/40 outline-none focus:ring-1 focus:ring-accent"
           onKeyDown={(e) => e.key === "Enter" && addLink()}
         />
