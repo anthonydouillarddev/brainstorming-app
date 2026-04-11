@@ -10,16 +10,17 @@ import ThemeToggle from "@/app/components/theme-toggle";
 import Cockpit from "./cockpit";
 import BrainstormEditor from "./editor";
 import DecisionsPanel from "./decisions";
-import ResourcesPanel from "./resources";
+import SingleSectionPanel from "./resources";
 import TodoList from "@/app/components/todolist";
 
-type Tab = "cockpit" | "brainstorm" | "tasks" | "decisions" | "resources";
+type Tab = "cockpit" | "brainstorm" | "tasks" | "decisions" | "tech" | "resources";
 
 const TABS: { value: Tab; label: string; emoji: string }[] = [
   { value: "cockpit", label: "Cockpit", emoji: "📊" },
   { value: "brainstorm", label: "Brainstorm", emoji: "💡" },
   { value: "tasks", label: "Tâches", emoji: "✅" },
   { value: "decisions", label: "Décisions", emoji: "🧭" },
+  { value: "tech", label: "Technique", emoji: "⚙️" },
   { value: "resources", label: "Ressources", emoji: "🔗" },
 ];
 
@@ -231,9 +232,20 @@ export default function ProjectDashboard({
         />
       )}
 
-      {tab === "resources" && (
-        <ResourcesPanel
+      {tab === "tech" && (
+        <SingleSectionPanel
           project={project}
+          sectionKey="tech"
+          initialSections={sections}
+          onProjectUpdate={updateProject}
+          onSectionsChange={setSections}
+        />
+      )}
+
+      {tab === "resources" && (
+        <SingleSectionPanel
+          project={project}
+          sectionKey="resources"
           initialSections={sections}
           onProjectUpdate={updateProject}
           onSectionsChange={setSections}
