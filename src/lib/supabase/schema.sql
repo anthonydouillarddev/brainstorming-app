@@ -79,12 +79,45 @@ create table decisions (
 );
 
 -- ═══════════════════════════════════════════════
+-- ROADMAP_ITEMS (objectifs par trimestre)
+-- ═══════════════════════════════════════════════
+create table roadmap_items (
+  id uuid default gen_random_uuid() primary key,
+  project_id uuid references projects(id) on delete cascade not null,
+  quarter text not null check (quarter in ('Q1','Q2','Q3','Q4')),
+  year integer not null,
+  objective text not null,
+  achieved boolean not null default false,
+  position integer not null default 0,
+  created_at timestamptz default now()
+);
+
+create index idx_roadmap_items_project on roadmap_items(project_id, year, quarter, position);
+
+-- ═══════════════════════════════════════════════
+-- RISKS (risk matrix)
+-- ═══════════════════════════════════════════════
+create table risks (
+  id uuid default gen_random_uuid() primary key,
+  project_id uuid references projects(id) on delete cascade not null,
+  title text not null,
+  probability text not null check (probability in ('low','medium','high')),
+  impact text not null check (impact in ('low','medium','high')),
+  mitigation text,
+  created_at timestamptz default now()
+);
+
+create index idx_risks_project on risks(project_id);
+
+-- ═══════════════════════════════════════════════
 -- ROW LEVEL SECURITY
 -- ═══════════════════════════════════════════════
 alter table projects enable row level security;
 alter table sections enable row level security;
 alter table todos enable row level security;
 alter table decisions enable row level security;
+alter table roadmap_items enable row level security;
+alter table risks enable row level security;
 
 -- Projects : chaque user ne voit que SES projets
 create policy "Users can view own projects"
@@ -139,6 +172,42 @@ create policy "Users can update own decisions"
   );
 create policy "Users can delete own decisions"
   on decisions for delete using (
+    project_id in (select id from projects where user_id = auth.uid())
+  );
+
+-- Roadmap items : via project ownership
+create policy "Users can view own roadmap_items"
+  on roadmap_items for select using (
+    project_id in (select id from projects where user_id = auth.uid())
+  );
+create policy "Users can insert own roadmap_items"
+  on roadmap_items for insert with check (
+    project_id in (select id from projects where user_id = auth.uid())
+  );
+create policy "Users can update own roadmap_items"
+  on roadmap_items for update using (
+    project_id in (select id from projects where user_id = auth.uid())
+  );
+create policy "Users can delete own roadmap_items"
+  on roadmap_items for delete using (
+    project_id in (select id from projects where user_id = auth.uid())
+  );
+
+-- Risks : via project ownership
+create policy "Users can view own risks"
+  on risks for select using (
+    project_id in (select id from projects where user_id = auth.uid())
+  );
+create policy "Users can insert own risks"
+  on risks for insert with check (
+    project_id in (select id from projects where user_id = auth.uid())
+  );
+create policy "Users can update own risks"
+  on risks for update using (
+    project_id in (select id from projects where user_id = auth.uid())
+  );
+create policy "Users can delete own risks"
+  on risks for delete using (
     project_id in (select id from projects where user_id = auth.uid())
   );
 

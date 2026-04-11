@@ -66,6 +66,52 @@ export interface Decision {
   created_at: string;
 }
 
+export type Quarter = "Q1" | "Q2" | "Q3" | "Q4";
+
+export interface RoadmapItem {
+  id: string;
+  project_id: string;
+  quarter: Quarter;
+  year: number;
+  objective: string;
+  achieved: boolean;
+  position: number;
+  created_at: string;
+}
+
+export type RiskLevel = "low" | "medium" | "high";
+
+export interface Risk {
+  id: string;
+  project_id: string;
+  title: string;
+  probability: RiskLevel;
+  impact: RiskLevel;
+  mitigation: string | null;
+  created_at: string;
+}
+
+export const QUARTERS: Quarter[] = ["Q1", "Q2", "Q3", "Q4"];
+
+export const RISK_LEVELS: { value: RiskLevel; label: string; weight: number }[] = [
+  { value: "low", label: "Faible", weight: 1 },
+  { value: "medium", label: "Moyen", weight: 2 },
+  { value: "high", label: "Fort", weight: 3 },
+];
+
+export function riskCriticality(risk: Pick<Risk, "probability" | "impact">): number {
+  const p = RISK_LEVELS.find((r) => r.value === risk.probability)?.weight ?? 1;
+  const i = RISK_LEVELS.find((r) => r.value === risk.impact)?.weight ?? 1;
+  return p * i;
+}
+
+export function riskColor(criticality: number): { bg: string; text: string; border: string } {
+  if (criticality >= 6) return { bg: "bg-red-500/15", text: "text-red-500", border: "border-red-500/40" };
+  if (criticality >= 4) return { bg: "bg-orange-500/15", text: "text-orange-500", border: "border-orange-500/40" };
+  if (criticality >= 2) return { bg: "bg-yellow-500/15", text: "text-yellow-500", border: "border-yellow-500/40" };
+  return { bg: "bg-green-500/15", text: "text-green-500", border: "border-green-500/40" };
+}
+
 export const PROJECT_TYPES: { value: ProjectType; label: string; emoji: string; description: string }[] = [
   { value: "outil", label: "Outil perso", emoji: "🛠️", description: "Outil de productivité personnel, pas de marché visé" },
   { value: "saas", label: "SaaS", emoji: "☁️", description: "Produit SaaS complet avec monétisation" },
