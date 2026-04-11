@@ -214,11 +214,11 @@ export default function ProjectDashboard({
       )}
 
       {/* Footer actions */}
-      <div className="mt-12 pt-6 border-t border-border">
+      <div className="mt-12 pt-6 border-t border-border flex justify-center">
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="w-full py-2 text-red-500 text-sm hover:text-red-400 transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-red-500 text-sm hover:text-red-400 transition-colors disabled:opacity-50"
         >
           {deleting ? "Mise à la corbeille..." : "🗑️ Mettre à la corbeille"}
         </button>
