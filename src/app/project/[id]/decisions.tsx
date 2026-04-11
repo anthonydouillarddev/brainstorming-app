@@ -75,8 +75,13 @@ export default function DecisionsPanel({
 
   async function handleDelete(id: string) {
     if (!confirm("Supprimer cette décision ?")) return;
-    commit(decisions.filter((d) => d.id !== id));
-    await supabase.from("decisions").delete().eq("id", id);
+    const previous = decisions;
+    commit(previous.filter((d) => d.id !== id));
+    const { error } = await supabase.from("decisions").delete().eq("id", id);
+    if (error) {
+      commit(previous);
+      alert("Erreur de suppression : " + error.message);
+    }
   }
 
   return (

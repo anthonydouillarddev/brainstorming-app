@@ -97,12 +97,11 @@ export default function TodoList({
   }
 
   async function toggleDone(todo: Todo) {
-    const newDone = !todo.done;
-    const patch: Partial<Todo> = {
-      done: newDone,
-      status: newDone ? "done" : "todo",
-    };
-    await updateTodo(todo.id, patch);
+    const isDone = todo.status === "done";
+    await updateTodo(todo.id, {
+      status: isDone ? "todo" : "done",
+      done: !isDone,
+    });
   }
 
   async function deleteTodo(id: string) {
@@ -230,7 +229,7 @@ export default function TodoList({
                             const status = e.target.value as TodoStatus;
                             updateTodo(todo.id, { status, done: status === "done" });
                           }}
-                          className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none"
+                          className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
                         >
                           {TODO_STATUSES.map((s) => (
                             <option key={s.value} value={s.value}>

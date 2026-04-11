@@ -43,6 +43,10 @@ alter table todos add column if not exists ice_ease integer;
 
 update todos set status = 'done' where done = true and status <> 'done';
 
+-- Normalisation priority : jamais null (aligné avec les types TS)
+update todos set priority = 'normal' where priority is null;
+alter table todos alter column priority set not null;
+
 -- ═══════════════════════════════════════════════
 -- 3. decisions (ADR) : nouvelle table + RLS
 -- ═══════════════════════════════════════════════

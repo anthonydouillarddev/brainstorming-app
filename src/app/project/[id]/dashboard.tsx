@@ -49,8 +49,13 @@ export default function ProjectDashboard({
   const typeInfo = PROJECT_TYPES.find((t) => t.value === project.type) ?? PROJECT_TYPES[1];
 
   async function updateProject(patch: Partial<Project>) {
+    const previous = project;
     setProject((prev) => ({ ...prev, ...patch }));
-    await supabase.from("projects").update(patch).eq("id", project.id);
+    const { error } = await supabase.from("projects").update(patch).eq("id", project.id);
+    if (error) {
+      setProject(previous);
+      alert("Erreur de sauvegarde : " + error.message);
+    }
   }
 
   async function handleNameBlur() {

@@ -45,7 +45,7 @@ create table todos (
   text text not null,
   done boolean default false,
   status text not null default 'todo' check (status in ('todo','in_progress','blocked','done')),
-  priority text default 'normal' check (priority in ('low','normal','high','urgent')),
+  priority text not null default 'normal' check (priority in ('low','normal','high','urgent')),
   deadline date,
   phase text check (phase is null or phase in ('discovery','build','test','launch')),
   score_method text not null default 'none' check (score_method in ('none','rice','ice')),

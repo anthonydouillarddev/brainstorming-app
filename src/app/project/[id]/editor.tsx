@@ -53,18 +53,23 @@ export default function BrainstormEditor({
   const [sections, setSections] = useState<Record<string, SectionData>>(parsedInitial);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
-  const [userOpened, setUserOpened] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") return new Set();
-    try {
-      const stored = localStorage.getItem(`brainstorm:opened:${project.id}`);
-      return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
+  const [collapseOverride, setCollapseOverride] = useState<Record<string, "open" | "closed">>({});
   const [showModulePicker, setShowModulePicker] = useState(false);
-  const saveTimeout = useRef<NodeJS.Timeout | null>(null);
+  const saveTimers = useRef<Record<string, NodeJS.Timeout>>({});
   const supabase = createClient();
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`brainstorm:collapse:${project.id}`);
+      if (stored) {
+        // Sync from external store (localStorage) after mount to avoid hydration mismatch
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setCollapseOverride(JSON.parse(stored) as Record<string, "open" | "closed">);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [project.id]);
 
   const saveSection = useCallback(
     async (sectionKey: string, data: SectionData) => {
@@ -82,11 +87,11 @@ export default function BrainstormEditor({
         ...prev,
         [sectionKey]: { ...(prev[sectionKey] || {}), [fieldKey]: value },
       };
-      if (saveTimeout.current) clearTimeout(saveTimeout.current);
-      saveTimeout.current = setTimeout(async () => {
+      if (saveTimers.current[sectionKey]) clearTimeout(saveTimers.current[sectionKey]);
+      saveTimers.current[sectionKey] = setTimeout(async () => {
         setSaving(true);
         await saveSection(sectionKey, updated[sectionKey]);
-        await supabase.from("projects").update({ updated_at: new Date().toISOString() }).eq("id", project.id);
+        await onProjectUpdate({ updated_at: new Date().toISOString() });
         setSaving(false);
         setLastSaved(
           new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
@@ -97,8 +102,9 @@ export default function BrainstormEditor({
   }
 
   useEffect(() => {
+    const timers = saveTimers.current;
     return () => {
-      if (saveTimeout.current) clearTimeout(saveTimeout.current);
+      for (const id of Object.values(timers)) clearTimeout(id);
     };
   }, []);
 
@@ -108,15 +114,10 @@ export default function BrainstormEditor({
   );
 
   function toggleManual(key: string, currentlyOpen: boolean) {
-    setUserOpened((prev) => {
-      const next = new Set(prev);
-      if (currentlyOpen) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
+    setCollapseOverride((prev) => {
+      const next = { ...prev, [key]: currentlyOpen ? ("closed" as const) : ("open" as const) };
       if (typeof window !== "undefined") {
-        localStorage.setItem(`brainstorm:opened:${project.id}`, JSON.stringify(Array.from(next)));
+        localStorage.setItem(`brainstorm:collapse:${project.id}`, JSON.stringify(next));
       }
       return next;
     });
@@ -276,9 +277,8 @@ export default function BrainstormEditor({
           const data = sections[def.key] || {};
           const filledCount = countFilled(def, data);
           const isComplete = filledCount === def.fields.length && def.fields.length > 0;
-          const userHasOpened = userOpened.has(def.key);
-          // Auto-collapse if complete & user hasn't manually opened
-          const isOpen = !isComplete || userHasOpened;
+          const override = collapseOverride[def.key];
+          const isOpen = override ? override === "open" : !isComplete;
 
           return (
             <div

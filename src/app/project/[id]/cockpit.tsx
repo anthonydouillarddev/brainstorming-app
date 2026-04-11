@@ -85,7 +85,10 @@ export default function Cockpit({
     (statusIndex(project.status) / (PROJECT_STATUSES.length - 1)) * 100
   );
 
-  const globalProgress = Math.round((sectionProgress + statusProgress) / 2);
+  const globalProgress =
+    activeSections.length === 0
+      ? statusProgress
+      : Math.round((sectionProgress + statusProgress) / 2);
 
   const currentPhase = statusPhase(project.status);
 
