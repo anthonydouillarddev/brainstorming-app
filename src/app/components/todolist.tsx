@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useState, useEffect, useMemo } from "react";
 import type { Todo, TodoStatus, TodoPriority, ProjectType, Phase, ScoreMethod } from "@/lib/types";
 import { TODO_PRIORITIES, TODO_STATUSES, PHASES } from "@/lib/types";
-import { todoScore, RICE_IMPACT_OPTIONS, RICE_CONFIDENCE_OPTIONS } from "@/lib/scoring";
+import { todoScore, ICE_HINTS } from "@/lib/scoring";
 
 type ViewMode = "list" | "kanban";
 
@@ -47,6 +47,14 @@ export default function TodoList({
   const [todos, setTodos] = useState<Todo[]>(initialTodos ?? []);
   const [newText, setNewText] = useState("");
   const [newPriority, setNewPriority] = useState<TodoPriority>("normal");
+  const [newStatus, setNewStatus] = useState<TodoStatus>("todo");
+  const [newDeadline, setNewDeadline] = useState<string>("");
+  const [newPhase, setNewPhase] = useState<Phase | "">("");
+  const [newScoreMethod, setNewScoreMethod] = useState<ScoreMethod>("none");
+  const [newIceImpact, setNewIceImpact] = useState<string>("");
+  const [newIceConfidence, setNewIceConfidence] = useState<string>("");
+  const [newIceEase, setNewIceEase] = useState<string>("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(initialTodos == null);
   const [showDone, setShowDone] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -101,6 +109,19 @@ export default function TodoList({
     setLoading(false);
   }
 
+  function resetNewForm() {
+    setNewText("");
+    setNewPriority("normal");
+    setNewStatus("todo");
+    setNewDeadline("");
+    setNewPhase("");
+    setNewScoreMethod("none");
+    setNewIceImpact("");
+    setNewIceConfidence("");
+    setNewIceEase("");
+    setShowAdvanced(false);
+  }
+
   async function addTodo(e?: React.FormEvent | React.KeyboardEvent | React.MouseEvent) {
     e?.preventDefault?.();
     if (!newText.trim()) return;
@@ -108,7 +129,15 @@ export default function TodoList({
       text: newText.trim(),
       priority: newPriority,
       user_id: userId,
-      status: "todo",
+      status: newStatus,
+      done: newStatus === "done",
+      deadline: newDeadline || null,
+      phase: newPhase || null,
+      score_method: newScoreMethod,
+      ice_impact: newScoreMethod === "ice" && newIceImpact ? Number(newIceImpact) : null,
+      ice_confidence:
+        newScoreMethod === "ice" && newIceConfidence ? Number(newIceConfidence) : null,
+      ice_ease: newScoreMethod === "ice" && newIceEase ? Number(newIceEase) : null,
     };
     if (scope.kind === "project") payload.project_id = scope.projectId;
 
@@ -119,8 +148,7 @@ export default function TodoList({
     }
     if (data) {
       commit([data as Todo, ...todos]);
-      setNewText("");
-      setNewPriority("normal");
+      resetNewForm();
     }
   }
 
@@ -205,33 +233,157 @@ export default function TodoList({
         </div>
       </div>
       <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl overflow-hidden shadow-sm">
-        {/* Add */}
-        <div className="px-4 py-3 border-b border-border flex gap-2">
-          <input
-            value={newText}
-            onChange={(e) => setNewText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addTodo(e)}
-            placeholder="Ajouter une tâche..."
-            className="flex-1 px-3 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground placeholder:text-muted/40 outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition-all"
-          />
-          <select
-            value={newPriority}
-            onChange={(e) => setNewPriority(e.target.value as TodoPriority)}
-            className="px-2 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground outline-none"
-          >
-            {TODO_PRIORITIES.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.emoji} {p.short}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={addTodo}
-            className="px-3 py-2 bg-accent text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            +
-          </button>
+        {/* Add — form compact + panneau avancé */}
+        <div className="px-4 py-3 border-b border-border">
+          <div className="flex gap-2">
+            <input
+              value={newText}
+              onChange={(e) => setNewText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addTodo(e)}
+              placeholder="Ajouter une tâche..."
+              className="flex-1 px-3 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground placeholder:text-muted/40 outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition-all"
+            />
+            <select
+              value={newPriority}
+              onChange={(e) => setNewPriority(e.target.value as TodoPriority)}
+              className="px-2 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground outline-none"
+              aria-label="Priorité"
+            >
+              {TODO_PRIORITIES.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.emoji} {p.short}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((v) => !v)}
+              className={`px-2.5 py-2 rounded-lg text-sm transition-colors border ${
+                showAdvanced
+                  ? "bg-accent/15 border-accent/40 text-accent"
+                  : "bg-background/60 border-border text-muted hover:text-foreground"
+              }`}
+              aria-label="Plus d'options"
+              title="Plus d'options"
+            >
+              ⚙️
+            </button>
+            <button
+              type="button"
+              onClick={addTodo}
+              disabled={!newText.trim()}
+              className="px-3 py-2 bg-accent text-white text-sm rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              +
+            </button>
+          </div>
+
+          {showAdvanced && (
+            <div className="mt-3 p-3 bg-background/40 border border-border rounded-xl space-y-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+                    Statut initial
+                  </label>
+                  <select
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value as TodoStatus)}
+                    className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30"
+                  >
+                    {TODO_STATUSES.map((s) => (
+                      <option key={s.value} value={s.value}>
+                        {s.emoji} {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+                    Deadline
+                  </label>
+                  <input
+                    type="date"
+                    value={newDeadline}
+                    onChange={(e) => setNewDeadline(e.target.value)}
+                    className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30"
+                  />
+                </div>
+                {isProject && (
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+                      Phase liée
+                    </label>
+                    <select
+                      value={newPhase}
+                      onChange={(e) => setNewPhase((e.target.value as Phase) || "")}
+                      className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30"
+                    >
+                      <option value="">—</option>
+                      {PHASES.map((p) => (
+                        <option key={p.value} value={p.value}>
+                          {p.emoji} {p.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div className={isProject ? "" : "col-span-2 md:col-span-1"}>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+                    Scoring
+                  </label>
+                  <select
+                    value={newScoreMethod}
+                    onChange={(e) => setNewScoreMethod(e.target.value as ScoreMethod)}
+                    className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30"
+                  >
+                    <option value="none">Aucun</option>
+                    <option value="ice">ICE (prioriser)</option>
+                  </select>
+                </div>
+              </div>
+
+              {newScoreMethod === "ice" && (
+                <div className="space-y-2 p-3 bg-card/50 border border-border rounded-xl">
+                  <p className="text-[10px] text-muted italic">
+                    Note chaque critère de 1 à 10. Le score final = Impact × Confiance × Facilité.
+                    Plus le score est haut, plus la tâche est prioritaire.
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(
+                      [
+                        { key: "impact", value: newIceImpact, setter: setNewIceImpact },
+                        {
+                          key: "confidence",
+                          value: newIceConfidence,
+                          setter: setNewIceConfidence,
+                        },
+                        { key: "ease", value: newIceEase, setter: setNewIceEase },
+                      ] as const
+                    ).map(({ key, value, setter }) => (
+                      <div key={key}>
+                        <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+                          {ICE_HINTS[key].title}
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={10}
+                          value={value}
+                          onChange={(e) => setter(e.target.value)}
+                          placeholder="1-10"
+                          title={ICE_HINTS[key].hint}
+                          className="w-full px-2 py-1.5 bg-background border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30"
+                        />
+                        <p className="text-[9px] text-muted/80 mt-1 leading-tight">
+                          {ICE_HINTS[key].hint}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Active todos — LIST VIEW */}
@@ -368,130 +520,56 @@ export default function TodoList({
                           Scoring
                         </label>
                         <select
-                          value={todo.score_method}
+                          value={todo.score_method === "ice" ? "ice" : "none"}
                           onChange={(e) =>
                             updateTodo(todo.id, { score_method: e.target.value as ScoreMethod })
                           }
                           className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none"
                         >
                           <option value="none">Aucun</option>
-                          <option value="rice">RICE</option>
                           <option value="ice">ICE</option>
                         </select>
                       </div>
                     </div>
 
-                    {/* RICE fields */}
-                    {todo.score_method === "rice" && (
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-3 bg-card/50 border border-border rounded-xl">
-                        <div>
-                          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-                            Reach
-                          </label>
-                          <input
-                            type="number"
-                            min={0}
-                            value={todo.rice_reach ?? ""}
-                            onChange={(e) =>
-                              updateTodo(todo.id, {
-                                rice_reach: e.target.value ? Number(e.target.value) : null,
-                              })
-                            }
-                            placeholder="0"
-                            className="w-full px-2 py-1.5 bg-background border border-border rounded-lg text-xs outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-                            Impact
-                          </label>
-                          <select
-                            value={todo.rice_impact ?? ""}
-                            onChange={(e) =>
-                              updateTodo(todo.id, {
-                                rice_impact: e.target.value ? Number(e.target.value) : null,
-                              })
-                            }
-                            className="w-full px-2 py-1.5 bg-background border border-border rounded-lg text-xs outline-none"
-                          >
-                            <option value="">—</option>
-                            {RICE_IMPACT_OPTIONS.map((o) => (
-                              <option key={o.value} value={o.value}>
-                                {o.value} — {o.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-                            Confiance
-                          </label>
-                          <select
-                            value={todo.rice_confidence ?? ""}
-                            onChange={(e) =>
-                              updateTodo(todo.id, {
-                                rice_confidence: e.target.value ? Number(e.target.value) : null,
-                              })
-                            }
-                            className="w-full px-2 py-1.5 bg-background border border-border rounded-lg text-xs outline-none"
-                          >
-                            <option value="">—</option>
-                            {RICE_CONFIDENCE_OPTIONS.map((o) => (
-                              <option key={o.value} value={o.value}>
-                                {o.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-                            Effort (j)
-                          </label>
-                          <input
-                            type="number"
-                            min={0}
-                            step={0.5}
-                            value={todo.rice_effort ?? ""}
-                            onChange={(e) =>
-                              updateTodo(todo.id, {
-                                rice_effort: e.target.value ? Number(e.target.value) : null,
-                              })
-                            }
-                            placeholder="0"
-                            className="w-full px-2 py-1.5 bg-background border border-border rounded-lg text-xs outline-none"
-                          />
-                        </div>
-                      </div>
-                    )}
-
                     {/* ICE fields */}
                     {todo.score_method === "ice" && (
-                      <div className="grid grid-cols-3 gap-2 p-3 bg-card/50 border border-border rounded-xl">
-                        {(["ice_impact", "ice_confidence", "ice_ease"] as const).map((key) => (
-                          <div key={key}>
-                            <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-                              {key === "ice_impact"
-                                ? "Impact"
-                                : key === "ice_confidence"
-                                ? "Confiance"
-                                : "Facilité"}{" "}
-                              (1-10)
-                            </label>
-                            <input
-                              type="number"
-                              min={1}
-                              max={10}
-                              value={todo[key] ?? ""}
-                              onChange={(e) =>
-                                updateTodo(todo.id, {
-                                  [key]: e.target.value ? Number(e.target.value) : null,
-                                })
-                              }
-                              placeholder="—"
-                              className="w-full px-2 py-1.5 bg-background border border-border rounded-lg text-xs outline-none"
-                            />
-                          </div>
-                        ))}
+                      <div className="space-y-2 p-3 bg-card/50 border border-border rounded-xl">
+                        <p className="text-[10px] text-muted italic">
+                          Note chaque critère de 1 à 10. Score = Impact × Confiance × Facilité.
+                        </p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {(
+                            [
+                              { field: "ice_impact", hintKey: "impact" },
+                              { field: "ice_confidence", hintKey: "confidence" },
+                              { field: "ice_ease", hintKey: "ease" },
+                            ] as const
+                          ).map(({ field, hintKey }) => (
+                            <div key={field}>
+                              <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+                                {ICE_HINTS[hintKey].title}
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={10}
+                                value={todo[field] ?? ""}
+                                onChange={(e) =>
+                                  updateTodo(todo.id, {
+                                    [field]: e.target.value ? Number(e.target.value) : null,
+                                  })
+                                }
+                                placeholder="1-10"
+                                title={ICE_HINTS[hintKey].hint}
+                                className="w-full px-2 py-1.5 bg-background border border-border rounded-lg text-xs outline-none"
+                              />
+                              <p className="text-[9px] text-muted/80 mt-1 leading-tight">
+                                {ICE_HINTS[hintKey].hint}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>

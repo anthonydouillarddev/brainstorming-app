@@ -1,20 +1,5 @@
 import type { Todo } from "./types";
 
-export function riceScore(todo: Todo): number | null {
-  if (todo.score_method !== "rice") return null;
-  const { rice_reach, rice_impact, rice_confidence, rice_effort } = todo;
-  if (
-    rice_reach == null ||
-    rice_impact == null ||
-    rice_confidence == null ||
-    rice_effort == null ||
-    rice_effort <= 0
-  ) {
-    return null;
-  }
-  return Math.round(((rice_reach * rice_impact * (rice_confidence / 100)) / rice_effort) * 10) / 10;
-}
-
 export function iceScore(todo: Todo): number | null {
   if (todo.score_method !== "ice") return null;
   const { ice_impact, ice_confidence, ice_ease } = todo;
@@ -23,21 +8,21 @@ export function iceScore(todo: Todo): number | null {
 }
 
 export function todoScore(todo: Todo): number | null {
-  if (todo.score_method === "rice") return riceScore(todo);
   if (todo.score_method === "ice") return iceScore(todo);
   return null;
 }
 
-export const RICE_IMPACT_OPTIONS = [
-  { value: 0.25, label: "Minimal" },
-  { value: 0.5, label: "Faible" },
-  { value: 1, label: "Moyen" },
-  { value: 2, label: "Fort" },
-  { value: 3, label: "Massif" },
-];
-
-export const RICE_CONFIDENCE_OPTIONS = [
-  { value: 50, label: "50 %" },
-  { value: 80, label: "80 %" },
-  { value: 100, label: "100 %" },
-];
+export const ICE_HINTS: Record<"impact" | "confidence" | "ease", { title: string; hint: string }> = {
+  impact: {
+    title: "Impact",
+    hint: "À quel point ça va faire avancer ton projet ?  1 = négligeable · 5 = moyen · 10 = transformationnel",
+  },
+  confidence: {
+    title: "Confiance",
+    hint: "À quel point tu es sûr que ça va marcher ?  1 = pari risqué · 5 = possible · 10 = certitude",
+  },
+  ease: {
+    title: "Facilité",
+    hint: "À quel point c'est simple/rapide à réaliser ?  1 = très long/dur · 5 = moyen · 10 = trivial",
+  },
+};

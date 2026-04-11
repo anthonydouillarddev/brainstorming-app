@@ -13,7 +13,7 @@ export type ProjectStatus =
 export type TodoStatus = "todo" | "in_progress" | "blocked" | "done";
 export type TodoPriority = "low" | "normal" | "high" | "urgent";
 export type Phase = "discovery" | "build" | "test" | "launch";
-export type ScoreMethod = "none" | "rice" | "ice";
+export type ScoreMethod = "none" | "ice";
 
 export interface Project {
   id: string;
