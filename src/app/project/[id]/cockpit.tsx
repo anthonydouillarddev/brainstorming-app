@@ -50,6 +50,7 @@ export default function Cockpit({
   );
   const [metricMrr, setMetricMrr] = useState<string>(project.metric_mrr?.toString() ?? "");
   const [savingField, setSavingField] = useState<string | null>(null);
+  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
   const saveTimers = useRef<Record<string, NodeJS.Timeout>>({});
 
   const saveDebounced = useCallback(
@@ -101,8 +102,62 @@ export default function Cockpit({
 
   const currentStatus = PROJECT_STATUSES.find((s) => s.value === project.status) ?? PROJECT_STATUSES[0];
 
+  async function syncFromBrainstorm() {
+    const identity = parsed["identity"] ?? {};
+    const score = parsed["score"] ?? {};
+    const tagline = typeof identity.tagline === "string" ? identity.tagline.trim() : "";
+    const brainstormNextAction =
+      typeof score.next_action === "string" ? score.next_action.trim() : "";
+
+    const patch: Partial<Project> = {};
+    const updates: string[] = [];
+
+    if (tagline) {
+      patch.description = tagline;
+      updates.push("description");
+    }
+    if (brainstormNextAction) {
+      patch.next_action = brainstormNextAction;
+      setNextAction(brainstormNextAction);
+      updates.push("prochaine action");
+    }
+
+    if (updates.length === 0) {
+      setSyncFeedback("Rien à synchroniser — remplis la tagline (Identité) ou la prochaine action (Score)");
+      setTimeout(() => setSyncFeedback(null), 3500);
+      return;
+    }
+
+    await onUpdate(patch);
+    setSyncFeedback(`✓ ${updates.join(" + ")} mis à jour`);
+    setTimeout(() => setSyncFeedback(null), 2500);
+  }
+
   return (
     <div className="space-y-5">
+      {/* Sync depuis brainstorm */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <button
+          onClick={syncFromBrainstorm}
+          className="text-xs px-3.5 py-2 rounded-xl bg-accent/15 border border-accent/40 text-accent font-semibold hover:bg-accent/25 transition-colors inline-flex items-center gap-1.5"
+        >
+          🔄 Synchroniser depuis le brainstorm
+        </button>
+        {syncFeedback && (
+          <span className="text-xs text-muted">{syncFeedback}</span>
+        )}
+      </div>
+
+      {/* Description dérivée du brainstorm */}
+      {project.description && (
+        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">
+            ℹ️ Description
+          </h3>
+          <p className="text-sm leading-relaxed">{project.description}</p>
+        </div>
+      )}
+
       {/* Prochaine action critique — UNE SEULE, toujours en haut */}
       <div className="bg-gradient-to-br from-accent/10 to-accent/5 backdrop-blur-sm border border-accent/30 rounded-2xl p-5 shadow-sm">
         <label className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-accent mb-2">

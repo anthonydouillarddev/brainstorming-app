@@ -9,6 +9,7 @@ create table projects (
   user_id uuid references auth.users(id) on delete cascade not null,
   name text not null,
   type text not null default 'saas' check (type in ('outil','saas','appli','logiciel','business')),
+  description text,
   status text default 'idea' check (status in (
     'idea','validating','building','mvp','testing',
     'launched','continuous_improvement','final'

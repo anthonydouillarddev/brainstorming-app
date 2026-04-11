@@ -20,6 +20,7 @@ export interface Project {
   user_id: string;
   name: string;
   type: ProjectType;
+  description: string | null;
   status: ProjectStatus;
   north_star: string | null;
   next_action: string | null;

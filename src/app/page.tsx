@@ -91,6 +91,11 @@ export default async function Home() {
                         <span>{type.label}</span>
                       </span>
                     </div>
+                    {project.description && (
+                      <p className="text-sm text-foreground/80 mt-1.5 line-clamp-2">
+                        {project.description}
+                      </p>
+                    )}
                     <p className="text-muted text-xs mt-2">
                       Mis à jour le{" "}
                       {new Date(project.updated_at).toLocaleDateString("fr-FR", {
