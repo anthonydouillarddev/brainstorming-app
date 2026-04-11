@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { SECTIONS } from "@/lib/sections";
-import type { Project, Todo, Decision } from "@/lib/types";
+import type { Project, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
 import ProjectDashboard from "./dashboard";
 
 export default async function ProjectPage({
@@ -25,10 +25,32 @@ export default async function ProjectPage({
   if (!project) redirect("/");
   if (project.deleted_at) redirect("/?tab=trash");
 
-  const [{ data: sections }, { data: todos }, { data: decisions }] = await Promise.all([
+  const [
+    { data: sections },
+    { data: todos },
+    { data: decisions },
+    { data: roadmap },
+    { data: risks },
+  ] = await Promise.all([
     supabase.from("sections").select("*").eq("project_id", id),
     supabase.from("todos").select("*").eq("project_id", id),
-    supabase.from("decisions").select("*").eq("project_id", id).order("decided_at", { ascending: false }),
+    supabase
+      .from("decisions")
+      .select("*")
+      .eq("project_id", id)
+      .order("decided_at", { ascending: false }),
+    supabase
+      .from("roadmap_items")
+      .select("*")
+      .eq("project_id", id)
+      .order("year", { ascending: true })
+      .order("quarter", { ascending: true })
+      .order("position", { ascending: true }),
+    supabase
+      .from("risks")
+      .select("*")
+      .eq("project_id", id)
+      .order("created_at", { ascending: false }),
   ]);
 
   const sectionMap: Record<string, string> = {};
@@ -44,6 +66,8 @@ export default async function ProjectPage({
       sectionDefs={SECTIONS}
       initialTodos={(todos ?? []) as Todo[]}
       initialDecisions={(decisions ?? []) as Decision[]}
+      initialRoadmap={(roadmap ?? []) as RoadmapItem[]}
+      initialRisks={(risks ?? []) as Risk[]}
     />
   );
 }

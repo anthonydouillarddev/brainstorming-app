@@ -6,6 +6,30 @@ import type { SectionDef, Field } from "@/lib/sections";
 import { getActiveSections } from "@/lib/sections";
 import type { Project } from "@/lib/types";
 
+function syncFromBrainstorm(
+  parsed: Record<string, Record<string, unknown>>
+): { patch: Partial<Project>; updates: string[] } {
+  const identity = parsed["identity"] ?? {};
+  const score = parsed["score"] ?? {};
+  const tagline = typeof identity.tagline === "string" ? identity.tagline.trim() : "";
+  const brainstormNextAction =
+    typeof score.next_action === "string" ? score.next_action.trim() : "";
+
+  const patch: Partial<Project> = {};
+  const updates: string[] = [];
+
+  if (tagline) {
+    patch.description = tagline;
+    updates.push("description");
+  }
+  if (brainstormNextAction) {
+    patch.next_action = brainstormNextAction;
+    updates.push("prochaine action");
+  }
+
+  return { patch, updates };
+}
+
 interface LinkItem {
   title: string;
   url: string;
@@ -55,6 +79,8 @@ export default function BrainstormEditor({
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [collapseOverride, setCollapseOverride] = useState<Record<string, "open" | "closed">>({});
   const [showModulePicker, setShowModulePicker] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const saveTimers = useRef<Record<string, NodeJS.Timeout>>({});
   const supabase = createClient();
 
@@ -336,11 +362,46 @@ export default function BrainstormEditor({
         })}
       </div>
 
-      {/* Export */}
-      <div className="pt-4">
+      {/* Sync + Export (fin du form) */}
+      <div className="pt-4 space-y-3">
+        <div className="bg-accent/10 border border-accent/30 rounded-2xl p-5 shadow-sm">
+          <div className="flex items-start justify-between gap-3 flex-wrap mb-2">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-accent">🔄 Synchroniser avec le cockpit</h3>
+              <p className="text-xs text-muted mt-0.5">
+                Remonte la tagline (Identité) et la prochaine action (Score) dans le cockpit.
+              </p>
+            </div>
+            {syncFeedback && (
+              <span className="text-xs text-muted shrink-0">{syncFeedback}</span>
+            )}
+          </div>
+          <button
+            onClick={async () => {
+              const { patch, updates } = syncFromBrainstorm(sections);
+              if (updates.length === 0) {
+                setSyncFeedback(
+                  "Rien à synchroniser — remplis la tagline (Identité) ou la prochaine action (Score)"
+                );
+                setTimeout(() => setSyncFeedback(null), 4000);
+                return;
+              }
+              setSyncing(true);
+              await onProjectUpdate(patch);
+              setSyncing(false);
+              setSyncFeedback(`✓ ${updates.join(" + ")} mis à jour`);
+              setTimeout(() => setSyncFeedback(null), 2500);
+            }}
+            disabled={syncing}
+            className="w-full py-2.5 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-50"
+          >
+            {syncing ? "Synchronisation..." : "🔄 Synchroniser avec le cockpit"}
+          </button>
+        </div>
+
         <button
           onClick={exportForClaude}
-          className="w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm"
+          className="w-full py-3 bg-card border border-border text-foreground text-sm font-semibold rounded-xl hover:border-accent/50 transition-colors shadow-sm"
         >
           📥 Exporter pour Claude
         </button>

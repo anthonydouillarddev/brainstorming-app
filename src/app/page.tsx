@@ -40,12 +40,14 @@ export default async function Home({
           <p className="text-muted text-sm mt-1">Pilote tes projets de l&apos;idée au lancement</p>
         </div>
         <div className="flex gap-2 items-center shrink-0">
-          <Link
-            href="/new"
-            className="px-4 py-2.5 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm"
-          >
-            + Nouvelle idée
-          </Link>
+          {!showTrash && (
+            <Link
+              href="/new"
+              className="px-4 py-2.5 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm"
+            >
+              + Nouvelle idée
+            </Link>
+          )}
           <ThemeToggle />
           <form action="/auth/signout" method="post">
             <button className="px-3 py-2 text-muted text-sm hover:text-foreground transition-colors">
@@ -62,41 +64,28 @@ export default async function Home({
         </div>
       )}
 
-      {/* Toggle Actifs / Corbeille */}
-      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-        <div className="flex gap-1 bg-card/60 backdrop-blur-sm border border-border rounded-xl p-1 shadow-sm">
-          <Link
-            href="/"
-            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
-              !showTrash ? "bg-accent text-white shadow-sm" : "text-muted hover:text-foreground"
-            }`}
-          >
-            📂 Projets
-            <span
-              className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${
-                !showTrash ? "bg-white/25" : "bg-accent/15 text-accent"
-              }`}
-            >
-              {activeProjects.length}
-            </span>
-          </Link>
-          <Link
-            href="/?tab=trash"
-            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
-              showTrash ? "bg-accent text-white shadow-sm" : "text-muted hover:text-foreground"
-            }`}
-          >
-            🗑️ Corbeille
-            <span
-              className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${
-                showTrash ? "bg-white/25" : "bg-accent/15 text-accent"
-              }`}
-            >
-              {trashedProjects.length}
-            </span>
-          </Link>
-        </div>
+      {/* Titre liste */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold tracking-tight">
+          {showTrash ? "🗑️ Corbeille" : "📂 Projets"}
+        </h2>
+        <span className="text-xs text-muted">
+          {visibleProjects.length}{" "}
+          {showTrash
+            ? `projet${visibleProjects.length !== 1 ? "s" : ""} supprimé${visibleProjects.length !== 1 ? "s" : ""}`
+            : `projet${visibleProjects.length !== 1 ? "s" : ""}`}
+        </span>
       </div>
+
+      {/* Retour depuis corbeille */}
+      {showTrash && (
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors mb-4"
+        >
+          ← Retour aux projets
+        </Link>
+      )}
 
       {/* Projects list */}
       {visibleProjects.length === 0 ? (
@@ -204,6 +193,18 @@ export default async function Home({
               </Link>
             );
           })}
+        </div>
+      )}
+
+      {/* Lien discret corbeille en bas (uniquement en vue projets) */}
+      {!showTrash && trashedProjects.length > 0 && (
+        <div className="mt-10 pt-6 border-t border-border flex justify-center">
+          <Link
+            href="/?tab=trash"
+            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors"
+          >
+            🗑️ Corbeille ({trashedProjects.length})
+          </Link>
         </div>
       )}
     </div>

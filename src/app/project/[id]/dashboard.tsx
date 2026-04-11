@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { SectionDef } from "@/lib/sections";
-import type { Project, ProjectStatus, Todo, Decision } from "@/lib/types";
+import type { Project, ProjectStatus, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
 import { PROJECT_STATUSES, PROJECT_TYPES } from "@/lib/types";
 import ThemeToggle from "@/app/components/theme-toggle";
 import Cockpit from "./cockpit";
@@ -28,6 +28,8 @@ export default function ProjectDashboard({
   sectionDefs,
   initialTodos,
   initialDecisions,
+  initialRoadmap,
+  initialRisks,
 }: {
   userId: string;
   project: Project;
@@ -35,6 +37,8 @@ export default function ProjectDashboard({
   sectionDefs: SectionDef[];
   initialTodos: Todo[];
   initialDecisions: Decision[];
+  initialRoadmap: RoadmapItem[];
+  initialRisks: Risk[];
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -42,6 +46,8 @@ export default function ProjectDashboard({
   const [project, setProject] = useState<Project>(initialProject);
   const [todos, setTodos] = useState<Todo[]>(initialTodos);
   const [decisions, setDecisions] = useState<Decision[]>(initialDecisions);
+  const [roadmap, setRoadmap] = useState<RoadmapItem[]>(initialRoadmap);
+  const [risks, setRisks] = useState<Risk[]>(initialRisks);
   const [tab, setTab] = useState<Tab>("cockpit");
   const [name, setName] = useState(project.name);
   const [deleting, setDeleting] = useState(false);
@@ -108,23 +114,23 @@ export default function ProjectDashboard({
         </div>
       </div>
 
-      {/* Project header */}
+      {/* Project header — titre grand puis type en dessous */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={handleNameBlur}
+          className="text-4xl font-extrabold tracking-tight bg-transparent border-none outline-none w-full focus:ring-0"
+        />
+        <div className="flex items-center gap-2 mt-2">
           <span className="text-xs px-2 py-0.5 rounded-full bg-card border border-border text-muted font-medium inline-flex items-center gap-1">
             <span>{typeInfo.emoji}</span>
             <span>{typeInfo.label}</span>
           </span>
         </div>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={handleNameBlur}
-          className="text-3xl font-extrabold tracking-tight bg-transparent border-none outline-none w-full focus:ring-0"
-        />
 
         {/* Status picker */}
-        <div className="flex gap-1.5 mt-4 flex-wrap">
+        <div className="flex gap-1.5 mt-5 flex-wrap">
           {PROJECT_STATUSES.map((s) => (
             <button
               key={s.value}
@@ -183,7 +189,15 @@ export default function ProjectDashboard({
           sections={initialSections}
           sectionDefs={sectionDefs}
           todos={todos}
+          decisions={decisions}
+          roadmap={roadmap}
+          risks={risks}
           onUpdate={updateProject}
+          onRoadmapChange={setRoadmap}
+          onRisksChange={setRisks}
+          onDelete={handleDelete}
+          deleting={deleting}
+          onGoToTasks={() => setTab("tasks")}
         />
       )}
 
@@ -212,17 +226,6 @@ export default function ProjectDashboard({
           onChange={setDecisions}
         />
       )}
-
-      {/* Footer actions */}
-      <div className="mt-12 pt-6 border-t border-border flex justify-center">
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="px-4 py-2 text-red-500 text-sm hover:text-red-400 transition-colors disabled:opacity-50"
-        >
-          {deleting ? "Mise à la corbeille..." : "🗑️ Mettre à la corbeille"}
-        </button>
-      </div>
     </div>
   );
 }
