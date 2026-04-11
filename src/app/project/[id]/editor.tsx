@@ -67,11 +67,13 @@ export default function BrainstormEditor({
   initialSections,
   sectionDefs,
   onProjectUpdate,
+  onSectionsChange,
 }: {
   project: Project;
   initialSections: Record<string, string>;
   sectionDefs: SectionDef[];
   onProjectUpdate: (patch: Partial<Project>) => Promise<void>;
+  onSectionsChange?: (sections: Record<string, string>) => void;
 }) {
   const parsedInitial = useMemo(() => parseInitial(initialSections), [initialSections]);
   const [sections, setSections] = useState<Record<string, SectionData>>(parsedInitial);
@@ -118,6 +120,12 @@ export default function BrainstormEditor({
         setSaving(true);
         await saveSection(sectionKey, updated[sectionKey]);
         await onProjectUpdate({ updated_at: new Date().toISOString() });
+        onSectionsChange?.({
+          ...initialSections,
+          ...Object.fromEntries(
+            Object.entries(updated).map(([k, v]) => [k, JSON.stringify(v)])
+          ),
+        });
         setSaving(false);
         setLastSaved(
           new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })

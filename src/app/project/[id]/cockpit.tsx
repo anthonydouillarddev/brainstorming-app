@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useRef, useCallback } from "react";
+import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import type { SectionDef } from "@/lib/sections";
 import { getActiveSections } from "@/lib/sections";
 import type { Project, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
@@ -97,6 +97,13 @@ export default function Cockpit({
     [onUpdate]
   );
 
+  useEffect(() => {
+    const timers = saveTimers.current;
+    return () => {
+      for (const id of Object.values(timers)) clearTimeout(id);
+    };
+  }, []);
+
   // Derived progress
   const activeSections = useMemo(
     () => getActiveSections(project.type, project.disabled_sections),
@@ -132,8 +139,6 @@ export default function Cockpit({
   const identityData = parsed["identity"] ?? {};
   const problemData = parsed["problem"] ?? {};
   const targetData = parsed["target"] ?? {};
-  const techData = parsed["tech"] ?? {};
-  const journalData = parsed["journal"] ?? {};
 
   const problemStatement = firstString(problemData, "problem_statement");
   const persona = firstString(targetData, "persona_who");
@@ -149,17 +154,17 @@ export default function Cockpit({
   const blockers = useMemo(() => todos.filter((t) => t.status === "blocked"), [todos]);
 
   // Stack chips (depuis section tech)
-  const stackChips = useMemo(
-    () =>
-      STACK_FIELDS.map((field) => ({
-        ...field,
-        value: firstString(techData, field.key),
-      })).filter((c) => c.value != null),
-    [techData]
-  );
+  const stackChips = useMemo(() => {
+    const techData = parsed["tech"] ?? {};
+    return STACK_FIELDS.map((field) => ({
+      ...field,
+      value: firstString(techData, field.key),
+    })).filter((c) => c.value != null);
+  }, [parsed]);
 
-  // Dernière entrée journal (premières lignes non-vides)
+  // Dernière entrée journal (dernière ligne non-vide)
   const journalLastLine = useMemo(() => {
+    const journalData = parsed["journal"] ?? {};
     const entries = firstString(journalData, "journal_entries");
     if (!entries) return null;
     const lines = entries
@@ -167,7 +172,7 @@ export default function Cockpit({
       .map((l) => l.trim())
       .filter((l) => l.length > 0);
     return lines[lines.length - 1] ?? null;
-  }, [journalData]);
+  }, [parsed]);
 
   // 3 dernières décisions
   const recentDecisions = decisions.slice(0, 3);

@@ -44,6 +44,7 @@ export default function ProjectDashboard({
   const supabase = createClient();
 
   const [project, setProject] = useState<Project>(initialProject);
+  const [sections, setSections] = useState<Record<string, string>>(initialSections);
   const [todos, setTodos] = useState<Todo[]>(initialTodos);
   const [decisions, setDecisions] = useState<Decision[]>(initialDecisions);
   const [roadmap, setRoadmap] = useState<RoadmapItem[]>(initialRoadmap);
@@ -186,7 +187,7 @@ export default function ProjectDashboard({
       {tab === "cockpit" && (
         <Cockpit
           project={project}
-          sections={initialSections}
+          sections={sections}
           sectionDefs={sectionDefs}
           todos={todos}
           decisions={decisions}
@@ -204,9 +205,10 @@ export default function ProjectDashboard({
       {tab === "brainstorm" && (
         <BrainstormEditor
           project={project}
-          initialSections={initialSections}
+          initialSections={sections}
           sectionDefs={sectionDefs}
           onProjectUpdate={updateProject}
+          onSectionsChange={setSections}
         />
       )}
 

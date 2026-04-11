@@ -6,6 +6,15 @@ import type { Todo, TodoStatus, TodoPriority, ProjectType, Phase, ScoreMethod } 
 import { TODO_PRIORITIES, TODO_STATUSES, PHASES } from "@/lib/types";
 import { todoScore, RICE_IMPACT_OPTIONS, RICE_CONFIDENCE_OPTIONS } from "@/lib/scoring";
 
+type ViewMode = "list" | "kanban";
+
+const KANBAN_COLUMNS: { status: TodoStatus; label: string; emoji: string; accent: string }[] = [
+  { status: "todo", label: "À faire", emoji: "⚪", accent: "border-gray-400/40" },
+  { status: "in_progress", label: "En cours", emoji: "🔵", accent: "border-blue-500/40" },
+  { status: "blocked", label: "Bloqué", emoji: "🚧", accent: "border-red-500/40" },
+  { status: "done", label: "Terminé", emoji: "✅", accent: "border-green-500/40" },
+];
+
 type Scope =
   | { kind: "global" } // default — global todos only
   | { kind: "project"; projectId: string; projectType: ProjectType };
@@ -41,9 +50,33 @@ export default function TodoList({
   const [loading, setLoading] = useState(initialTodos == null);
   const [showDone, setShowDone] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [view, setView] = useState<ViewMode>("list");
   const supabase = createClient();
 
   const isProject = scope.kind === "project";
+  const viewStorageKey = isProject
+    ? `todolist:view:${scope.projectId}`
+    : "todolist:view:global";
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(viewStorageKey);
+      if (stored === "list" || stored === "kanban") {
+        setView(stored);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [viewStorageKey]);
+
+  function changeView(next: ViewMode) {
+    setView(next);
+    try {
+      localStorage.setItem(viewStorageKey, next);
+    } catch {
+      /* ignore */
+    }
+  }
 
   useEffect(() => {
     if (initialTodos != null) return;
@@ -92,8 +125,13 @@ export default function TodoList({
   }
 
   async function updateTodo(id: string, patch: Partial<Todo>) {
-    commit(todos.map((t) => (t.id === id ? { ...t, ...patch } : t)));
-    await supabase.from("todos").update(patch).eq("id", id);
+    const previous = todos;
+    commit(previous.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+    const { error } = await supabase.from("todos").update(patch).eq("id", id);
+    if (error) {
+      commit(previous);
+      alert("Erreur : " + error.message);
+    }
   }
 
   async function toggleDone(todo: Todo) {
@@ -105,8 +143,13 @@ export default function TodoList({
   }
 
   async function deleteTodo(id: string) {
-    commit(todos.filter((t) => t.id !== id));
-    await supabase.from("todos").delete().eq("id", id);
+    const previous = todos;
+    commit(previous.filter((t) => t.id !== id));
+    const { error } = await supabase.from("todos").delete().eq("id", id);
+    if (error) {
+      commit(previous);
+      alert("Erreur : " + error.message);
+    }
   }
 
   const sortedActive = useMemo(() => {
@@ -127,13 +170,39 @@ export default function TodoList({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <h2 className="text-xl font-bold tracking-tight">
           📋 {isProject ? "Tâches du projet" : "To-Do"}
         </h2>
-        <span className="text-xs text-muted">
-          {sortedActive.length} tâche{sortedActive.length !== 1 ? "s" : ""}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted">
+            {sortedActive.length} tâche{sortedActive.length !== 1 ? "s" : ""}
+          </span>
+          <div className="flex gap-1 bg-card/60 backdrop-blur-sm border border-border rounded-xl p-0.5">
+            <button
+              onClick={() => changeView("list")}
+              className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-all ${
+                view === "list"
+                  ? "bg-accent text-white shadow-sm"
+                  : "text-muted hover:text-foreground"
+              }`}
+              aria-label="Vue liste"
+            >
+              ≡ Liste
+            </button>
+            <button
+              onClick={() => changeView("kanban")}
+              className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-all ${
+                view === "kanban"
+                  ? "bg-accent text-white shadow-sm"
+                  : "text-muted hover:text-foreground"
+              }`}
+              aria-label="Vue kanban"
+            >
+              ▦ Kanban
+            </button>
+          </div>
+        </div>
       </div>
       <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl overflow-hidden shadow-sm">
         {/* Add */}
@@ -165,7 +234,9 @@ export default function TodoList({
           </button>
         </div>
 
-        {/* Active todos */}
+        {/* Active todos — LIST VIEW */}
+        {view === "list" && (
+        <>
         <div className="divide-y divide-border">
           {sortedActive.length === 0 && (
             <p className="px-4 py-6 text-center text-muted text-sm">Aucune tâche en cours</p>
@@ -466,7 +537,96 @@ export default function TodoList({
             )}
           </>
         )}
+        </>
+        )}
       </div>
+
+      {/* Kanban view */}
+      {view === "kanban" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
+          {KANBAN_COLUMNS.map((col) => {
+            const columnTodos = todos.filter((t) => t.status === col.status);
+            return (
+              <div
+                key={col.status}
+                className={`bg-card/80 backdrop-blur-sm border-t-4 ${col.accent} border border-border rounded-2xl p-3 shadow-sm min-h-[160px]`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-bold tracking-wide">
+                    {col.emoji} {col.label}
+                  </h3>
+                  <span className="text-[10px] text-muted">{columnTodos.length}</span>
+                </div>
+                <div className="space-y-2">
+                  {columnTodos.length === 0 && (
+                    <p className="text-[11px] text-muted/60 italic text-center py-2">
+                      —
+                    </p>
+                  )}
+                  {columnTodos.map((todo) => {
+                    const score = todoScore(todo);
+                    return (
+                      <div
+                        key={todo.id}
+                        className={`bg-background/60 border border-border border-l-4 ${priorityBg[todo.priority]} rounded-xl p-2.5 group hover:border-accent/40 transition-colors`}
+                      >
+                        <p
+                          className={`text-xs leading-snug ${
+                            todo.status === "done" ? "line-through opacity-60" : ""
+                          }`}
+                        >
+                          {todo.text}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                          <span className="text-[9px] font-bold text-muted">
+                            {TODO_PRIORITIES.find((p) => p.value === todo.priority)?.short}
+                          </span>
+                          {score != null && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-accent/15 text-accent font-semibold">
+                              {todo.score_method.toUpperCase()} {score}
+                            </span>
+                          )}
+                          {todo.deadline && (
+                            <span className="text-[9px] text-muted">
+                              📅{" "}
+                              {new Date(todo.deadline).toLocaleDateString("fr-FR", {
+                                day: "numeric",
+                                month: "short",
+                              })}
+                            </span>
+                          )}
+                          <select
+                            value={todo.status}
+                            onChange={(e) => {
+                              const status = e.target.value as TodoStatus;
+                              updateTodo(todo.id, { status, done: status === "done" });
+                            }}
+                            className="ml-auto text-[9px] bg-card border border-border rounded px-1 py-0.5 outline-none"
+                            aria-label="Changer statut"
+                          >
+                            {TODO_STATUSES.map((s) => (
+                              <option key={s.value} value={s.value}>
+                                {s.emoji}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => deleteTodo(todo.id)}
+                            className="text-muted hover:text-red-400 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                            aria-label="Supprimer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

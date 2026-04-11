@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { RoadmapItem, Quarter } from "@/lib/types";
 import { QUARTERS } from "@/lib/types";
 
@@ -19,6 +19,7 @@ export default function RoadmapPanel({
   const [year, setYear] = useState<number>(currentYear);
   const [addingQuarter, setAddingQuarter] = useState<Quarter | null>(null);
   const [newObjective, setNewObjective] = useState("");
+  const submittingRef = useRef(false);
   const supabase = createClient();
 
   const byQuarter = useMemo(() => {
@@ -33,9 +34,16 @@ export default function RoadmapPanel({
   }, [roadmap, year]);
 
   async function handleAdd(quarter: Quarter) {
+    if (submittingRef.current) return;
     const objective = newObjective.trim();
-    if (!objective) return;
-    const nextPosition = byQuarter[quarter].length;
+    if (!objective) {
+      setAddingQuarter(null);
+      return;
+    }
+    submittingRef.current = true;
+    const existingPositions = byQuarter[quarter].map((i) => i.position);
+    const nextPosition =
+      existingPositions.length === 0 ? 0 : Math.max(...existingPositions) + 1;
     const { data, error } = await supabase
       .from("roadmap_items")
       .insert({
@@ -47,6 +55,7 @@ export default function RoadmapPanel({
       })
       .select()
       .single();
+    submittingRef.current = false;
     if (error) {
       alert("Erreur : " + error.message);
       return;
