@@ -196,8 +196,8 @@ export default async function Home({
         </div>
       )}
 
-      {/* Lien discret corbeille en bas (uniquement en vue projets) */}
-      {!showTrash && trashedProjects.length > 0 && (
+      {/* Lien discret corbeille en bas (toujours visible en vue projets) */}
+      {!showTrash && (
         <div className="mt-10 pt-6 border-t border-border flex justify-center">
           <Link
             href="/?tab=trash"
