@@ -10,15 +10,17 @@ import ThemeToggle from "@/app/components/theme-toggle";
 import Cockpit from "./cockpit";
 import BrainstormEditor from "./editor";
 import DecisionsPanel from "./decisions";
+import ResourcesPanel from "./resources";
 import TodoList from "@/app/components/todolist";
 
-type Tab = "cockpit" | "brainstorm" | "tasks" | "decisions";
+type Tab = "cockpit" | "brainstorm" | "tasks" | "decisions" | "resources";
 
 const TABS: { value: Tab; label: string; emoji: string }[] = [
   { value: "cockpit", label: "Cockpit", emoji: "📊" },
   { value: "brainstorm", label: "Brainstorm", emoji: "💡" },
   { value: "tasks", label: "Tâches", emoji: "✅" },
   { value: "decisions", label: "Décisions", emoji: "🧭" },
+  { value: "resources", label: "Ressources", emoji: "🔗" },
 ];
 
 export default function ProjectDashboard({
@@ -226,6 +228,15 @@ export default function ProjectDashboard({
           projectId={project.id}
           initialDecisions={decisions}
           onChange={setDecisions}
+        />
+      )}
+
+      {tab === "resources" && (
+        <ResourcesPanel
+          project={project}
+          initialSections={sections}
+          onProjectUpdate={updateProject}
+          onSectionsChange={setSections}
         />
       )}
     </div>

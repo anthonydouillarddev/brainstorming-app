@@ -22,11 +22,22 @@ export interface SectionDef {
   fields: Field[];
 }
 
+export const RESOURCES_SECTION_KEYS = ["tech", "resources"] as const;
+
 export function getActiveSections(type: ProjectType, disabledKeys: string[] = []): SectionDef[] {
   const disabled = new Set(disabledKeys);
+  const resourcesKeys = new Set<string>(RESOURCES_SECTION_KEYS);
   return SECTIONS.filter(
-    (s) => s.defaultForTypes.includes(type) && !disabled.has(s.key)
+    (s) =>
+      s.defaultForTypes.includes(type) &&
+      !disabled.has(s.key) &&
+      !resourcesKeys.has(s.key)
   );
+}
+
+export function getResourcesSections(): SectionDef[] {
+  const resourcesKeys = new Set<string>(RESOURCES_SECTION_KEYS);
+  return SECTIONS.filter((s) => resourcesKeys.has(s.key));
 }
 
 export function isSectionDefaultFor(key: string, type: ProjectType): boolean {
