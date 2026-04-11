@@ -347,7 +347,7 @@ export default function Cockpit({
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted mb-4">
           📅 Dates clés
         </h3>
-        <div className="grid grid-cols-3 gap-4 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div>
             <div className="text-muted mb-1">Créé</div>
             <div className="font-semibold">

@@ -154,17 +154,17 @@ export default function ProjectDashboard({
             <button
               key={t.value}
               onClick={() => setTab(t.value)}
-              className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`flex-1 px-2 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all inline-flex items-center justify-center gap-1 ${
                 tab === t.value
                   ? "bg-accent text-white shadow-sm"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              <span className="mr-1">{t.emoji}</span>
-              {t.label}
+              <span>{t.emoji}</span>
+              <span className="hidden sm:inline">{t.label}</span>
               {count !== null && count > 0 && (
                 <span
-                  className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                     tab === t.value ? "bg-white/25" : "bg-accent/15 text-accent"
                   }`}
                 >

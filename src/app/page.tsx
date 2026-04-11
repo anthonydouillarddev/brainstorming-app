@@ -34,12 +34,12 @@ export default async function Home({
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 w-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-10">
-        <div>
+      <div className="flex items-start justify-between mb-10 gap-4 flex-wrap">
+        <div className="min-w-0">
           <h1 className="text-3xl font-extrabold tracking-tight">🧠 Brainstorm</h1>
           <p className="text-muted text-sm mt-1">Pilote tes projets de l&apos;idée au lancement</p>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center shrink-0">
           <Link
             href="/new"
             className="px-4 py-2.5 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm"
