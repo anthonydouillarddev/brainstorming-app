@@ -28,6 +28,7 @@ export interface Project {
   disabled_sections: string[];
   metric_users: number | null;
   metric_mrr: number | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }

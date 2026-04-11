@@ -3,19 +3,30 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import TodoList from "./components/todolist";
 import ThemeToggle from "./components/theme-toggle";
+import TrashActions from "./components/trash-actions";
 import { PROJECT_STATUSES, PROJECT_TYPES, type Project } from "@/lib/types";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
+  const showTrash = tab === "trash";
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: projects } = await supabase
+  const { data: all } = await supabase
     .from("projects")
     .select("*")
     .order("updated_at", { ascending: false });
 
-  const typedProjects = (projects ?? []) as Project[];
+  const typedAll = (all ?? []) as Project[];
+  const activeProjects = typedAll.filter((p) => !p.deleted_at);
+  const trashedProjects = typedAll.filter((p) => p.deleted_at);
+  const visibleProjects = showTrash ? trashedProjects : activeProjects;
 
   const statusMap = new Map(PROJECT_STATUSES.map((s) => [s.value, s]));
   const typeMap = new Map(PROJECT_TYPES.map((t) => [t.value, t]));
@@ -44,38 +55,112 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* Todolist globale */}
-      <div className="mb-10">
-        <TodoList userId={user.id} />
-      </div>
+      {/* Todolist globale — masquée dans la corbeille */}
+      {!showTrash && (
+        <div className="mb-10">
+          <TodoList userId={user.id} />
+        </div>
+      )}
 
-      {/* Projets */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold tracking-tight">📂 Projets</h2>
-        <span className="text-xs text-muted">
-          {typedProjects.length} projet{typedProjects.length !== 1 ? "s" : ""}
-        </span>
-      </div>
-
-      {typedProjects.length === 0 ? (
-        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-12 text-center shadow-sm">
-          <p className="text-4xl mb-4">🚀</p>
-          <p className="text-lg font-semibold mb-2">Aucun projet pour l&apos;instant</p>
-          <p className="text-muted text-sm mb-6">
-            Commence par ajouter ta première idée
-          </p>
+      {/* Toggle Actifs / Corbeille */}
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <div className="flex gap-1 bg-card/60 backdrop-blur-sm border border-border rounded-xl p-1 shadow-sm">
           <Link
-            href="/new"
-            className="inline-flex px-5 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm"
+            href="/"
+            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+              !showTrash ? "bg-accent text-white shadow-sm" : "text-muted hover:text-foreground"
+            }`}
           >
-            + Nouvelle idée
+            📂 Projets
+            <span
+              className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${
+                !showTrash ? "bg-white/25" : "bg-accent/15 text-accent"
+              }`}
+            >
+              {activeProjects.length}
+            </span>
           </Link>
+          <Link
+            href="/?tab=trash"
+            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+              showTrash ? "bg-accent text-white shadow-sm" : "text-muted hover:text-foreground"
+            }`}
+          >
+            🗑️ Corbeille
+            <span
+              className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${
+                showTrash ? "bg-white/25" : "bg-accent/15 text-accent"
+              }`}
+            >
+              {trashedProjects.length}
+            </span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Projects list */}
+      {visibleProjects.length === 0 ? (
+        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-12 text-center shadow-sm">
+          <p className="text-4xl mb-4">{showTrash ? "🗑️" : "🚀"}</p>
+          <p className="text-lg font-semibold mb-2">
+            {showTrash ? "Corbeille vide" : "Aucun projet pour l'instant"}
+          </p>
+          <p className="text-muted text-sm mb-6">
+            {showTrash
+              ? "Les projets supprimés apparaîtront ici et pourront être restaurés."
+              : "Commence par ajouter ta première idée"}
+          </p>
+          {!showTrash && (
+            <Link
+              href="/new"
+              className="inline-flex px-5 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm"
+            >
+              + Nouvelle idée
+            </Link>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
-          {typedProjects.map((project) => {
+          {visibleProjects.map((project) => {
             const status = statusMap.get(project.status) ?? PROJECT_STATUSES[0];
             const type = typeMap.get(project.type) ?? PROJECT_TYPES[1];
+
+            if (showTrash) {
+              return (
+                <div
+                  key={project.id}
+                  className="block bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 opacity-75"
+                >
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-bold text-lg truncate">{project.name}</h3>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-background/60 border border-border text-muted font-medium inline-flex items-center gap-1">
+                          <span>{type.emoji}</span>
+                          <span>{type.label}</span>
+                        </span>
+                      </div>
+                      {project.description && (
+                        <p className="text-sm text-foreground/70 mt-1.5 line-clamp-2">
+                          {project.description}
+                        </p>
+                      )}
+                      <p className="text-muted text-xs mt-2">
+                        Supprimé le{" "}
+                        {project.deleted_at &&
+                          new Date(project.deleted_at).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                      </p>
+                    </div>
+                    <TrashActions projectId={project.id} projectName={project.name} />
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={project.id}

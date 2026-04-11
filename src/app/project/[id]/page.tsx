@@ -23,6 +23,7 @@ export default async function ProjectPage({
     .single();
 
   if (!project) redirect("/");
+  if (project.deleted_at) redirect("/?tab=trash");
 
   const [{ data: sections }, { data: todos }, { data: decisions }] = await Promise.all([
     supabase.from("sections").select("*").eq("project_id", id),

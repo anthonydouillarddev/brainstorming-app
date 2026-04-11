@@ -71,10 +71,23 @@ export default function ProjectDashboard({
   }
 
   async function handleDelete() {
-    if (!confirm(`Supprimer "${project.name}" et tout son contenu ?`)) return;
+    if (
+      !confirm(
+        `Mettre "${project.name}" à la corbeille ?\n\nTu pourras le restaurer depuis l'onglet Corbeille de l'accueil.`
+      )
+    )
+      return;
     setDeleting(true);
-    await supabase.from("projects").delete().eq("id", project.id);
-    router.push("/");
+    const { error } = await supabase
+      .from("projects")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", project.id);
+    if (error) {
+      setDeleting(false);
+      alert("Erreur : " + error.message);
+      return;
+    }
+    router.push("/?tab=trash");
   }
 
   return (
@@ -207,7 +220,7 @@ export default function ProjectDashboard({
           disabled={deleting}
           className="w-full py-2 text-red-500 text-sm hover:text-red-400 transition-colors disabled:opacity-50"
         >
-          {deleting ? "Suppression..." : "🗑️ Supprimer ce projet"}
+          {deleting ? "Mise à la corbeille..." : "🗑️ Mettre à la corbeille"}
         </button>
       </div>
     </div>

@@ -20,9 +20,12 @@ create table projects (
   disabled_sections text[] not null default '{}',
   metric_users integer,
   metric_mrr integer,
+  deleted_at timestamptz,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+create index if not exists idx_projects_deleted_at on projects(deleted_at);
 
 -- ═══════════════════════════════════════════════
 -- SECTIONS (brainstorming fields)
