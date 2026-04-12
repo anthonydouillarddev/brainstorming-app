@@ -111,6 +111,25 @@ create table risks (
 create index idx_risks_project on risks(project_id);
 
 -- ═══════════════════════════════════════════════
+-- DEV_ITEMS (workspace Dev perso : idées, liens, docs, infos, prefs)
+-- ═══════════════════════════════════════════════
+create table dev_items (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  kind text not null check (kind in ('idea','link','doc','info','pref')),
+  title text not null,
+  content text,
+  url text,
+  tags text[] not null default '{}',
+  status text check (status is null or status in ('not_opened','in_progress','done')),
+  position integer not null default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index idx_dev_items_user_kind on dev_items(user_id, kind, position);
+
+-- ═══════════════════════════════════════════════
 -- ROW LEVEL SECURITY
 -- ═══════════════════════════════════════════════
 alter table projects enable row level security;
@@ -119,6 +138,7 @@ alter table todos enable row level security;
 alter table decisions enable row level security;
 alter table roadmap_items enable row level security;
 alter table risks enable row level security;
+alter table dev_items enable row level security;
 
 -- Projects : chaque user ne voit que SES projets
 create policy "Users can view own projects"
@@ -212,6 +232,16 @@ create policy "Users can delete own risks"
     project_id in (select id from projects where user_id = auth.uid())
   );
 
+-- Dev items : par user_id
+create policy "Users can view own dev_items"
+  on dev_items for select using (auth.uid() = user_id);
+create policy "Users can insert own dev_items"
+  on dev_items for insert with check (auth.uid() = user_id);
+create policy "Users can update own dev_items"
+  on dev_items for update using (auth.uid() = user_id);
+create policy "Users can delete own dev_items"
+  on dev_items for delete using (auth.uid() = user_id);
+
 -- ═══════════════════════════════════════════════
 -- TRIGGERS
 -- ═══════════════════════════════════════════════
@@ -229,4 +259,8 @@ create trigger projects_updated_at
 
 create trigger sections_updated_at
   before update on sections
+  for each row execute function update_updated_at();
+
+create trigger dev_items_updated_at
+  before update on dev_items
   for each row execute function update_updated_at();

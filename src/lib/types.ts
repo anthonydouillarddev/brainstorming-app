@@ -88,6 +88,46 @@ export interface Risk {
   created_at: string;
 }
 
+export type DevItemKind = "idea" | "link" | "doc" | "info" | "pref";
+export type DevLinkStatus = "not_opened" | "in_progress" | "done";
+
+export interface DevItem {
+  id: string;
+  user_id: string;
+  kind: DevItemKind;
+  title: string;
+  content: string | null;
+  url: string | null;
+  tags: string[];
+  status: DevLinkStatus | null;
+  position: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export const DEV_KINDS: {
+  value: DevItemKind;
+  label: string;
+  emoji: string;
+  description: string;
+}[] = [
+  { value: "idea", label: "Idées", emoji: "💡", description: "Skills, agents, nouvelles idées de dev" },
+  { value: "link", label: "Liens", emoji: "🔗", description: "Sites de codage, exemples, ressources" },
+  { value: "doc", label: "Docs", emoji: "📄", description: "Notes longues, documentation perso" },
+  { value: "info", label: "Infos", emoji: "📝", description: "Notes rapides, infos diverses" },
+  { value: "pref", label: "Prefs", emoji: "🎨", description: "Couleurs, styles, design préférés" },
+];
+
+export const DEV_LINK_STATUSES: {
+  value: DevLinkStatus;
+  label: string;
+  emoji: string;
+}[] = [
+  { value: "not_opened", label: "Pas ouvert", emoji: "⚪" },
+  { value: "in_progress", label: "En cours", emoji: "🔵" },
+  { value: "done", label: "Traité", emoji: "✅" },
+];
+
 export const QUARTERS: Quarter[] = ["Q1", "Q2", "Q3", "Q4"];
 
 export const RISK_LEVELS: { value: RiskLevel; label: string; weight: number }[] = [
@@ -103,10 +143,10 @@ export function riskCriticality(risk: Pick<Risk, "probability" | "impact">): num
 }
 
 export function riskColor(criticality: number): { bg: string; text: string; border: string } {
-  if (criticality >= 6) return { bg: "bg-red-500/15", text: "text-red-500", border: "border-red-500/40" };
-  if (criticality >= 4) return { bg: "bg-orange-500/15", text: "text-orange-500", border: "border-orange-500/40" };
-  if (criticality >= 2) return { bg: "bg-yellow-500/15", text: "text-yellow-500", border: "border-yellow-500/40" };
-  return { bg: "bg-green-500/15", text: "text-green-500", border: "border-green-500/40" };
+  if (criticality >= 6) return { bg: "bg-red-500/25", text: "text-red-600 dark:text-red-400", border: "border-red-500/50" };
+  if (criticality >= 4) return { bg: "bg-orange-500/25", text: "text-orange-600 dark:text-orange-400", border: "border-orange-500/50" };
+  if (criticality >= 2) return { bg: "bg-yellow-500/20", text: "text-yellow-700 dark:text-yellow-400", border: "border-yellow-500/50" };
+  return { bg: "bg-green-500/20", text: "text-green-700 dark:text-green-400", border: "border-green-500/50" };
 }
 
 export const PROJECT_TYPES: { value: ProjectType; label: string; emoji: string; description: string }[] = [

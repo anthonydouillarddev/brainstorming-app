@@ -2,8 +2,17 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useState, useEffect, useMemo } from "react";
-import type { Todo, TodoStatus, TodoPriority, ProjectType, Phase, ScoreMethod } from "@/lib/types";
-import { TODO_PRIORITIES, TODO_STATUSES, PHASES } from "@/lib/types";
+import Link from "next/link";
+import type {
+  Todo,
+  TodoStatus,
+  TodoPriority,
+  ProjectType,
+  Phase,
+  ScoreMethod,
+  Project,
+} from "@/lib/types";
+import { TODO_PRIORITIES, TODO_STATUSES, PHASES, PROJECT_TYPES } from "@/lib/types";
 import { todoScore, ICE_HINTS } from "@/lib/scoring";
 
 type ViewMode = "list" | "kanban";
@@ -16,8 +25,11 @@ const KANBAN_COLUMNS: { status: TodoStatus; label: string; emoji: string; accent
 ];
 
 type Scope =
-  | { kind: "global" } // default — global todos only
+  | { kind: "global" } // legacy — project_id is null only
+  | { kind: "home"; projects: Project[] } // accueil — tous todos actifs + badge origine + sélecteur
   | { kind: "project"; projectId: string; projectType: ProjectType };
+
+type TargetValue = "dev" | string; // "dev" = project_id null, sinon project id
 
 const priorityBg: Record<TodoPriority, string> = {
   urgent: "border-l-red-500",
@@ -54,6 +66,7 @@ export default function TodoList({
   const [newIceImpact, setNewIceImpact] = useState<string>("");
   const [newIceConfidence, setNewIceConfidence] = useState<string>("");
   const [newIceEase, setNewIceEase] = useState<string>("");
+  const [newTarget, setNewTarget] = useState<TargetValue>("dev");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(initialTodos == null);
   const [showDone, setShowDone] = useState(false);
@@ -62,9 +75,28 @@ export default function TodoList({
   const supabase = createClient();
 
   const isProject = scope.kind === "project";
+  const isHome = scope.kind === "home";
+  const homeProjects = useMemo(
+    () => (scope.kind === "home" ? scope.projects : []),
+    [scope]
+  );
+  const projectNameById = useMemo(() => {
+    const map = new Map<string, { name: string; emoji: string }>();
+    for (const p of homeProjects) {
+      const emoji =
+        PROJECT_TYPES.find((t) => t.value === p.type)?.emoji ?? "📦";
+      map.set(p.id, {
+        name: (p.official_name?.trim() || p.name).slice(0, 40),
+        emoji,
+      });
+    }
+    return map;
+  }, [homeProjects]);
   const viewStorageKey = isProject
     ? `todolist:view:${scope.projectId}`
-    : "todolist:view:global";
+    : isHome
+      ? "todolist:view:home"
+      : "todolist:view:global";
 
   useEffect(() => {
     try {
@@ -101,6 +133,13 @@ export default function TodoList({
     let query = supabase.from("todos").select("*");
     if (scope.kind === "project") {
       query = query.eq("project_id", scope.projectId);
+    } else if (scope.kind === "home") {
+      const activeIds = homeProjects.map((p) => p.id);
+      if (activeIds.length > 0) {
+        query = query.or(`project_id.is.null,project_id.in.(${activeIds.join(",")})`);
+      } else {
+        query = query.is("project_id", null);
+      }
     } else {
       query = query.is("project_id", null);
     }
@@ -119,6 +158,7 @@ export default function TodoList({
     setNewIceImpact("");
     setNewIceConfidence("");
     setNewIceEase("");
+    setNewTarget("dev");
     setShowAdvanced(false);
   }
 
@@ -139,7 +179,11 @@ export default function TodoList({
         newScoreMethod === "ice" && newIceConfidence ? Number(newIceConfidence) : null,
       ice_ease: newScoreMethod === "ice" && newIceEase ? Number(newIceEase) : null,
     };
-    if (scope.kind === "project") payload.project_id = scope.projectId;
+    if (scope.kind === "project") {
+      payload.project_id = scope.projectId;
+    } else if (scope.kind === "home") {
+      payload.project_id = newTarget === "dev" ? null : newTarget;
+    }
 
     const { data, error } = await supabase.from("todos").insert(payload).select().single();
     if (error) {
@@ -200,7 +244,8 @@ export default function TodoList({
     <div>
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <h2 className="text-xl font-bold tracking-tight">
-          📋 {isProject ? "Tâches du projet" : "To-Do"}
+          📋{" "}
+          {isProject ? "Tâches du projet" : isHome ? "Toutes mes tâches" : "To-Do"}
         </h2>
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted">
@@ -235,14 +280,33 @@ export default function TodoList({
       <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl overflow-hidden shadow-sm">
         {/* Add — form compact + panneau avancé */}
         <div className="px-4 py-3 border-b border-border">
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <input
               value={newText}
               onChange={(e) => setNewText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addTodo(e)}
               placeholder="Ajouter une tâche..."
-              className="flex-1 px-3 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground placeholder:text-muted/40 outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition-all"
+              className="flex-1 min-w-[180px] px-3 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground placeholder:text-muted/40 outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition-all"
             />
+            {isHome && (
+              <select
+                value={newTarget}
+                onChange={(e) => setNewTarget(e.target.value as TargetValue)}
+                className="px-2 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground outline-none max-w-[180px]"
+                aria-label="Rattacher à"
+                title="Rattacher à"
+              >
+                <option value="dev">🧪 Dev</option>
+                {homeProjects.map((p) => {
+                  const info = projectNameById.get(p.id);
+                  return (
+                    <option key={p.id} value={p.id}>
+                      {info?.emoji} {info?.name}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
             <select
               value={newPriority}
               onChange={(e) => setNewPriority(e.target.value as TodoPriority)}
@@ -272,7 +336,7 @@ export default function TodoList({
               type="button"
               onClick={addTodo}
               disabled={!newText.trim()}
-              className="px-3 py-2 bg-accent text-white text-sm rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-2 bg-accent text-white text-sm rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               +
             </button>
@@ -396,16 +460,38 @@ export default function TodoList({
           {sortedActive.map((todo) => {
             const score = todoScore(todo);
             const isOpen = expanded === todo.id;
+            const origin =
+              isHome
+                ? todo.project_id
+                  ? projectNameById.get(todo.project_id) ?? null
+                  : { name: "Dev", emoji: "🧪" }
+                : null;
             return (
               <div key={todo.id} className={`border-l-4 ${priorityBg[todo.priority]}`}>
-                <div className="px-4 py-2.5 flex items-center gap-3 group hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setExpanded(isOpen ? null : todo.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setExpanded(isOpen ? null : todo.id);
+                    }
+                  }}
+                  className="px-4 py-3.5 flex items-center gap-3 group hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer select-none"
+                  aria-expanded={isOpen}
+                  aria-label={`Tâche : ${todo.text}. Toucher pour ${isOpen ? "réduire" : "éditer"}.`}
+                >
                   <button
-                    onClick={() => toggleDone(todo)}
-                    className="w-5 h-5 rounded-full border-2 border-border hover:border-accent flex-shrink-0 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleDone(todo);
+                    }}
+                    className="w-6 h-6 rounded-full border-2 border-border hover:border-accent flex-shrink-0 transition-colors"
                     aria-label="Marquer comme terminé"
                   />
                   <span
-                    className="text-sm cursor-default"
+                    className="text-base cursor-default"
                     title={TODO_STATUSES.find((s) => s.value === todo.status)?.label}
                   >
                     {statusIcon[todo.status]}
@@ -414,25 +500,51 @@ export default function TodoList({
                     {TODO_PRIORITIES.find((p) => p.value === todo.priority)?.short}
                   </span>
                   <span className="text-sm flex-1 truncate">{todo.text}</span>
+                  {origin &&
+                    (todo.project_id ? (
+                      <Link
+                        href={`/project/${todo.project_id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium shrink-0 max-w-[140px] truncate hover:bg-accent/20 transition-colors"
+                        title={origin.name}
+                      >
+                        {origin.emoji} {origin.name}
+                      </Link>
+                    ) : (
+                      <span
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-500 font-medium shrink-0"
+                        title="Tâche Dev (hors projet)"
+                      >
+                        {origin.emoji} {origin.name}
+                      </span>
+                    ))}
                   {score != null && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/15 text-accent font-semibold shrink-0">
                       {todo.score_method.toUpperCase()} {score}
                     </span>
                   )}
                   {todo.deadline && (
-                    <span className="text-[10px] text-muted shrink-0">
+                    <span className="text-[10px] text-muted shrink-0 hidden sm:inline">
                       📅 {new Date(todo.deadline).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
                     </span>
                   )}
-                  <button
-                    onClick={() => setExpanded(isOpen ? null : todo.id)}
-                    className="text-muted hover:text-foreground text-xs shrink-0"
+                  <span
+                    className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-base transition-all ${
+                      isOpen
+                        ? "bg-accent/15 text-accent"
+                        : "text-muted group-hover:bg-background/60"
+                    }`}
+                    aria-hidden="true"
                   >
-                    {isOpen ? "▾" : "▸"}
-                  </button>
+                    {isOpen ? "▾" : "✎"}
+                  </span>
                   <button
-                    onClick={() => deleteTodo(todo.id)}
-                    className="text-muted hover:text-red-400 text-xs shrink-0 opacity-40 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteTodo(todo.id);
+                    }}
+                    className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-red-400 hover:bg-red-500/10 opacity-60 sm:opacity-40 sm:group-hover:opacity-100 transition-all"
+                    aria-label="Supprimer"
                   >
                     ✕
                   </button>
@@ -643,6 +755,12 @@ export default function TodoList({
                   )}
                   {columnTodos.map((todo) => {
                     const score = todoScore(todo);
+                    const origin =
+                      isHome
+                        ? todo.project_id
+                          ? projectNameById.get(todo.project_id) ?? null
+                          : { name: "Dev", emoji: "🧪" }
+                        : null;
                     return (
                       <div
                         key={todo.id}
@@ -655,6 +773,22 @@ export default function TodoList({
                         >
                           {todo.text}
                         </p>
+                        {origin && (
+                          <div className="mt-1">
+                            {todo.project_id ? (
+                              <Link
+                                href={`/project/${todo.project_id}`}
+                                className="inline-block text-[9px] px-1.5 py-0.5 rounded bg-accent/10 text-accent font-medium max-w-full truncate hover:bg-accent/20 transition-colors"
+                              >
+                                {origin.emoji} {origin.name}
+                              </Link>
+                            ) : (
+                              <span className="inline-block text-[9px] px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-500 font-medium">
+                                {origin.emoji} {origin.name}
+                              </span>
+                            )}
+                          </div>
+                        )}
                         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                           <span className="text-[9px] font-bold text-muted">
                             {TODO_PRIORITIES.find((p) => p.value === todo.priority)?.short}
