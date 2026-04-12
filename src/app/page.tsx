@@ -114,6 +114,9 @@ export default async function Home({
             const status = statusMap.get(project.status) ?? PROJECT_STATUSES[0];
             const type = typeMap.get(project.type) ?? PROJECT_TYPES[1];
 
+            const hasOfficial = !!(project.official_name && project.official_name.trim());
+            const primaryTitle = hasOfficial ? project.official_name! : project.name;
+
             if (showTrash) {
               return (
                 <div
@@ -123,12 +126,17 @@ export default async function Home({
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-bold text-lg truncate">{project.name}</h3>
+                        <h3 className="font-bold text-lg truncate leading-[1.25] pb-0.5">
+                          {primaryTitle}
+                        </h3>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-background/60 border border-border text-muted font-medium inline-flex items-center gap-1">
                           <span>{type.emoji}</span>
                           <span>{type.label}</span>
                         </span>
                       </div>
+                      {hasOfficial && (
+                        <p className="text-xs text-muted mt-0.5">{project.name}</p>
+                      )}
                       {project.description && (
                         <p className="text-sm text-foreground/70 mt-1.5 line-clamp-2">
                           {project.description}
@@ -159,12 +167,17 @@ export default async function Home({
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-lg truncate">{project.name}</h3>
+                      <h3 className="font-bold text-lg truncate leading-[1.25] pb-0.5">
+                        {primaryTitle}
+                      </h3>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-background/60 border border-border text-muted font-medium inline-flex items-center gap-1">
                         <span>{type.emoji}</span>
                         <span>{type.label}</span>
                       </span>
                     </div>
+                    {hasOfficial && (
+                      <p className="text-xs text-muted mt-0.5">{project.name}</p>
+                    )}
                     {project.description && (
                       <p className="text-sm text-foreground/80 mt-1.5 line-clamp-2">
                         {project.description}

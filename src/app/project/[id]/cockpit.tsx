@@ -33,8 +33,6 @@ export default function Cockpit({
   onUpdate,
   onRoadmapChange,
   onRisksChange,
-  onDelete,
-  deleting,
   onGoToTasks,
 }: {
   project: Project;
@@ -46,8 +44,6 @@ export default function Cockpit({
   onUpdate: (patch: Partial<Project>) => Promise<void>;
   onRoadmapChange: (items: RoadmapItem[]) => void;
   onRisksChange: (items: Risk[]) => void;
-  onDelete: () => void;
-  deleting: boolean;
   onGoToTasks: () => void;
 }) {
   const parsed = useMemo(() => parseSections(sections), [sections]);
@@ -498,17 +494,6 @@ export default function Cockpit({
         >
           {currentStatus.emoji} {currentStatus.label}
         </span>
-      </div>
-
-      {/* Action destructrice centralisée */}
-      <div className="pt-6 border-t border-border flex justify-center">
-        <button
-          onClick={onDelete}
-          disabled={deleting}
-          className="px-4 py-2 text-red-500 text-sm hover:text-red-400 transition-colors disabled:opacity-50"
-        >
-          {deleting ? "Mise à la corbeille..." : "🗑️ Mettre à la corbeille"}
-        </button>
       </div>
     </div>
   );

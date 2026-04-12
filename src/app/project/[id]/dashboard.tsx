@@ -2,9 +2,9 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SectionDef } from "@/lib/sections";
-import type { Project, ProjectStatus, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
+import type { Project, ProjectStatus, ProjectType, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
 import { PROJECT_STATUSES, PROJECT_TYPES } from "@/lib/types";
 import ThemeToggle from "@/app/components/theme-toggle";
 import Cockpit from "./cockpit";
@@ -13,7 +13,7 @@ import DecisionsPanel from "./decisions";
 import SingleSectionPanel from "./resources";
 import TodoList from "@/app/components/todolist";
 
-type Tab = "cockpit" | "brainstorm" | "tasks" | "decisions" | "tech" | "resources";
+type Tab = "cockpit" | "brainstorm" | "tasks" | "decisions" | "tech" | "design" | "resources";
 
 const TABS: { value: Tab; label: string; emoji: string }[] = [
   { value: "cockpit", label: "Cockpit", emoji: "📊" },
@@ -21,6 +21,7 @@ const TABS: { value: Tab; label: string; emoji: string }[] = [
   { value: "tasks", label: "Tâches", emoji: "✅" },
   { value: "decisions", label: "Décisions", emoji: "🧭" },
   { value: "tech", label: "Technique", emoji: "⚙️" },
+  { value: "design", label: "Design", emoji: "🎨" },
   { value: "resources", label: "Ressources", emoji: "🔗" },
 ];
 
@@ -53,10 +54,35 @@ export default function ProjectDashboard({
   const [roadmap, setRoadmap] = useState<RoadmapItem[]>(initialRoadmap);
   const [risks, setRisks] = useState<Risk[]>(initialRisks);
   const [tab, setTab] = useState<Tab>("cockpit");
-  const [name, setName] = useState(project.name);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState(project.name);
+  const [typeMenuOpen, setTypeMenuOpen] = useState(false);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const typeMenuRef = useRef<HTMLDivElement>(null);
+  const actionsMenuRef = useRef<HTMLDivElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const typeInfo = PROJECT_TYPES.find((t) => t.value === project.type) ?? PROJECT_TYPES[1];
+  const hasOfficialName = !!(project.official_name && project.official_name.trim());
+  const displayTitle = hasOfficialName ? project.official_name! : project.name;
+
+  useEffect(() => {
+    if (editingName) nameInputRef.current?.focus();
+  }, [editingName]);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (typeMenuRef.current && !typeMenuRef.current.contains(e.target as Node)) {
+        setTypeMenuOpen(false);
+      }
+      if (actionsMenuRef.current && !actionsMenuRef.current.contains(e.target as Node)) {
+        setActionsMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
 
   async function updateProject(patch: Partial<Project>) {
     const previous = project;
@@ -68,12 +94,19 @@ export default function ProjectDashboard({
     }
   }
 
-  async function handleNameBlur() {
-    if (name.trim() && name !== project.name) {
-      await updateProject({ name: name.trim() });
+  async function commitName() {
+    const trimmed = nameDraft.trim();
+    if (trimmed && trimmed !== project.name) {
+      await updateProject({ name: trimmed });
     } else {
-      setName(project.name);
+      setNameDraft(project.name);
     }
+    setEditingName(false);
+  }
+
+  async function handleTypeChange(type: ProjectType) {
+    setTypeMenuOpen(false);
+    if (type !== project.type) await updateProject({ type });
   }
 
   async function handleStatusChange(status: ProjectStatus) {
@@ -81,6 +114,7 @@ export default function ProjectDashboard({
   }
 
   async function handleDelete() {
+    setActionsMenuOpen(false);
     if (
       !confirm(
         `Mettre "${project.name}" à la corbeille ?\n\nTu pourras le restaurer depuis l'onglet Corbeille de l'accueil.`
@@ -118,19 +152,146 @@ export default function ProjectDashboard({
         </div>
       </div>
 
-      {/* Project header — titre grand puis type en dessous */}
+      {/* Project header */}
       <div className="mb-6">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={handleNameBlur}
-          className="text-4xl font-extrabold tracking-tight bg-transparent border-none outline-none w-full focus:ring-0"
-        />
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-xs px-2 py-0.5 rounded-full bg-card border border-border text-muted font-medium inline-flex items-center gap-1">
-            <span>{typeInfo.emoji}</span>
-            <span>{typeInfo.label}</span>
-          </span>
+        <div className="flex items-start gap-3">
+          <div className="flex-1 min-w-0">
+            {/* Primary title — official_name ou name */}
+            {hasOfficialName ? (
+              <h1
+                className="text-4xl font-extrabold tracking-tight leading-[1.2] pb-1 break-words"
+                title="Modifiable via Brainstorm → Branding → Nom officiel"
+              >
+                {displayTitle}
+              </h1>
+            ) : editingName ? (
+              <input
+                ref={nameInputRef}
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                onBlur={commitName}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") commitName();
+                  if (e.key === "Escape") {
+                    setNameDraft(project.name);
+                    setEditingName(false);
+                  }
+                }}
+                className="text-4xl font-extrabold tracking-tight leading-[1.2] pb-1 bg-transparent border-none outline-none w-full focus:ring-0"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditingName(true)}
+                className="group inline-flex items-center gap-2 text-left w-full"
+                title="Cliquer pour renommer"
+              >
+                <h1 className="text-4xl font-extrabold tracking-tight leading-[1.2] pb-1 break-words">
+                  {displayTitle}
+                </h1>
+                <span className="text-muted text-sm opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  ✎
+                </span>
+              </button>
+            )}
+
+            {/* Secondary — nom de travail si official_name existe */}
+            {hasOfficialName && (
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[10px] uppercase tracking-wider text-muted font-semibold">
+                  Nom de travail
+                </span>
+                {editingName ? (
+                  <input
+                    ref={nameInputRef}
+                    value={nameDraft}
+                    onChange={(e) => setNameDraft(e.target.value)}
+                    onBlur={commitName}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitName();
+                      if (e.key === "Escape") {
+                        setNameDraft(project.name);
+                        setEditingName(false);
+                      }
+                    }}
+                    className="text-sm text-muted bg-transparent border-none outline-none flex-1 focus:ring-0"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditingName(true)}
+                    className="group inline-flex items-center gap-1.5 text-muted hover:text-foreground transition-colors"
+                    title="Cliquer pour renommer"
+                  >
+                    <span className="text-sm">{project.name}</span>
+                    <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                      ✎
+                    </span>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Type badge — cliquable */}
+            <div className="flex items-center gap-2 mt-2 relative" ref={typeMenuRef}>
+              <button
+                type="button"
+                onClick={() => setTypeMenuOpen((v) => !v)}
+                className="text-xs px-2.5 py-1 rounded-full bg-card border border-border text-muted font-medium inline-flex items-center gap-1.5 hover:text-foreground hover:border-muted transition-colors"
+                title="Changer le type"
+              >
+                <span>{typeInfo.emoji}</span>
+                <span>{typeInfo.label}</span>
+                <span className="text-[9px] opacity-70">▾</span>
+              </button>
+              {typeMenuOpen && (
+                <div className="absolute top-full left-0 mt-1.5 z-30 bg-card border border-border rounded-xl shadow-lg overflow-hidden min-w-[220px]">
+                  {PROJECT_TYPES.map((t) => (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => handleTypeChange(t.value)}
+                      className={`w-full px-3 py-2 text-left text-sm hover:bg-accent/10 transition-colors flex items-center gap-2 ${
+                        t.value === project.type ? "bg-accent/15 text-accent font-medium" : ""
+                      }`}
+                    >
+                      <span className="text-base">{t.emoji}</span>
+                      <span>{t.label}</span>
+                      {t.value === project.type && (
+                        <span className="ml-auto text-xs">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Menu actions */}
+          <div className="relative shrink-0" ref={actionsMenuRef}>
+            <button
+              type="button"
+              onClick={() => setActionsMenuOpen((v) => !v)}
+              className="w-9 h-9 rounded-xl bg-card/60 border border-border text-muted hover:text-foreground hover:border-muted transition-colors inline-flex items-center justify-center"
+              aria-label="Actions du projet"
+              title="Actions"
+            >
+              …
+            </button>
+            {actionsMenuOpen && (
+              <div className="absolute top-full right-0 mt-1.5 z-30 bg-card border border-border rounded-xl shadow-lg overflow-hidden min-w-[220px]">
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  <span>🗑️</span>
+                  <span>{deleting ? "Mise à la corbeille..." : "Mettre à la corbeille"}</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Status picker */}
@@ -198,8 +359,6 @@ export default function ProjectDashboard({
           onUpdate={updateProject}
           onRoadmapChange={setRoadmap}
           onRisksChange={setRisks}
-          onDelete={handleDelete}
-          deleting={deleting}
           onGoToTasks={() => setTab("tasks")}
         />
       )}
@@ -235,6 +394,16 @@ export default function ProjectDashboard({
         <SingleSectionPanel
           project={project}
           sectionKey="tech"
+          initialSections={sections}
+          onProjectUpdate={updateProject}
+          onSectionsChange={setSections}
+        />
+      )}
+
+      {tab === "design" && (
+        <SingleSectionPanel
+          project={project}
+          sectionKey="design"
           initialSections={sections}
           onProjectUpdate={updateProject}
           onSectionsChange={setSections}
