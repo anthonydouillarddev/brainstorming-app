@@ -294,7 +294,7 @@ export default function DevWorkspace({
           <div className="bg-card/60 border border-dashed border-border rounded-2xl p-8 text-center">
             <p className="text-3xl mb-2">{activeKindDef.emoji}</p>
             <p className="text-sm text-muted">
-              Aucun {activeKindDef.label.toLowerCase()} pour l&apos;instant.
+              Rien dans {activeKindDef.label.toLowerCase()} pour l&apos;instant.
             </p>
           </div>
         )}

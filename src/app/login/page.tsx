@@ -49,9 +49,9 @@ export default function LoginPage() {
   return (
     <div className="flex flex-1 items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-center mb-2">🧠 Brainstorming</h1>
+        <h1 className="text-3xl font-bold text-center mb-2">🧠 Brainstorm</h1>
         <p className="text-muted text-center mb-8 text-sm">
-          Tes idées SaaS, accessibles partout
+          Pilote tes projets de l&apos;idée au lancement
         </p>
 
         <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-6 space-y-4">
