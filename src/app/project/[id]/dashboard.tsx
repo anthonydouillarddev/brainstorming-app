@@ -25,6 +25,8 @@ const TABS: { value: Tab; label: string; emoji: string }[] = [
   { value: "resources", label: "Ressources", emoji: "🔗" },
 ];
 
+const VALID_TABS = new Set<string>(TABS.map((t) => t.value));
+
 export default function ProjectDashboard({
   userId,
   project: initialProject,
@@ -34,6 +36,7 @@ export default function ProjectDashboard({
   initialDecisions,
   initialRoadmap,
   initialRisks,
+  initialTab,
 }: {
   userId: string;
   project: Project;
@@ -43,6 +46,7 @@ export default function ProjectDashboard({
   initialDecisions: Decision[];
   initialRoadmap: RoadmapItem[];
   initialRisks: Risk[];
+  initialTab?: string;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -53,7 +57,9 @@ export default function ProjectDashboard({
   const [decisions, setDecisions] = useState<Decision[]>(initialDecisions);
   const [roadmap, setRoadmap] = useState<RoadmapItem[]>(initialRoadmap);
   const [risks, setRisks] = useState<Risk[]>(initialRisks);
-  const [tab, setTab] = useState<Tab>("cockpit");
+  const [tab, setTab] = useState<Tab>(
+    initialTab && VALID_TABS.has(initialTab) ? (initialTab as Tab) : "cockpit"
+  );
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(project.name);
   const [typeMenuOpen, setTypeMenuOpen] = useState(false);
@@ -138,12 +144,11 @@ export default function ProjectDashboard({
     <div className="max-w-6xl mx-auto px-4 py-6 w-full">
       {/* Top bar */}
       <div
-        className="flex items-center justify-between mb-6 sticky top-0 py-3 z-20 -mx-4 px-4 backdrop-blur-md"
-        style={{ background: "color-mix(in srgb, var(--color-background) 75%, transparent)" }}
+        className="flex items-center justify-between mb-6 sticky top-0 z-20 -mx-4 px-4"
       >
         <button
           onClick={() => router.push("/")}
-          className="text-muted hover:text-foreground text-sm transition-colors"
+          className="px-4 py-3 -ml-4 text-muted hover:text-foreground text-sm transition-colors rounded-xl"
         >
           ← Retour
         </button>

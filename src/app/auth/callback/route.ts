@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+const VALID_OTP_TYPES = new Set(["signup", "email", "magiclink", "recovery"]);
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -10,9 +12,16 @@ export async function GET(request: Request) {
   const supabase = await createClient();
 
   if (code) {
-    await supabase.auth.exchangeCodeForSession(code);
-  } else if (token_hash && type) {
-    await supabase.auth.verifyOtp({ token_hash, type: type as "signup" | "email" });
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+  } else if (token_hash && type && VALID_OTP_TYPES.has(type)) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash,
+      type: type as "signup" | "email",
+    });
+    if (error) return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+  } else {
+    return NextResponse.redirect(`${origin}/login`);
   }
 
   return NextResponse.redirect(origin);

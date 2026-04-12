@@ -6,10 +6,12 @@ import ProjectDashboard from "./dashboard";
 
 export default async function ProjectPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, query] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
   const {
     data: { user },
@@ -68,6 +70,7 @@ export default async function ProjectPage({
       initialDecisions={(decisions ?? []) as Decision[]}
       initialRoadmap={(roadmap ?? []) as RoadmapItem[]}
       initialRisks={(risks ?? []) as Risk[]}
+      initialTab={query.tab}
     />
   );
 }
