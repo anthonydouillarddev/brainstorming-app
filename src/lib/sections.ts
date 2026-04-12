@@ -2,6 +2,16 @@ import type { ProjectType } from "./types";
 
 export type FieldType = "text" | "question" | "choice" | "links" | "score";
 
+export interface SuggestionOption {
+  value: string;
+  doc?: string;
+}
+
+export interface ToolLink {
+  label: string;
+  url: string;
+}
+
 export interface Field {
   key: string;
   type: FieldType;
@@ -9,6 +19,8 @@ export interface Field {
   hint?: string;
   placeholder?: string;
   options?: string[];
+  suggestions?: SuggestionOption[];
+  tools?: ToolLink[];
   max?: number;
 }
 
@@ -22,7 +34,7 @@ export interface SectionDef {
   fields: Field[];
 }
 
-export const RESOURCES_SECTION_KEYS = ["tech", "resources"] as const;
+export const DEDICATED_TAB_SECTION_KEYS = ["tech", "resources", "design"] as const;
 
 export type SectionData = Record<string, unknown>;
 
@@ -48,15 +60,26 @@ export function isFieldFilled(value: unknown): boolean {
   return false;
 }
 
-export function getActiveSections(type: ProjectType, disabledKeys: string[] = []): SectionDef[] {
-  const disabled = new Set(disabledKeys);
-  const resourcesKeys = new Set<string>(RESOURCES_SECTION_KEYS);
+const dedicatedTabKeys = new Set<string>(DEDICATED_TAB_SECTION_KEYS);
+
+export function isSectionEnabled(
+  def: SectionDef,
+  type: ProjectType,
+  overrideKeys: string[] = []
+): boolean {
+  const isDefault = def.defaultForTypes.includes(type);
+  const isOverridden = overrideKeys.includes(def.key);
+  return isDefault !== isOverridden;
+}
+
+export function getActiveSections(type: ProjectType, overrideKeys: string[] = []): SectionDef[] {
   return SECTIONS.filter(
-    (s) =>
-      s.defaultForTypes.includes(type) &&
-      !disabled.has(s.key) &&
-      !resourcesKeys.has(s.key)
+    (s) => !dedicatedTabKeys.has(s.key) && isSectionEnabled(s, type, overrideKeys)
   );
+}
+
+export function getManageableSections(): SectionDef[] {
+  return SECTIONS.filter((s) => !dedicatedTabKeys.has(s.key));
 }
 
 export const SECTIONS: SectionDef[] = [
@@ -226,14 +249,104 @@ export const SECTIONS: SectionDef[] = [
     description: "Décisions techniques avant de coder",
     defaultForTypes: ["outil", "saas", "appli", "logiciel"],
     fields: [
-      { key: "framework", type: "question", label: "Framework frontend", placeholder: "Ex: Next.js 15 App Router" },
-      { key: "ui", type: "question", label: "UI / Styles", placeholder: "Ex: Tailwind CSS v4 + shadcn/ui" },
-      { key: "database", type: "question", label: "Base de données", placeholder: "Ex: PostgreSQL via Prisma (Supabase / Neon)" },
-      { key: "auth", type: "question", label: "Authentification", placeholder: "Ex: Better Auth / Clerk / Supabase Auth" },
-      { key: "payments", type: "question", label: "Paiements", placeholder: "Ex: Stripe / Paddle / LemonSqueezy" },
-      { key: "email", type: "question", label: "Emails", placeholder: "Ex: Resend + React Email" },
-      { key: "hosting", type: "question", label: "Hébergement", placeholder: "Ex: Vercel / Railway" },
-      { key: "monitoring", type: "question", label: "Monitoring", placeholder: "Ex: Sentry + PostHog" },
+      {
+        key: "framework",
+        type: "question",
+        label: "Framework frontend",
+        placeholder: "Ex: Next.js 16 App Router",
+        suggestions: [
+          { value: "Next.js", doc: "https://nextjs.org/docs" },
+          { value: "Remix", doc: "https://remix.run/docs" },
+          { value: "Astro", doc: "https://docs.astro.build" },
+          { value: "Vite + React", doc: "https://vite.dev/guide/" },
+          { value: "SvelteKit", doc: "https://svelte.dev/docs/kit" },
+        ],
+      },
+      {
+        key: "ui",
+        type: "question",
+        label: "UI / Styles",
+        placeholder: "Ex: Tailwind CSS v4 + shadcn/ui",
+        suggestions: [
+          { value: "Tailwind CSS v4", doc: "https://tailwindcss.com/docs" },
+          { value: "shadcn/ui", doc: "https://ui.shadcn.com/docs" },
+          { value: "Radix UI", doc: "https://www.radix-ui.com/primitives" },
+          { value: "Mantine", doc: "https://mantine.dev/getting-started/" },
+        ],
+      },
+      {
+        key: "database",
+        type: "question",
+        label: "Base de données",
+        placeholder: "Ex: Postgres via Supabase",
+        suggestions: [
+          { value: "Supabase (Postgres)", doc: "https://supabase.com/docs" },
+          { value: "Neon (Postgres)", doc: "https://neon.tech/docs" },
+          { value: "PlanetScale (MySQL)", doc: "https://planetscale.com/docs" },
+          { value: "Prisma ORM", doc: "https://www.prisma.io/docs" },
+          { value: "Drizzle ORM", doc: "https://orm.drizzle.team/docs/overview" },
+        ],
+      },
+      {
+        key: "auth",
+        type: "question",
+        label: "Authentification",
+        placeholder: "Ex: Supabase Auth",
+        suggestions: [
+          { value: "Supabase Auth", doc: "https://supabase.com/docs/guides/auth" },
+          { value: "Better Auth", doc: "https://www.better-auth.com/docs" },
+          { value: "Clerk", doc: "https://clerk.com/docs" },
+          { value: "Auth.js (NextAuth)", doc: "https://authjs.dev" },
+        ],
+      },
+      {
+        key: "payments",
+        type: "question",
+        label: "Paiements",
+        placeholder: "Ex: Stripe",
+        suggestions: [
+          { value: "Stripe", doc: "https://docs.stripe.com" },
+          { value: "Paddle", doc: "https://developer.paddle.com" },
+          { value: "LemonSqueezy", doc: "https://docs.lemonsqueezy.com" },
+        ],
+      },
+      {
+        key: "email",
+        type: "question",
+        label: "Emails",
+        placeholder: "Ex: Resend + React Email",
+        suggestions: [
+          { value: "Resend", doc: "https://resend.com/docs" },
+          { value: "Postmark", doc: "https://postmarkapp.com/developer" },
+          { value: "React Email", doc: "https://react.email/docs/introduction" },
+          { value: "Loops", doc: "https://loops.so/docs" },
+        ],
+      },
+      {
+        key: "hosting",
+        type: "question",
+        label: "Hébergement",
+        placeholder: "Ex: Vercel",
+        suggestions: [
+          { value: "Vercel", doc: "https://vercel.com/docs" },
+          { value: "Netlify", doc: "https://docs.netlify.com" },
+          { value: "Railway", doc: "https://docs.railway.com" },
+          { value: "Fly.io", doc: "https://fly.io/docs" },
+          { value: "Cloudflare Pages", doc: "https://developers.cloudflare.com/pages" },
+        ],
+      },
+      {
+        key: "monitoring",
+        type: "question",
+        label: "Monitoring",
+        placeholder: "Ex: Sentry + PostHog",
+        suggestions: [
+          { value: "Sentry", doc: "https://docs.sentry.io" },
+          { value: "PostHog", doc: "https://posthog.com/docs" },
+          { value: "Axiom", doc: "https://axiom.co/docs" },
+          { value: "Plausible", doc: "https://plausible.io/docs" },
+        ],
+      },
       { key: "repo_url", type: "question", label: "URL du repo GitHub", placeholder: "https://github.com/..." },
       { key: "prod_url", type: "question", label: "URL production", placeholder: "https://..." },
       { key: "tech_notes", type: "text", label: "Notes techniques", placeholder: "Architecture, contraintes, choix à faire..." },
@@ -270,12 +383,118 @@ export const SECTIONS: SectionDef[] = [
     description: "L'identité visuelle de ton produit",
     defaultForTypes: ["saas", "appli", "business"],
     fields: [
+      { key: "official_name", type: "question", label: "Nom officiel du produit", hint: "Le nom de marque définitif (différent du nom de travail). Synchronisé avec l'en-tête du projet.", placeholder: "Ex: Brainwave, Linear, Notion..." },
       { key: "domain", type: "question", label: "Nom de domaine retenu", placeholder: "Ex: monoutil.com, monoutil.fr, monoutil.io" },
       { key: "domain_backup", type: "question", label: "Noms de domaine alternatifs", placeholder: "Ex: getmonoutil.com, trymonoutil.com" },
       { key: "colors", type: "question", label: "Couleurs principales", placeholder: "Ex: #1E3A5F (navy) / #2E86AB (bleu) / #FFFFFF (blanc)" },
       { key: "font", type: "question", label: "Police", placeholder: "Ex: Inter, Geist, Cal Sans" },
       { key: "logo_status", type: "choice", label: "Statut du logo", options: ["Pas encore", "En cours", "Fait", "Pas prioritaire"] },
       { key: "tone", type: "question", label: "Ton / voix de la marque", placeholder: "Ex: Pro mais accessible, pas de jargon, tutoiement, emojis OK" },
+    ],
+  },
+
+  // ────────────────────────────
+  // 11 bis. UI / UX / DESIGN (onglet dédié)
+  // ────────────────────────────
+  {
+    key: "design",
+    title: "UI / UX / Design",
+    emoji: "🎨",
+    color: "border-fuchsia-500",
+    description: "Direction artistique, système de design et parcours utilisateur",
+    defaultForTypes: ["outil", "saas", "appli", "logiciel", "business"],
+    fields: [
+      {
+        key: "moodboard",
+        type: "links",
+        label: "Moodboard — inspirations visuelles",
+        hint: "Sites, apps, dribbble, captures d'écran, affiches... tout ce qui t'inspire",
+      },
+      {
+        key: "color_palette",
+        type: "question",
+        label: "Palette de couleurs",
+        hint: "Primaire, secondaire, accent, neutres. Penser contraste (WCAG AA = 4.5:1).",
+        placeholder: "Ex:\nPrimary #1E3A5F\nAccent #2E86AB\nBackground #FAFAF7\nMuted #8A8A8A",
+        tools: [
+          { label: "Coolors", url: "https://coolors.co" },
+          { label: "Realtime Colors", url: "https://www.realtimecolors.com" },
+          { label: "UI Colors", url: "https://uicolors.app" },
+          { label: "Contrast Checker", url: "https://webaim.org/resources/contrastchecker" },
+        ],
+      },
+      {
+        key: "typography",
+        type: "question",
+        label: "Typographie",
+        hint: "Famille(s), graisses, échelle modulaire. 2 polices max suffisent.",
+        placeholder: "Ex:\nHeadings : Geist Sans (700)\nBody : Inter (400/500)\nMono : JetBrains Mono",
+        tools: [
+          { label: "Type Scale", url: "https://typescale.com" },
+          { label: "Font Pair", url: "https://www.fontpair.co" },
+          { label: "Modern Font Stacks", url: "https://modernfontstacks.com" },
+          { label: "Google Fonts", url: "https://fonts.google.com" },
+        ],
+      },
+      {
+        key: "design_tokens",
+        type: "question",
+        label: "Tokens & espacement",
+        hint: "Radius, shadows, spacing scale, breakpoints. Définir une fois, réutiliser partout.",
+        placeholder: "Ex:\nRadius : 8 / 12 / 16 / 24\nShadow : sm, md, lg\nSpacing : 4 / 8 / 12 / 16 / 24 / 32",
+        tools: [
+          { label: "Tailwind Tokens", url: "https://tailwindcss.com/docs/theme" },
+          { label: "Design Tokens W3C", url: "https://www.designtokens.org" },
+        ],
+      },
+      {
+        key: "ui_components",
+        type: "text",
+        label: "Composants clés",
+        hint: "Boutons, cards, inputs, modals, toasts... Lister les patterns réutilisables.",
+        placeholder: "Ex:\n- Button : primary / secondary / ghost / danger\n- Card : bordered, padded, avec header optionnel\n- Input : label flottant, erreur en rouge sous le champ",
+      },
+      {
+        key: "ux_principles",
+        type: "text",
+        label: "Principes UX",
+        hint: "3-5 règles non négociables qui guident toutes les décisions d'interface.",
+        placeholder: "Ex:\n1. Action primaire toujours visible sans scroll\n2. Feedback immédiat sur toute action\n3. Pas de modal qui bloque sans raison\n4. Formulaires courts, un champ par question",
+        tools: [
+          { label: "Refactoring UI", url: "https://www.refactoringui.com" },
+          { label: "Laws of UX", url: "https://lawsofux.com" },
+          { label: "NN Group — 10 Heuristics", url: "https://www.nngroup.com/articles/ten-usability-heuristics" },
+        ],
+      },
+      {
+        key: "user_journey",
+        type: "text",
+        label: "Parcours utilisateur clé",
+        hint: "De l'arrivée sur la landing au premier 'aha moment'. Viser le chemin le plus court.",
+        placeholder: "Ex:\n1. Landing → clic CTA\n2. Signup (email uniquement)\n3. Onboarding 2 étapes\n4. Premier succès en < 2 min",
+      },
+      {
+        key: "accessibility",
+        type: "choice",
+        label: "Accessibilité — checklist WCAG AA",
+        hint: "Les bases à couvrir dès le MVP. Un site accessible est meilleur pour tout le monde.",
+        options: [
+          "Contrastes AA (4.5:1 texte, 3:1 gros texte)",
+          "Navigation clavier complète",
+          "Focus visible sur tous les éléments interactifs",
+          "Labels explicites sur les formulaires",
+          "Attributs alt sur les images",
+          "aria-* sur les composants custom",
+          "Respect de prefers-reduced-motion",
+          "Responsive mobile (< 375px)",
+        ],
+      },
+      {
+        key: "design_notes",
+        type: "text",
+        label: "Notes libres",
+        placeholder: "Idées, doutes, références, retours d'utilisateurs sur le design...",
+      },
     ],
   },
 

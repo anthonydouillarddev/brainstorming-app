@@ -43,6 +43,89 @@ export function FieldRenderer({
   }
 }
 
+function FieldHeader({ field }: { field: Field }) {
+  return (
+    <>
+      <label className="block text-sm font-semibold mb-1">{field.label}</label>
+      {field.hint && (
+        <p className="text-xs text-muted mb-2 pl-0.5 border-l-2 border-accent/30 ml-0.5 px-2">
+          {field.hint}
+        </p>
+      )}
+      {field.tools && field.tools.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-muted font-semibold self-center">
+            Outils
+          </span>
+          {field.tools.map((tool) => (
+            <a
+              key={tool.url}
+              href={tool.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] px-2 py-0.5 rounded-full bg-background/60 border border-border text-muted hover:text-accent hover:border-accent/50 transition-colors inline-flex items-center gap-0.5"
+            >
+              {tool.label}
+              <span className="text-[9px]">↗</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function Suggestions({
+  field,
+  value,
+  onChange,
+}: {
+  field: Field;
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  if (!field.suggestions || field.suggestions.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5 mb-2">
+      {field.suggestions.map((sug) => {
+        const isActive = value.trim() === sug.value;
+        return (
+          <span
+            key={sug.value}
+            className={`inline-flex items-center rounded-full border text-xs overflow-hidden transition-colors ${
+              isActive
+                ? "bg-accent/15 border-accent/50 text-accent"
+                : "bg-background/60 border-border text-muted hover:text-foreground hover:border-muted"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => onChange(isActive ? "" : sug.value)}
+              className="px-2.5 py-1"
+              title={isActive ? "Cliquer pour retirer" : `Choisir ${sug.value}`}
+            >
+              {isActive ? "✓ " : ""}
+              {sug.value}
+            </button>
+            {sug.doc && (
+              <a
+                href={sug.doc}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-1.5 py-1 border-l border-border/60 hover:text-accent transition-colors"
+                title={`Doc ${sug.value}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                ↗
+              </a>
+            )}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function QuestionField({
   field,
   value,
@@ -54,12 +137,8 @@ function QuestionField({
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold mb-1">{field.label}</label>
-      {field.hint && (
-        <p className="text-xs text-muted mb-2 pl-0.5 border-l-2 border-accent/30 ml-0.5 px-2">
-          {field.hint}
-        </p>
-      )}
+      <FieldHeader field={field} />
+      <Suggestions field={field} value={value} onChange={onChange} />
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -82,12 +161,7 @@ function TextField({
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold mb-1">{field.label}</label>
-      {field.hint && (
-        <p className="text-xs text-muted mb-2 pl-0.5 border-l-2 border-accent/30 ml-0.5 px-2">
-          {field.hint}
-        </p>
-      )}
+      <FieldHeader field={field} />
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}

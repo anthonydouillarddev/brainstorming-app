@@ -5,6 +5,8 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import type { SectionDef } from "@/lib/sections";
 import {
   getActiveSections,
+  getManageableSections,
+  isSectionEnabled,
   parseSections,
   isFieldFilled,
   type SectionData,
@@ -17,9 +19,12 @@ function syncFromBrainstorm(
 ): { patch: Partial<Project>; updates: string[] } {
   const identity = parsed["identity"] ?? {};
   const score = parsed["score"] ?? {};
+  const branding = parsed["branding"] ?? {};
   const tagline = typeof identity.tagline === "string" ? identity.tagline.trim() : "";
   const brainstormNextAction =
     typeof score.next_action === "string" ? score.next_action.trim() : "";
+  const officialName =
+    typeof branding.official_name === "string" ? branding.official_name.trim() : "";
 
   const patch: Partial<Project> = {};
   const updates: string[] = [];
@@ -31,6 +36,10 @@ function syncFromBrainstorm(
   if (brainstormNextAction) {
     patch.next_action = brainstormNextAction;
     updates.push("prochaine action");
+  }
+  if (officialName) {
+    patch.official_name = officialName;
+    updates.push("nom officiel");
   }
 
   return { patch, updates };
@@ -123,6 +132,7 @@ export default function BrainstormEditor({
     () => getActiveSections(project.type, project.disabled_sections),
     [project.type, project.disabled_sections]
   );
+  const manageableSections = useMemo(() => getManageableSections(), []);
 
   function toggleManual(key: string, currentlyOpen: boolean) {
     setCollapseOverride((prev) => {
@@ -242,19 +252,23 @@ export default function BrainstormEditor({
       {/* Module picker */}
       {showModulePicker && (
         <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted mb-3">
-            Activer / désactiver les modules
-          </h3>
+          <div className="flex items-baseline justify-between mb-3 gap-2 flex-wrap">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">
+              Activer / désactiver les modules
+            </h3>
+            <span className="text-[11px] text-muted">
+              {activeSections.length}/{manageableSections.length} modules actifs
+            </span>
+          </div>
           <p className="text-xs text-muted mb-4">
             Par défaut, seules les sections pertinentes pour un projet de type{" "}
             <span className="font-semibold text-foreground">{project.type}</span> sont affichées.
             Tu peux ajouter ou retirer des modules manuellement.
           </p>
           <div className="grid sm:grid-cols-2 gap-2">
-            {sectionDefs.map((def) => {
+            {manageableSections.map((def) => {
               const isDefault = def.defaultForTypes.includes(project.type);
-              const isDisabled = project.disabled_sections.includes(def.key);
-              const isActive = isDefault && !isDisabled;
+              const isActive = isSectionEnabled(def, project.type, project.disabled_sections);
               return (
                 <label
                   key={def.key}

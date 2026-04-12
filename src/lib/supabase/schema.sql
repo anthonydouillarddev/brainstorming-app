@@ -8,6 +8,7 @@ create table projects (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
   name text not null,
+  official_name text,
   type text not null default 'saas' check (type in ('outil','saas','appli','logiciel','business')),
   description text,
   status text default 'idea' check (status in (
