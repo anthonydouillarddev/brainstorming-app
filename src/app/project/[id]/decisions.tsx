@@ -90,7 +90,7 @@ export default function DecisionsPanel({
         <h2 className="text-xl font-bold tracking-tight">🧭 Décisions</h2>
         <button
           onClick={() => setAdding((v) => !v)}
-          className="text-xs px-3 py-1.5 rounded-xl bg-accent text-white font-medium hover:bg-blue-600 transition-colors shadow-sm"
+          className="text-xs px-3 py-1.5 rounded-xl bg-accent text-white font-medium hover:bg-accent-hover transition-colors shadow-sm"
         >
           {adding ? "✕ Annuler" : "+ Ajouter une décision"}
         </button>
@@ -180,7 +180,7 @@ export default function DecisionsPanel({
 
           <button
             type="submit"
-            className="w-full py-2.5 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm"
+            className="w-full py-2.5 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-accent-hover transition-colors shadow-sm"
           >
             Enregistrer
           </button>

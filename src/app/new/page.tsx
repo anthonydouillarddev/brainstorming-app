@@ -121,7 +121,7 @@ export default function NewProject() {
           <button
             type="submit"
             disabled={loading || !name.trim() || !type}
-            className="flex-1 py-3 bg-accent text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? "Création..." : "Créer le projet"}
           </button>

@@ -7,6 +7,7 @@
   --color-border: var(--bd);
   --color-muted: var(--mt);
   --color-accent: var(--ac);
+  --color-accent-hover: var(--ac-h);
 }
 
 :root {
@@ -15,7 +16,8 @@
   --card: #F2EDE8;
   --bd: #d4cbc0;
   --mt: #7a7068;
-  --ac: #2563EB;
+  --ac: #7C6A4F;
+  --ac-h: #65543C;
 }
 
 .dark {
@@ -24,7 +26,8 @@
   --card: #12121a;
   --bd: #1e1e2e;
   --mt: #6b7280;
-  --ac: #3b82f6;
+  --ac: #C9956B;
+  --ac-h: #B07F55;
 }
 
 body {

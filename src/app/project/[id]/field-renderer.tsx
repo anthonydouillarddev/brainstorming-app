@@ -396,7 +396,7 @@ function LinksField({
           <button
             type="button"
             onClick={addLink}
-            className="px-3 py-2 bg-accent text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-3 py-2 bg-accent text-white text-sm rounded-lg hover:bg-accent-hover transition-colors"
           >
             +
           </button>

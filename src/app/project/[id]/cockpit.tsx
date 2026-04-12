@@ -151,7 +151,7 @@ export default function Cockpit({
       <div
         className={`backdrop-blur-sm border rounded-2xl p-5 shadow-sm ${
           blockers.length > 0
-            ? "bg-red-500/5 border-red-500/40"
+            ? "bg-red-500/15 border-red-500/50"
             : "bg-card/80 border-border"
         }`}
       >
@@ -170,7 +170,7 @@ export default function Cockpit({
             {blockers.map((todo) => (
               <div
                 key={todo.id}
-                className="flex items-start gap-3 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-xl"
+                className="flex items-start gap-3 px-3 py-2 bg-red-500/15 border border-red-500/40 rounded-xl"
               >
                 <span className="text-red-500 text-sm mt-0.5">🚧</span>
                 <span className="text-sm flex-1">{todo.text}</span>
@@ -181,7 +181,7 @@ export default function Cockpit({
       </div>
 
       {/* 2. PROCHAINE ACTION CRITIQUE — auto = 1ère P1 non-done */}
-      <div className="bg-gradient-to-br from-accent/10 to-accent/5 backdrop-blur-sm border border-accent/30 rounded-2xl p-5 shadow-sm">
+      <div className="bg-gradient-to-br from-accent/20 to-accent/10 backdrop-blur-sm border border-accent/40 rounded-2xl p-5 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-accent">
             ⚡ Prochaine action critique

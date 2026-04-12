@@ -141,7 +141,7 @@ export default function RisksPanel({
           />
           <button
             type="submit"
-            className="w-full py-2 bg-accent text-white text-xs font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+            className="w-full py-2 bg-accent text-white text-xs font-semibold rounded-lg hover:bg-accent-hover transition-colors"
           >
             Enregistrer
           </button>

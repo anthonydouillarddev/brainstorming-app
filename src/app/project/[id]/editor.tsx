@@ -392,7 +392,7 @@ export default function BrainstormEditor({
               setTimeout(() => setSyncFeedback(null), 2500);
             }}
             disabled={syncing}
-            className="w-full py-2.5 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-50"
+            className="w-full py-2.5 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-accent-hover transition-colors shadow-sm disabled:opacity-50"
           >
             {syncing ? "Synchronisation..." : "🔄 Synchroniser avec le cockpit"}
           </button>

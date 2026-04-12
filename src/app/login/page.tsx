@@ -93,7 +93,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-accent text-white font-medium rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+            className="w-full py-2.5 bg-accent text-white font-medium rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-50"
           >
             {loading ? "Chargement..." : mode === "login" ? "Se connecter" : "Créer mon compte"}
           </button>
