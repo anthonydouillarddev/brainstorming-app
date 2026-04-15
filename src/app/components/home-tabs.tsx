@@ -5,7 +5,7 @@ import Link from "next/link";
 import TodoList from "./todolist";
 import DevWorkspace from "./dev-workspace";
 import TagFilter from "./tag-filter";
-import { TAG_PRESETS, mergeTagSuggestions, uniqueTags } from "@/lib/tags";
+import { TAG_PRESETS, countTags, mergeTagSuggestions, uniqueTags } from "@/lib/tags";
 import {
   PROJECT_STATUSES,
   PROJECT_TYPES,
@@ -91,6 +91,7 @@ export default function HomeTabs({
     () => mergeTagSuggestions(TAG_PRESETS, knownTags),
     [knownTags]
   );
+  const tagCounts = useMemo(() => countTags(initialTodos), [initialTodos]);
   const [activeTags, setActiveTags] = useState<string[]>([]);
 
   return (
@@ -101,6 +102,7 @@ export default function HomeTabs({
           knownTags={tagSuggestions}
           activeTags={activeTags}
           onChange={setActiveTags}
+          tagCounts={tagCounts}
           label="Filtrer mes tâches par tag"
         />
         <TodoList

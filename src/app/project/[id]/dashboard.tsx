@@ -7,7 +7,7 @@ import type { SectionDef } from "@/lib/sections";
 import type { Project, ProjectStatus, ProjectType, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
 import { PROJECT_STATUSES, PROJECT_TYPES } from "@/lib/types";
 import { deadlineStatus } from "@/lib/deadline";
-import { TAG_PRESETS, mergeTagSuggestions, uniqueTags } from "@/lib/tags";
+import { TAG_PRESETS, countTags, mergeTagSuggestions, uniqueTags } from "@/lib/tags";
 import TagFilter from "@/app/components/tag-filter";
 import ThemeToggle from "@/app/components/theme-toggle";
 import Cockpit from "./cockpit";
@@ -463,14 +463,13 @@ function TasksTab({
   onTasksChange: (todos: Todo[]) => void;
   onIdeasChange: (todos: Todo[]) => void;
 }) {
-  const knownTags = useMemo(
-    () => uniqueTags([...tasks, ...ideas]),
-    [tasks, ideas]
-  );
+  const allTodos = useMemo(() => [...tasks, ...ideas], [tasks, ideas]);
+  const knownTags = useMemo(() => uniqueTags(allTodos), [allTodos]);
   const tagSuggestions = useMemo(
     () => mergeTagSuggestions(TAG_PRESETS, knownTags),
     [knownTags]
   );
+  const tagCounts = useMemo(() => countTags(allTodos), [allTodos]);
   const [activeTags, setActiveTags] = useState<string[]>([]);
 
   return (
@@ -479,6 +478,7 @@ function TasksTab({
         knownTags={tagSuggestions}
         activeTags={activeTags}
         onChange={setActiveTags}
+        tagCounts={tagCounts}
         label="Filtrer tâches + idées par tag"
       />
       <TodoList
