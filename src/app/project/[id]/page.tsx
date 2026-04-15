@@ -22,6 +22,7 @@ export default async function ProjectPage({
     .from("projects")
     .select("*")
     .eq("id", id)
+    .eq("user_id", user.id)
     .single();
 
   if (!project) redirect("/");

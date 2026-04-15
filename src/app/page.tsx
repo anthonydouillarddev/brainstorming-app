@@ -88,7 +88,7 @@ export default async function Home({
           <div className="space-y-3">
             {trashedProjects.map((project) => {
               const type =
-                typeMap.get(project.type) ?? PROJECT_TYPES[1];
+                typeMap.get(project.type) ?? PROJECT_TYPES[0];
               const hasOfficial = !!(
                 project.official_name && project.official_name.trim()
               );
@@ -173,8 +173,11 @@ export default async function Home({
     projectNameById.set(p.id, p.official_name?.trim() || p.name);
   }
 
+  const HOME_PREVIEW_LIMIT = 5;
+
   const blockingTodos = activeTodos
     .filter((t) => t.status === "blocked")
+    .slice(0, HOME_PREVIEW_LIMIT)
     .map((t) => ({
       ...t,
       _projectName: t.project_id
@@ -185,6 +188,7 @@ export default async function Home({
   const topRisks = activeRisks
     .filter((r) => !r.resolved_at)
     .sort((a, b) => riskCriticality(b) - riskCriticality(a))
+    .slice(0, HOME_PREVIEW_LIMIT)
     .map((r) => ({
       ...r,
       _projectName: projectNameById.get(r.project_id),
