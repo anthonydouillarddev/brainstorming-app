@@ -13,6 +13,7 @@ export type ProjectStatus =
 export type TodoStatus = "todo" | "in_progress" | "blocked" | "done";
 export type TodoPriority = "low" | "normal" | "high" | "urgent";
 export type TodoKind = "task" | "idea";
+export type TodoEffort = "S" | "M" | "L" | "XL";
 export type Phase = "discovery" | "build" | "test" | "launch";
 export type ScoreMethod = "none" | "ice";
 
@@ -42,6 +43,9 @@ export interface Todo {
   kind: TodoKind;
   text: string;
   description: string | null;
+  problem: string | null;
+  effort: TodoEffort | null;
+  tags: string[];
   done: boolean;
   status: TodoStatus;
   priority: TodoPriority;
@@ -213,6 +217,13 @@ export const TODO_KINDS: {
     title: "Idées de fonctions",
     addPlaceholder: "Ajouter une idée de fonction...",
   },
+];
+
+export const TODO_EFFORTS: { value: TodoEffort; label: string; emoji: string; hint: string }[] = [
+  { value: "S", label: "S", emoji: "🟢", hint: "Quelques heures" },
+  { value: "M", label: "M", emoji: "🟡", hint: "1-2 jours" },
+  { value: "L", label: "L", emoji: "🟠", hint: "Une semaine" },
+  { value: "XL", label: "XL", emoji: "🔴", hint: "Plusieurs semaines" },
 ];
 
 export const TODO_PRIORITIES: { value: TodoPriority; label: string; short: string; emoji: string }[] = [
