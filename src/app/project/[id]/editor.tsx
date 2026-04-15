@@ -151,11 +151,12 @@ export default function BrainstormEditor({
     await onProjectUpdate({ disabled_sections: disabled });
   }
 
-  const scoreDef = sectionDefs.find((s) => s.key === "score");
+  const scoreActive = activeSections.some((s) => s.key === "score");
+  const scoreDef = scoreActive ? sectionDefs.find((s) => s.key === "score") : undefined;
   const scoreData = sections["score"] || {};
   const scoreFields = scoreDef?.fields.filter((f) => f.type === "score") ?? [];
   const totalScore = scoreFields.reduce((sum, f) => sum + (Number(scoreData[f.key]) || 0), 0);
-  const maxScore = scoreFields.length * 10;
+  const maxScore = scoreFields.reduce((sum, f) => sum + (f.max ?? 10), 0);
 
   function exportForClaude() {
     const lines: string[] = [];
@@ -303,7 +304,7 @@ export default function BrainstormEditor({
           const filledCount = countFilled(def, data);
           const isComplete = filledCount === def.fields.length && def.fields.length > 0;
           const override = collapseOverride[def.key];
-          const isOpen = override ? override === "open" : !isComplete;
+          const isOpen = override === "open";
 
           return (
             <div
