@@ -669,7 +669,8 @@ function TodoRow({
 }) {
   const urgency = todoUrgency(todo);
   const score = todoScore(todo);
-  const hasDescription = (todo.description ?? "").trim().length > 0;
+  const isIdea = kind === "idea";
+  const hasDescription = isIdea && (todo.description ?? "").trim().length > 0;
   const highlight =
     urgency?.urgency === "overdue" || urgency?.urgency === "today"
       ? "bg-red-500/5"
@@ -720,7 +721,7 @@ function TodoRow({
             </div>
           )}
         </div>
-        {todo.effort && (
+        {isIdea && todo.effort && (
           <span
             className={`hidden sm:inline-flex text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0 ${effortBadge[todo.effort]}`}
             title={TODO_EFFORTS.find((e) => e.value === todo.effort)?.hint}
@@ -805,6 +806,7 @@ function TodoEditPanel({
   onDelete: () => void;
   onClose: () => void;
 }) {
+  const isIdea = kind === "idea";
   const [name, setName] = useState(todo.text);
   const [description, setDescription] = useState(todo.description ?? "");
   const [problem, setProblem] = useState(todo.problem ?? "");
@@ -843,54 +845,56 @@ function TodoEditPanel({
 
   return (
     <div className="px-3 sm:px-4 pb-4 pt-2 bg-background/40 border-t border-border space-y-3">
-      <div>
-        <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-          {kind === "idea" ? "Nom de l'idée" : "Nom"}
-        </label>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={commitName}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              (e.target as HTMLInputElement).blur();
-            }
-          }}
-          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm font-medium outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
-        />
-      </div>
+      {isIdea && (
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+            Nom de l&apos;idée
+          </label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={commitName}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm font-medium outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
+          />
+        </div>
+      )}
 
-      <div>
-        <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-          Problème résolu
-        </label>
-        <input
-          value={problem}
-          onChange={(e) => setProblem(e.target.value)}
-          onBlur={commitProblem}
-          placeholder={
-            kind === "idea"
-              ? "Quel problème cette fonction résout ?"
-              : "Contexte, pourquoi cette tâche"
-          }
-          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
-        />
-      </div>
+      {isIdea && (
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+            Problème résolu
+          </label>
+          <input
+            value={problem}
+            onChange={(e) => setProblem(e.target.value)}
+            onBlur={commitProblem}
+            placeholder="Quel problème cette fonction résout ?"
+            className="w-full px-3 py-2 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
+          />
+        </div>
+      )}
 
-      <div>
-        <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-          Description
-        </label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          onBlur={commitDescription}
-          rows={5}
-          placeholder="Détails, liens, sous-étapes..."
-          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 resize-y min-h-[100px] leading-relaxed"
-        />
-      </div>
+      {isIdea && (
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+            Description
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onBlur={commitDescription}
+            rows={5}
+            placeholder="Détails, liens, sous-étapes..."
+            className="w-full px-3 py-2 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 resize-y min-h-[100px] leading-relaxed"
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
         <div>
@@ -939,26 +943,28 @@ function TodoEditPanel({
             className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none"
           />
         </div>
-        <div>
-          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-            Effort
-          </label>
-          <select
-            value={todo.effort ?? ""}
-            onChange={(e) =>
-              onUpdate({ effort: (e.target.value as TodoEffort) || null })
-            }
-            className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none"
-          >
-            <option value="">—</option>
-            {TODO_EFFORTS.map((eff) => (
-              <option key={eff.value} value={eff.value}>
-                {eff.emoji} {eff.label} — {eff.hint}
-              </option>
-            ))}
-          </select>
-        </div>
-        {isProject && (
+        {isIdea && (
+          <div>
+            <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+              Effort
+            </label>
+            <select
+              value={todo.effort ?? ""}
+              onChange={(e) =>
+                onUpdate({ effort: (e.target.value as TodoEffort) || null })
+              }
+              className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none"
+            >
+              <option value="">—</option>
+              {TODO_EFFORTS.map((eff) => (
+                <option key={eff.value} value={eff.value}>
+                  {eff.emoji} {eff.label} — {eff.hint}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {isProject && !isIdea && (
           <div>
             <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
               Phase liée
@@ -977,7 +983,7 @@ function TodoEditPanel({
             </select>
           </div>
         )}
-        <div>
+        <div className={isIdea || isProject ? "" : "col-span-2 md:col-span-1"}>
           <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
             Scoring
           </label>
@@ -1033,54 +1039,56 @@ function TodoEditPanel({
         </div>
       )}
 
-      <div>
-        <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-          Tags
-        </label>
-        <div className="flex flex-wrap gap-1.5 mb-2">
-          {todo.tags.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium"
-            >
-              {tag}
-              <button
-                type="button"
-                onClick={() => removeTag(tag)}
-                className="hover:text-red-400 transition-colors"
-                aria-label={`Retirer le tag ${tag}`}
+      {isIdea && (
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+            Tags
+          </label>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {todo.tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium"
               >
-                ✕
-              </button>
-            </span>
-          ))}
-          {todo.tags.length === 0 && (
-            <span className="text-[10px] text-muted italic">Aucun tag</span>
-          )}
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => removeTag(tag)}
+                  className="hover:text-red-400 transition-colors"
+                  aria-label={`Retirer le tag ${tag}`}
+                >
+                  ✕
+                </button>
+              </span>
+            ))}
+            {todo.tags.length === 0 && (
+              <span className="text-[10px] text-muted italic">Aucun tag</span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addTag();
+                }
+              }}
+              placeholder="Ajouter un tag (UX, Data, Perf...)"
+              className="flex-1 px-3 py-1.5 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
+            />
+            <button
+              type="button"
+              onClick={addTag}
+              disabled={!newTag.trim()}
+              className="px-3 py-1.5 bg-accent text-white text-xs rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-40"
+            >
+              +
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <input
-            value={newTag}
-            onChange={(e) => setNewTag(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addTag();
-              }
-            }}
-            placeholder="Ajouter un tag (UX, Data, Perf...)"
-            className="flex-1 px-3 py-1.5 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
-          />
-          <button
-            type="button"
-            onClick={addTag}
-            disabled={!newTag.trim()}
-            className="px-3 py-1.5 bg-accent text-white text-xs rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-40"
-          >
-            +
-          </button>
-        </div>
-      </div>
+      )}
 
       <div className="flex items-center justify-between gap-2 pt-1">
         <button
