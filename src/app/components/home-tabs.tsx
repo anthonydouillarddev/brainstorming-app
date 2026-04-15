@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import TodoList from "./todolist";
 import DevWorkspace from "./dev-workspace";
@@ -22,24 +22,6 @@ type HomeTab = "projects" | "dev";
 const STORAGE_KEY = "home_active_tab";
 const MAX_PREVIEW = 5;
 
-function subscribeTab(callback: () => void) {
-  window.addEventListener("home_tab_change", callback);
-  return () => window.removeEventListener("home_tab_change", callback);
-}
-
-function getTabSnapshot(): HomeTab {
-  try {
-    const v = localStorage.getItem(STORAGE_KEY);
-    return v === "dev" ? "dev" : "projects";
-  } catch {
-    return "projects";
-  }
-}
-
-function getTabServerSnapshot(): HomeTab {
-  return "projects";
-}
-
 type HomeTabsProps = {
   userId: string;
   activeProjects: Project[];
@@ -59,16 +41,24 @@ export default function HomeTabs({
   blockingTodos,
   topRisks,
 }: HomeTabsProps) {
-  const tab = useSyncExternalStore(
-    subscribeTab,
-    getTabSnapshot,
-    getTabServerSnapshot
-  );
+  const [tab, setTab] = useState<HomeTab>("projects");
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === "dev" || stored === "projects") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTab(stored);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   function switchTab(next: HomeTab) {
+    setTab(next);
     try {
       localStorage.setItem(STORAGE_KEY, next);
-      window.dispatchEvent(new Event("home_tab_change"));
     } catch {
       /* ignore */
     }
@@ -86,12 +76,13 @@ export default function HomeTabs({
   const previewBlocking = blockingTodos.slice(0, MAX_PREVIEW);
   const previewRisks = topRisks.slice(0, MAX_PREVIEW);
 
-  const knownTags = useMemo(() => uniqueTags(initialTodos), [initialTodos]);
+  const [todos, setTodos] = useState<Todo[]>(initialTodos);
+  const knownTags = useMemo(() => uniqueTags(todos), [todos]);
   const tagSuggestions = useMemo(
     () => mergeTagSuggestions(TAG_PRESETS, knownTags),
     [knownTags]
   );
-  const tagCounts = useMemo(() => countTags(initialTodos), [initialTodos]);
+  const tagCounts = useMemo(() => countTags(todos), [todos]);
   const [activeTags, setActiveTags] = useState<string[]>([]);
 
   return (
@@ -108,7 +99,8 @@ export default function HomeTabs({
         <TodoList
           userId={userId}
           scope={{ kind: "home", projects: activeProjects }}
-          initialTodos={initialTodos}
+          initialTodos={todos}
+          onTodosChange={setTodos}
           tagFilter={activeTags}
           tagSuggestions={tagSuggestions}
         />
@@ -287,7 +279,7 @@ export default function HomeTabs({
                 {activeProjects.map((project) => {
                   const status =
                     statusMap.get(project.status) ?? PROJECT_STATUSES[0];
-                  const type = typeMap.get(project.type) ?? PROJECT_TYPES[1];
+                  const type = typeMap.get(project.type) ?? PROJECT_TYPES[0];
                   const hasOfficial = !!(
                     project.official_name && project.official_name.trim()
                   );

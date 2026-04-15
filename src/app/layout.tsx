@@ -15,7 +15,8 @@ export default function RootLayout({
     <html lang="fr" className="h-full antialiased">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#E8E0D8" />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#E8E0D8" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0c0c14" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>

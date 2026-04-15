@@ -77,7 +77,7 @@ export default function ProjectDashboard({
   const actionsMenuRef = useRef<HTMLDivElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  const typeInfo = PROJECT_TYPES.find((t) => t.value === project.type) ?? PROJECT_TYPES[1];
+  const typeInfo = PROJECT_TYPES.find((t) => t.value === project.type) ?? PROJECT_TYPES[0];
   const hasOfficialName = !!(project.official_name && project.official_name.trim());
   const displayTitle = hasOfficialName ? project.official_name! : project.name;
   const deadline = deadlineStatus(project.deadline);
