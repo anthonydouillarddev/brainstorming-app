@@ -6,6 +6,7 @@ import type { Project, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
 import { PROJECT_STATUSES, PHASES, statusIndex, statusPhase } from "@/lib/types";
 import RisksPanel from "./risks";
 import RoadmapPanel from "./roadmap";
+import { deadlineStatus } from "@/lib/deadline";
 
 function firstString(data: SectionData, key: string): string | null {
   const v = data[key];
@@ -482,6 +483,18 @@ export default function Cockpit({
               }}
               className="w-full px-2 py-1 bg-background/60 border border-border rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
             />
+            {(() => {
+              const status = deadlineStatus(deadline || null);
+              if (!status) return null;
+              return (
+                <span
+                  className={`inline-flex items-center gap-1 mt-1.5 text-[11px] px-2 py-0.5 rounded-full font-semibold ${status.className}`}
+                >
+                  <span>{status.emoji}</span>
+                  <span>{status.label}</span>
+                </span>
+              );
+            })()}
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import type { SectionDef } from "@/lib/sections";
 import type { Project, ProjectStatus, ProjectType, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
 import { PROJECT_STATUSES, PROJECT_TYPES } from "@/lib/types";
+import { deadlineStatus } from "@/lib/deadline";
 import ThemeToggle from "@/app/components/theme-toggle";
 import Cockpit from "./cockpit";
 import BrainstormEditor from "./editor";
@@ -77,6 +78,7 @@ export default function ProjectDashboard({
   const typeInfo = PROJECT_TYPES.find((t) => t.value === project.type) ?? PROJECT_TYPES[1];
   const hasOfficialName = !!(project.official_name && project.official_name.trim());
   const displayTitle = hasOfficialName ? project.official_name! : project.name;
+  const deadline = deadlineStatus(project.deadline);
 
   useEffect(() => {
     if (editingName) nameInputRef.current?.focus();
@@ -243,7 +245,7 @@ export default function ProjectDashboard({
             )}
 
             {/* Type badge — cliquable */}
-            <div className="flex items-center gap-2 mt-2 relative" ref={typeMenuRef}>
+            <div className="flex items-center gap-2 mt-2 flex-wrap relative" ref={typeMenuRef}>
               <button
                 type="button"
                 onClick={() => setTypeMenuOpen((v) => !v)}
@@ -254,6 +256,15 @@ export default function ProjectDashboard({
                 <span>{typeInfo.label}</span>
                 <span className="text-[9px] opacity-70">▾</span>
               </button>
+              {deadline && (
+                <span
+                  className={`text-xs px-2.5 py-1 rounded-full font-semibold inline-flex items-center gap-1.5 ${deadline.className}`}
+                  title={`Deadline : ${new Date(project.deadline!).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`}
+                >
+                  <span>{deadline.emoji}</span>
+                  <span>{deadline.label}</span>
+                </span>
+              )}
               {typeMenuOpen && (
                 <div className="absolute top-full left-0 mt-1.5 z-30 bg-card border border-border rounded-xl shadow-lg overflow-hidden min-w-[220px]">
                   {PROJECT_TYPES.map((t) => (
