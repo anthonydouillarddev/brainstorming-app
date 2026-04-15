@@ -12,6 +12,7 @@ export type ProjectStatus =
 
 export type TodoStatus = "todo" | "in_progress" | "blocked" | "done";
 export type TodoPriority = "low" | "normal" | "high" | "urgent";
+export type TodoKind = "task" | "idea";
 export type Phase = "discovery" | "build" | "test" | "launch";
 export type ScoreMethod = "none" | "ice";
 
@@ -38,7 +39,9 @@ export interface Todo {
   id: string;
   user_id: string;
   project_id: string | null;
+  kind: TodoKind;
   text: string;
+  description: string | null;
   done: boolean;
   status: TodoStatus;
   priority: TodoPriority;
@@ -85,6 +88,7 @@ export interface Risk {
   probability: RiskLevel;
   impact: RiskLevel;
   mitigation: string | null;
+  resolved_at: string | null;
   created_at: string;
 }
 
@@ -186,6 +190,29 @@ export const TODO_STATUSES: { value: TodoStatus; label: string; emoji: string; c
   { value: "in_progress", label: "En cours", emoji: "🔵", color: "text-blue-500" },
   { value: "blocked", label: "Bloqué", emoji: "🚧", color: "text-red-500" },
   { value: "done", label: "Terminé", emoji: "✅", color: "text-green-500" },
+];
+
+export const TODO_KINDS: {
+  value: TodoKind;
+  label: string;
+  emoji: string;
+  title: string;
+  addPlaceholder: string;
+}[] = [
+  {
+    value: "task",
+    label: "Tâches",
+    emoji: "📋",
+    title: "Tâches du projet",
+    addPlaceholder: "Ajouter une tâche...",
+  },
+  {
+    value: "idea",
+    label: "Idées",
+    emoji: "💡",
+    title: "Idées de fonctions",
+    addPlaceholder: "Ajouter une idée de fonction...",
+  },
 ];
 
 export const TODO_PRIORITIES: { value: TodoPriority; label: string; short: string; emoji: string }[] = [

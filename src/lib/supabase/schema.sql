@@ -47,7 +47,9 @@ create table todos (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
   project_id uuid references projects(id) on delete set null,
+  kind text not null default 'task' check (kind in ('task','idea')),
   text text not null,
+  description text,
   done boolean default false,
   status text not null default 'todo' check (status in ('todo','in_progress','blocked','done')),
   priority text not null default 'normal' check (priority in ('low','normal','high','urgent')),
@@ -63,6 +65,8 @@ create table todos (
   ice_ease integer,
   created_at timestamptz default now()
 );
+
+create index if not exists todos_user_kind_idx on todos(user_id, kind);
 
 -- ═══════════════════════════════════════════════
 -- DECISIONS (ADR - Architecture Decision Records)
@@ -105,10 +109,12 @@ create table risks (
   probability text not null check (probability in ('low','medium','high')),
   impact text not null check (impact in ('low','medium','high')),
   mitigation text,
+  resolved_at timestamptz,
   created_at timestamptz default now()
 );
 
 create index idx_risks_project on risks(project_id);
+create index if not exists risks_project_resolved_idx on risks(project_id, resolved_at);
 
 -- ═══════════════════════════════════════════════
 -- DEV_ITEMS (workspace Dev perso : idées, liens, docs, infos, prefs)
