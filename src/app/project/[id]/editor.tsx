@@ -73,19 +73,6 @@ export default function BrainstormEditor({
   const saveTimers = useRef<Record<string, NodeJS.Timeout>>({});
   const supabase = createClient();
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(`brainstorm:collapse:${project.id}`);
-      if (stored) {
-        // Sync from external store (localStorage) after mount to avoid hydration mismatch
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCollapseOverride(JSON.parse(stored) as Record<string, "open" | "closed">);
-      }
-    } catch {
-      /* ignore */
-    }
-  }, [project.id]);
-
   const saveSection = useCallback(
     async (sectionKey: string, data: SectionData) => {
       await supabase.from("sections").upsert(
@@ -135,13 +122,10 @@ export default function BrainstormEditor({
   const manageableSections = useMemo(() => getManageableSections(), []);
 
   function toggleManual(key: string, currentlyOpen: boolean) {
-    setCollapseOverride((prev) => {
-      const next = { ...prev, [key]: currentlyOpen ? ("closed" as const) : ("open" as const) };
-      if (typeof window !== "undefined") {
-        localStorage.setItem(`brainstorm:collapse:${project.id}`, JSON.stringify(next));
-      }
-      return next;
-    });
+    setCollapseOverride((prev) => ({
+      ...prev,
+      [key]: currentlyOpen ? "closed" : "open",
+    }));
   }
 
   async function toggleSectionDisabled(sectionKey: string) {
@@ -157,6 +141,24 @@ export default function BrainstormEditor({
   const scoreFields = scoreDef?.fields.filter((f) => f.type === "score") ?? [];
   const totalScore = scoreFields.reduce((sum, f) => sum + (Number(scoreData[f.key]) || 0), 0);
   const maxScore = scoreFields.reduce((sum, f) => sum + (f.max ?? 10), 0);
+
+  const fillProgress = useMemo(() => {
+    if (activeSections.length === 0) return { percent: 0, filled: 0, total: 0 };
+    let filled = 0;
+    let total = 0;
+    for (const def of activeSections) {
+      const data = sections[def.key] || {};
+      for (const field of def.fields) {
+        total++;
+        if (isFieldFilled(data[field.key])) filled++;
+      }
+    }
+    return {
+      percent: total === 0 ? 0 : Math.round((filled / total) * 100),
+      filled,
+      total,
+    };
+  }, [activeSections, sections]);
 
   function exportForClaude() {
     const lines: string[] = [];
@@ -234,17 +236,18 @@ export default function BrainstormEditor({
         <div className="flex items-center gap-3 text-xs">
           {saving && <span className="text-muted">Sauvegarde...</span>}
           {lastSaved && !saving && <span className="text-green-500">✓ {lastSaved}</span>}
-          {maxScore > 0 && (
+          {fillProgress.total > 0 && (
             <span
               className={`font-bold ${
-                totalScore >= maxScore * 0.7
+                fillProgress.percent >= 70
                   ? "text-green-500"
-                  : totalScore >= maxScore * 0.4
+                  : fillProgress.percent >= 40
                   ? "text-yellow-500"
-                  : "text-red-400"
+                  : "text-muted"
               }`}
+              title={`${fillProgress.filled}/${fillProgress.total} champs remplis`}
             >
-              {totalScore}/{maxScore}
+              {fillProgress.percent}% rempli
             </span>
           )}
         </div>
