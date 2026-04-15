@@ -1,96 +1,104 @@
-# Audit complet — Brainstorming App
+# Audit — 2026-04-15
 
-**Date** : 12 avril 2026
-**Périmètre** : 29 fichiers source (.tsx, .ts, .css) + audit visuel Playwright (15 screenshots)
-**Méthode** : review code multi-agents + clean code + Puppeteer headless (light/dark/mobile)
-
----
+Audit complet post-refonte todolist (modal → expand), migrations 009/010/011, filtre tags, badges deadline/urgence.
 
 ## 1. Résumé de session
 
-**6 commits pushés sur main :**
+**Commits pushés lors de cette phase d'audit :**
 ```
-1d53dca docs: mise à jour CLAUDE.md et README.md — onglet Dev, palette, deep linking, 7 tables
-3217cf4 fix(ui): dark mode lisible + login texte mis à jour + typo dev workspace
-1c69ddb fix(meta): theme-color beige + titre et description mis à jour
-b570e4b fix(core): gestion erreurs auth callback + deep linking onglets projet
-1052dd9 style(ui): palette beige/caramel + rouges renforcés + UX tactile
-5b48f47 feat(home): onglets Projets/Dev + workspace Dev + todolist centralisée + blocages/risques
+0f11394 fix(ui): state tab simple, tags live home, theme-color dark, fallbacks
+a463502 fix(risks): line-through uniquement sur le titre + mitigation
+69f639b fix(auth): typer correctement les OTP via EmailOtpType
+e877f46 fix(project): trigger DB pour updated_at, slug export sans accents, exclusion blocages prochaine action
+82a029d fix(state): race conditions + rollback + kanban respecte le filtre
+f320866 fix(security): defense en profondeur user_id + slice previews home
 ```
 
-**16 fichiers modifiés, 3 fichiers créés, 1 migration SQL exécutée, 2 docs mis à jour.**
+**Total session (depuis stabilisation précédente) :** 21 commits pushés — migrations DB 009/010/011, refonte todolist modal→expand, filtre tags avec compteurs, badges deadline projet + urgence todo, modules brainstorm fermés par défaut, auto-expand form création.
+
+**Fichiers modifiés dans la phase d'audit :** 11
+**Fichiers créés durant toute la session :** 3 (`src/lib/tags.ts`, `src/lib/deadline.ts`, `src/app/components/tag-filter.tsx`)
 
 ---
 
-## 2. Bugs corrigés (10)
+## 2. Bugs corrigés
 
-| # | Bug | Sévérité | Fichier | Fix |
-|---|-----|----------|---------|-----|
-| 1 | Auth callback ignore les erreurs d'échange de session | CRITICAL | `auth/callback/route.ts` | Check `{ error }` + redirect `/login?error=auth_failed` + whitelist OTP types |
-| 2 | Filtre Supabase `.or()` invalide quand 0 projets actifs | HIGH | `todolist.tsx:138` | Condition `activeIds.length > 0` avant de construire le filtre |
-| 3 | Dashboard ignore `?tab=tasks` depuis les liens accueil | HIGH | `dashboard.tsx` + `page.tsx` | `searchParams` lu dans le Server Component, passé comme `initialTab` |
-| 4 | Dev workspace : 1 requête Supabase par frappe clavier | HIGH | `dev-workspace.tsx` | Debounce 600ms via `saveTimers` ref |
-| 5 | Dark mode cockpit illisible (contraste quasi nul) | HIGH | `globals.css` | Card `#1a1a28`, border `#2d2d40`, muted `#8b8fa5` |
-| 6 | `theme-color` meta tag encore bleu `#3b82f6` | MEDIUM | `layout.tsx` | Remplacé par `#E8E0D8` |
-| 7 | Metadata titre "Brainstorming SaaS" obsolète | MEDIUM | `layout.tsx` | "Brainstorm — Gestion de projets" |
-| 8 | Login sous-titre "Tes idées SaaS, accessibles partout" | LOW | `login/page.tsx` | "Pilote tes projets de l'idée au lancement" |
-| 9 | Typo genre dev workspace "Aucun idées" | LOW | `dev-workspace.tsx` | "Rien dans idées pour l'instant" |
-| 10 | Placeholder ternaire mort (même texte des 2 côtés) | LOW | `todolist.tsx:285` | Ternaire supprimé |
+| # | Bug | Sévérité | Fichier:ligne | Fix |
+|---|-----|----------|---------------|-----|
+| 1 | Query projet sans `user_id` (défense en profondeur RLS) | CRITICAL | `project/[id]/page.tsx:21-28` | Ajout `.eq("user_id", user.id)` |
+| 2 | `topRisks` / `blockingTodos` transportés en entier dans le payload RSC | CRITICAL | `page.tsx:172-186` | `.slice(0, 5)` côté serveur avant de passer en props |
+| 3 | Race `addTodo` : closure stale sur double Enter rapide | HIGH | `todolist.tsx:193-227` | `setTodos((prev) => [data, ...prev])` functional update |
+| 4 | Kanban ignorait le filtre par tags | HIGH | `todolist.tsx:573` | Ajout `&& matchesFilter(t)` dans `columnTodos` |
+| 5 | Rollback cassé : `previous` capturé après l'optimiste | HIGH | `dev-workspace.tsx:132-149` | `const previous = items` avant `commit(...)` |
+| 6 | `onProjectUpdate({updated_at})` manuel écrasait le trigger DB | HIGH | `editor.tsx:95-106` | Ligne supprimée, le trigger `projects_updated_at` gère seul |
+| 7 | Slug export markdown cassait les accents ("idée" → "id-e") | MEDIUM | `editor.tsx:217-225` | Normalisation NFD + strip diacritiques |
+| 8 | "Prochaine action critique" incluait les tâches bloquées | MEDIUM | `cockpit.tsx:120-121` | Exclusion `status !== "blocked"` |
+| 9 | Cast OTP faux (`"signup" \| "email"` alors qu'on accepte magiclink/recovery) | MEDIUM | `auth/callback/route.ts:20` | Type guard `isValidOtpType` via `EmailOtpType` de supabase-js |
+| 10 | `line-through` sur toute la card risque résolu (fragile) | MEDIUM | `risks.tsx:250-254` | Line-through uniquement sur le titre + mitigation |
+| 11 | Tags du filtre accueil pas live (dérivés de la prop initiale) | MEDIUM | `home-tabs.tsx` | State `todos` local + callback `onTodosChange` |
+| 12 | `theme-color` dark manquant (barre mobile beige en mode sombre) | LOW | `layout.tsx:18` | Ajout 2e `<meta theme-color media="(prefers-color-scheme: dark)">` |
+| 13 | Fallbacks `PROJECT_TYPES[1]` ("saas") arbitraires | LOW | `home-tabs.tsx`, `page.tsx`, `dashboard.tsx` | Remplacés par `PROJECT_TYPES[0]` ("outil") plus neutre |
+| 14 | Non-null assertion `!` sur `DEV_KINDS.find(...)` | LOW | `dev-workspace.tsx:93` | `?? DEV_KINDS[0]` |
+| 15 | `useSyncExternalStore` avec snapshot non-cachée (warning React) | LOW | `home-tabs.tsx` | Remplacé par `useState` + `useEffect` d'hydration |
 
 ---
 
 ## 3. Issues non corrigées (refactors futurs)
 
 | Sévérité | Issue | Raison du report |
-|----------|-------|-----------------|
-| MEDIUM | Duplication cards projet entre `page.tsx` et `home-tabs.tsx` (~30 lignes) | Refactor → extraire `ProjectCard`. Pas de bug fonctionnel. |
-| MEDIUM | Duplication logique debounced save (editor.tsx + resources.tsx, ~25 lignes) | Refactor → extraire `useDebouncedSectionSave`. Fonctionnel. |
-| MEDIUM | Cockpit ~500 lignes, pourrait être découpé en sous-composants | Maintenable pour usage solo, refactor quand ça grossira. |
-| MEDIUM | `ThemeToggle` : hydration mismatch possible (localStorage lu au render) | Fonctionne en pratique car localStorage est lu immédiatement. |
-| MEDIUM | `editor.tsx` : `setSaving` est un boolean global, pas per-section | Si 2 sections sauvegardées en parallèle, le premier `setSaving(false)` efface l'indicateur. Rare en pratique. |
-| LOW | Pas de check applicatif `project.user_id === user.id` dans `page.tsx` | RLS protège déjà en DB. Defense-in-depth à ajouter si multi-user un jour. |
-| LOW | `currentYear` module-level dans `roadmap.tsx` | Edge case onglet ouvert au changement d'année — négligeable. |
-| LOW | `roadmap.tsx` : `onBlur` et `onKeyDown` peuvent déclencher `handleAdd` 2 fois | Guard `submittingRef` en place, mais le timing peut être confus. |
-| LOW | `useSyncExternalStore` dans `home-tabs.tsx` : pas de listener `storage` natif | Le cross-tab sync n'est pas supporté. Acceptable pour usage solo. |
-| LOW | `createClient()` appelé au body de chaque composant client | `createBrowserClient` de `@supabase/ssr` est singleton interne — pas d'impact perf réel. |
+|----------|-------|------------------|
+| MEDIUM | `updateTodo` non debouncée : chaque `onChange` d'un select déclenche 1 `UPDATE` Supabase | Fonctionnel, juste sub-optimal. Un sélect = 1 action voulue, pas de rafale en pratique. Debouncer propre demande une refonte du pattern parent. |
+| MEDIUM | `updateProject` dashboard : rollback full-line (non clé par clé) | Rollback imparfait sur concurrent updates, mais seuls updates en vol sont user-driven séquentiels. Risque concret faible. Refactor = pattern générique (outsized pour le gain). |
+| MEDIUM | `persistPositions` (dev-workspace) : N requêtes parallèles sans gestion d'erreur agrégée | Si 1 update sur N échoue, divergence silencieuse. Fix propre = `upsert` batch ou `Promise.all` avec rollback global. |
+| LOW | `theme-toggle` cause un layout shift (`if (!mounted) return null`) | Solution propre = lire le cookie côté serveur pour SSR. Gain marginal pour outil perso. |
+| LOW | `toggleDone` perd le statut précédent (in_progress → done → todo) | Acceptable : repartir de "todo" est prévisible. "Fix propre" = colonne `previous_status`, overkill. |
+| LOW | `login/page.tsx` compare `error.message === "Invalid login credentials"` (string anglais) | Fragile si Supabase change le wording. À basculer sur `error.status` / `error.code`. |
 
 ---
 
 ## 4. Audit visuel
 
-### Méthode
-
-Puppeteer headless avec Chromium Linux installé en user-space (sans sudo). 15 screenshots capturées automatiquement : login, accueil (projets/dev), 7 onglets projet, création, corbeille, dark mode (accueil + cockpit), mobile (accueil + cockpit).
-
 ### Scores par catégorie
 
 | Catégorie | Score /10 | Justification |
-|-----------|----------|---------------|
-| **Couleurs** | 8/10 | Palette beige/moka cohérente et distinctive en clair. Navy/caramel lisible en sombre (après fix). Gradient de fond élégant. Rouges blocages bien visibles. |
-| **Design** | 7/10 | Cards arrondies + blur cohérent partout. Bonne hiérarchie cockpit → détails. Onglets Projets/Dev bien dimensionnés. Toggle Liste/Kanban propre. |
-| **UX** | 6/10 | Parcours principal fluide. Login sans contexte ("pourquoi s'inscrire ?"). Pas d'onboarding premier projet. Pas de feedback save temps réel sur todolist/dev-workspace. |
-| **Ergonomie** | 7/10 | Rows todo cliquables en entier (tactile-friendly, zone min 32×32). Toggle onglets large. Drag & drop fonctionnel. Feedback drag léger (opacity uniquement). |
-| **Responsive** | 6/10 | Tailwind gère les breakpoints de base. Mobile dark OK. Form todolist wraps bien. Les onglets Dev (5 catégories) pourraient être serrés sur <375px. |
+|-----------|-----------|---------------|
+| **Couleurs** | 8.5 | Palette beige/moka (clair) + navy/caramel (sombre) cohérente et distinctive. Contrastes AA sur le texte principal. Mode sombre particulièrement réussi. Petit bémol : fond beige jaunâtre sous certains écrans. |
+| **Design** | 8.0 | Hiérarchie claire, cards `rounded-2xl` cohérentes, typographie nette. Bonne utilisation des chips/badges (priorité, deadline, type, status). Espacement homogène. Cockpit dense mais bien segmenté. |
+| **UX** | 8.5 | Parcours limpide (accueil → projet → onglets). Empty states soignés. Auto-expand form création = vrai gain. Filtre tags compact/non intrusif. Badge deadline dans le header = awareness immédiate. |
+| **Ergonomie** | 7.0 | Zones cliquables correctes desktop. Mobile : checkboxes 24×24px < 44px recommandé (sous-optimal tactile). Nav claire. Breakpoints `sm:`/`md:` bien placés. |
+| **Responsive** | 7.5 | Todolist OK à 390px (break-words propre, badges cachés au bon moment). Toggle Projets/Dev adapté. Cockpit s'empile en colonne mobile. `15-cockpit-mobile` non capturé (échec du clic script, pas un bug UI). |
 
 ### Détails par screenshot
 
-| # | Page | Mode | Verdict |
-|---|------|------|---------|
-| 01 | Login | Light | Clean, gradient visible, bouton moka, formulaire centré ✅ |
-| 02 | Accueil (Projets) | Light | Todolist centralisée avec badges, toggle visible, blocs blocages/risques rouges bien marqués, 9 projets listés ✅ |
-| 03 | Accueil (Dev) | Light | 5 catégories claires, form d'ajout, état vide propre ✅ |
-| 04 | Cockpit | Light | 8 sections structurées, blocages rouges visibles, prochaine action critique en accent, progression 30% ✅ |
-| 05 | Brainstorm | Light | 13 sections avec collapse, sync button en bas, long scroll bien structuré ✅ |
-| 06 | Tâches | Light | Liste propre, P1/P3, scoring ICE badge, toggle Liste/Kanban ✅ |
-| 07 | Décisions | Light | Formulaire ADR complet, liste des décisions ✅ |
-| 08 | Technique | Light | Champs stack remplis ✅ |
-| 09 | Ressources | Light | Liens avec tags et statuts ✅ |
-| 10 | Création | Light | 5 types, formulaire guidé, bouton moka ✅ |
-| 11 | Corbeille | Light | État vide gracieux ✅ |
-| 12 | Accueil | Dark | Cartes lisibles, bordures visibles, caramel doré, badges colorés ✅ |
-| 13 | Cockpit | Dark | Corrigé — toutes les sections lisibles (cards, textes, bordures) ✅ |
-| 14 | Accueil | Mobile | Layout adapté, onglets stackés, todolist wraps, badges tronqués proprement ✅ |
-| 15 | Cockpit | Mobile | Sections empilées, texte lisible ✅ |
+**01-login** — Épuré, bon contraste, CTA "Se connecter" visible. ✅ RAS.
+
+**02-home (clair)** — 10 tâches, toggle Projets/Dev, filtre tags, 8 projets. Le projet "Brainstorm" affiche bien son badge "Dépassée de 2j" rouge. ✅ **Petit point** : bordure gauche priorité (4px) peu visible en mode clair.
+
+**03-home-dev** — 5 catégories (Idées/Liens/Docs/Infos/Prefs) avec form compact. ✅
+
+**04-cockpit (clair)** — Tous les blocs présents et lisibles. "Prochaine action critique" : fond gradient très pâle (`from-accent/20 to-accent/10`) — **à renforcer** le contraste du texte italique muted quand vide.
+
+**05-brainstorm** — Modules fermés par défaut ✅, badge "67% rempli" bien visible. Modules "✓ COMPLET" en vert clairs. Module picker `⚙️ Modules ▸` qui invite à la personnalisation. **Excellent**.
+
+**06-tasks** — 2 blocs "Tâches du projet" + "Idées de fonctions". Filtre tags en haut. Row tâches avec bordure priorité (rouge P1, orange P2, bleu P3, gris P4). ✅
+
+**07-decisions** — Empty state parfait avec CTA "+ Ajouter une décision". ✅
+
+**08-technique** — Form dense avec chips de suggestions (Next.js, Remix, Astro...). ✅
+
+**09-resources** — Layout propre, placeholders explicites. ✅
+
+**10-new-project** — Form création avec 5 types radio-like. "SaaS" est pré-sélectionné — **à vérifier** : force-t-on le choix conscient ou c'est voulu ? Reco : aucune pré-sélection.
+
+**11-trash** — Empty state "Corbeille vide". ✅
+
+**12-home-dark** — Tous les éléments restent lisibles en mode sombre. Badges (PITCH, Dépassée, Tests) bien contrastés. Fond navy `#0c0c14`. ✅ **Excellent**.
+
+**13-cockpit-dark** — Cockpit dark très réussi. Badge "EN COURS" accent caramel sur fond navy éclatant. Roadmap Q1-Q4 bien visible. ✅
+
+**14-home-mobile** — Stack vertical correct, todolist dense mais lisible. **Point** : le badge deadline "Dépassée de 2j" sur la card projet n'apparaît pas sur ce screenshot alors qu'il devrait (projet avec deadline dépassée). À investiguer — probablement un problème de wrap dans la `flex flex-wrap` du header card.
+
+**15-cockpit-mobile** — Non capturé (script a échoué sur le clic du lien projet en viewport mobile). Non-bloquant.
 
 ---
 
@@ -98,28 +106,36 @@ Puppeteer headless avec Chromium Linux installé en user-space (sans sudo). 15 s
 
 ### Quick wins (1-2h chacun)
 
-1. **Indicateur de sauvegarde** (toast discret) pour todolist + dev workspace — actuellement aucun feedback visuel quand on modifie une tâche ou un item dev
-2. **Badge compteur blocages** dans le toggle onglets Projets — info visible sans scroller
-3. **Feedback validation temps réel** sur le form login — email invalide, mot de passe vide (actuellement : submit silencieux)
-4. **Empty state login** — texte d'accroche / value prop en 3 bullets sous le titre, pour donner envie avant le formulaire
+1. **Checkboxes rondes todolist 32×32 sur mobile** : `w-8 h-8 sm:w-6 sm:h-6` pour se rapprocher des 44px tactile recommandés.
+2. **Renforcer contraste "Prochaine action critique"** quand vide : passer `from-accent/20` → `/30` et texte `text-muted` foncé.
+3. **Investiguer badge deadline mobile sur cards projet** (screenshot 14) : forcer `flex-wrap gap-1.5` pour que le badge apparaisse sous le titre si overflow.
+4. **Pas de pré-sélection type projet dans `/new`** : laisser aucun type coché au départ, forcer le choix conscient.
+5. **Bordure priorité todolist plus visible clair** : `border-l-[5px]` ou fond léger `bg-red-500/5` sur toute la row P1.
 
-### Améliorations futures
+### Améliorations futures (refactors moyens, 2-6h)
 
-5. **Recherche / filtre** dans la todolist centralisée — quand >20 todos, le scan visuel devient difficile
-6. **Onboarding premier projet** — 3 tooltips positionnels pour expliquer cockpit / brainstorm / tâches
-7. **Notifications deadline** — badge ou couleur sur les tâches qui arrivent à échéance dans le cockpit
-8. **Export PDF / Markdown** d'un projet complet (toutes les sections en un doc)
-9. **Onglet Design** — encore vide sur la plupart des projets. Envisager de fusionner avec Brainstorm ou masquer par défaut si peu utilisé.
+6. **Debounce `updateTodo`** pour éviter les rafales (utile si un jour slider/range ajouté).
+7. **`updateProject` clé par clé** pour un rollback parfait en concurrent updates.
+8. **`persistPositions` via `upsert` batch** (dev-workspace + roadmap).
+9. **Filtre par statut** (todo/in_progress/blocked/done) complémentaire au filtre tags.
+10. **Tri colonnes todolist** (priorité / deadline / créé).
 
-### Fonctions à forte valeur ajoutée (déjà en place)
+### Fonctions à valeur ajoutée
 
-- Cockpit "en un coup d'œil" — excellent pour le pilotage rapide
-- Scoring ICE — simple et efficace pour prioriser
-- Soft delete + corbeille — sécurité sans friction
-- Sync brainstorm → cockpit — évite la double saisie
-- Todolist centralisée — vue globale de toutes les tâches avec origine
-- Blocs blocages/risques sur l'accueil — pilotage sans ouvrir chaque projet
-- Deep linking ?tab= — navigation directe vers le bon onglet
+- **Badge deadline proche** sur la liste projets main (< 3j clignotant)
+- **Stats hebdo/mensuelles** : tâches complétées, trend, graph SVG pur
+- **Export PDF cockpit** : screenshot HTML → PDF serveur
+- **Notifs web** (opt-in) pour deadlines imminentes
+- **Raccourcis clavier** : `n` nouvelle tâche, `/` rechercher, `b` brainstorm
+- **Mode focus** : cacher toutes les cards sauf "Prochaine action critique"
+- **Bulk tags** : sélection multi-todos pour ajouter/retirer tags en masse
+
+### Fonctions à surveiller
+
+- **Rollback `updateProject`** : tester 2 onglets du même projet en édition simultanée
+- **Deadline timezone Perth ↔ France** : dates date-only décalent d'un jour
+- **Growth queries `.select("*")`** sans pagination sur `/` : OK pour usage perso, à paginer si > 100 items
+- **Migrations DB** : appliquer 009/010/011 manuellement Supabase Dashboard avant utilisation prod
 
 ---
 
@@ -127,18 +143,20 @@ Puppeteer headless avec Chromium Linux installé en user-space (sans sudo). 15 s
 
 | Aspect | % | Détail |
 |--------|---|--------|
-| Fonctionnalités core | 85% | Cockpit, brainstorm, tâches, décisions, roadmap, risques, dev workspace — tout fonctionne |
-| UI/Design | 75% | Palette en place, responsive basique OK, pas de polissage mobile fin ni animations |
-| Qualité code | 80% | TS strict, pas de `any`, conventions respectées. Quelques refactors medium restants (duplication) |
-| Robustesse | 65% | Auth solide (RLS + server check), optimistic updates. Manque : tests, error boundaries, retry réseau |
-| UX | 65% | Parcours fonctionnel mais brut. Pas d'onboarding, feedback limité, pas de recherche/filtre |
+| **Fonctionnalités core** | 88% | Cockpit, brainstorm 13 sections adaptatives, todolist kanban, ICE scoring, décisions ADR, roadmap Q1-Q4, risques édition+résolution, tags, dev workspace, soft delete. Manque : recherche globale, export PDF, stats. |
+| **UI/Design** | 85% | Palette cohérente, dark excellent, badges informatifs, typographie nette. À peaufiner : tactile mobile, contrastes "Prochaine action", deadline badge mobile. |
+| **Qualité code** | 83% | TS strict OK, RLS + défense en profondeur `user_id`, updates optimistes avec rollback (avec quelques imperfections assumées), debounced saves, peu de `any`/`!`. À améliorer : debounce updateTodo, rollback clé-par-clé. |
+| **Robustesse** | 78% | Migrations idempotentes, trigger `updated_at` DB, filtres cascade corbeille, soft-delete. Manque : tests auto (0), error boundaries globales, gestion offline. |
+| **UX** | 86% | Parcours clair, empty states soignés, auto-expand form, filtre tags, badge urgence dynamique, deep linking `?tab=`, modules brainstorm fermés. Manque : raccourcis clavier, toasts (alert utilisés). |
 
-### Score global estimé : ~78%
+**Score global estimé : 84%**
 
-### Prochaines étapes recommandées (par priorité)
+App déjà très utilisable et cohérente pour usage perso. Le restant = polish (tactile, contrastes, features +) et robustesse (tests), pas de bugs bloquants.
 
-1. Tester en prod sur mobile réel → corriger les soucis responsive spécifiques
-2. Ajouter un indicateur de sauvegarde global (toast ou badge discret)
-3. Error boundaries sur les composants principaux (cockpit, editor, todolist)
-4. Feedback validation form login + empty state accrocheur
-5. Extraire `ProjectCard` et `useDebouncedSectionSave` (refactors medium)
+**Prochaines étapes recommandées (par priorité) :**
+
+1. **Exécuter migrations 009 + 010 + 011** sur Supabase si pas encore fait (prérequis fonctionnel)
+2. **Quick wins visuels** (checkbox 32px mobile, contraste prochaine action, bordure priorité, badge deadline mobile)
+3. **Filtre par statut** (complément naturel du filtre tags, 1-2h)
+4. **Tests manuels critiques** : concurrent updates 2 onglets, timezone Perth↔France, drag&drop ressources
+5. **Feature prioritaire** : recherche globale OU stats hebdo (décider laquelle apporte le plus au quotidien)
