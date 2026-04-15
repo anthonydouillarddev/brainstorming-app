@@ -1,13 +1,14 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type {
   Todo,
   TodoStatus,
   TodoPriority,
   TodoKind,
+  TodoEffort,
   ProjectType,
   Phase,
   ScoreMethod,
@@ -17,10 +18,12 @@ import {
   TODO_PRIORITIES,
   TODO_STATUSES,
   TODO_KINDS,
+  TODO_EFFORTS,
   PHASES,
   PROJECT_TYPES,
 } from "@/lib/types";
 import { todoScore, ICE_HINTS } from "@/lib/scoring";
+import { todoUrgency } from "@/lib/deadline";
 
 type ViewMode = "list" | "kanban";
 
@@ -32,11 +35,11 @@ const KANBAN_COLUMNS: { status: TodoStatus; label: string; emoji: string; accent
 ];
 
 type Scope =
-  | { kind: "global" } // legacy — project_id is null only
-  | { kind: "home"; projects: Project[] } // accueil — tous todos actifs + badge origine + sélecteur
+  | { kind: "global" }
+  | { kind: "home"; projects: Project[] }
   | { kind: "project"; projectId: string; projectType: ProjectType };
 
-type TargetValue = "dev" | string; // "dev" = project_id null, sinon project id
+type TargetValue = "dev" | string;
 
 const priorityBg: Record<TodoPriority, string> = {
   urgent: "border-l-red-500",
@@ -50,6 +53,13 @@ const statusIcon: Record<TodoStatus, string> = {
   in_progress: "🔵",
   blocked: "🚧",
   done: "✅",
+};
+
+const effortBadge: Record<TodoEffort, string> = {
+  S: "bg-green-500/15 text-green-600",
+  M: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400",
+  L: "bg-orange-500/15 text-orange-600",
+  XL: "bg-red-500/15 text-red-500",
 };
 
 export default function TodoList({
@@ -79,7 +89,7 @@ export default function TodoList({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(initialTodos == null);
   const [showDone, setShowDone] = useState(false);
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [view, setView] = useState<ViewMode>("list");
   const supabase = createClient();
 
@@ -251,7 +261,6 @@ export default function TodoList({
   }, [todos]);
 
   const doneTodos = todos.filter((t) => t.status === "done");
-  const detailTodo = detailId ? todos.find((t) => t.id === detailId) ?? null : null;
 
   if (loading) return null;
 
@@ -471,154 +480,83 @@ export default function TodoList({
           )}
         </div>
 
-        {/* Active todos — LIST VIEW */}
         {view === "list" && (
-        <>
-        <div className="divide-y divide-border">
-          {sortedActive.length === 0 && (
-            <p className="px-4 py-6 text-center text-muted text-sm">
-              {kind === "idea" ? "Aucune idée pour l'instant" : "Aucune tâche en cours"}
-            </p>
-          )}
-          {sortedActive.map((todo) => {
-            const score = todoScore(todo);
-            const origin =
-              isHome
-                ? todo.project_id
-                  ? projectNameById.get(todo.project_id) ?? null
-                  : { name: "Dev", emoji: "🧪" }
-                : null;
-            const hasDescription = (todo.description ?? "").trim().length > 0;
-            return (
-              <div key={todo.id} className={`border-l-4 ${priorityBg[todo.priority]}`}>
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setDetailId(todo.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setDetailId(todo.id);
-                    }
-                  }}
-                  className="px-3 sm:px-4 py-3.5 flex items-center gap-2 sm:gap-3 group hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer select-none"
-                  aria-label={`Ouvrir détail : ${todo.text}`}
-                >
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleDone(todo);
-                    }}
-                    className="w-6 h-6 rounded-full border-2 border-border hover:border-accent flex-shrink-0 transition-colors"
-                    aria-label="Marquer comme terminé"
-                  />
-                  <span
-                    className="text-base cursor-default shrink-0"
-                    title={TODO_STATUSES.find((s) => s.value === todo.status)?.label}
-                  >
-                    {statusIcon[todo.status]}
-                  </span>
-                  <span className="text-xs font-semibold text-muted shrink-0">
-                    {TODO_PRIORITIES.find((p) => p.value === todo.priority)?.short}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm break-words leading-snug">{todo.text}</div>
-                    {hasDescription && (
-                      <div className="text-[11px] text-muted mt-0.5 line-clamp-1">
-                        {todo.description}
-                      </div>
-                    )}
-                  </div>
-                  {origin &&
-                    (todo.project_id ? (
-                      <Link
-                        href={`/project/${todo.project_id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hidden sm:inline-flex text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium shrink-0 max-w-[140px] truncate hover:bg-accent/20 transition-colors"
-                        title={origin.name}
-                      >
-                        {origin.emoji} {origin.name}
-                      </Link>
-                    ) : (
-                      <span
-                        className="hidden sm:inline-flex text-[10px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-500 font-medium shrink-0"
-                        title="Tâche Dev (hors projet)"
-                      >
-                        {origin.emoji} {origin.name}
-                      </span>
-                    ))}
-                  {score != null && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/15 text-accent font-semibold shrink-0">
-                      {todo.score_method.toUpperCase()} {score}
-                    </span>
-                  )}
-                  {todo.deadline && (
-                    <span className="text-[10px] text-muted shrink-0 hidden md:inline">
-                      📅 {new Date(todo.deadline).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
-                    </span>
-                  )}
-                  <span
-                    className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-muted text-base group-hover:bg-background/60 group-hover:text-foreground transition-colors"
-                    aria-hidden="true"
-                  >
-                    ✎
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Done */}
-        {doneTodos.length > 0 && (
           <>
-            <button
-              onClick={() => setShowDone(!showDone)}
-              className="w-full px-4 py-2 text-xs text-muted hover:text-foreground border-t border-border transition-colors text-left"
-            >
-              {showDone ? "▾" : "▸"} {doneTodos.length} terminée
-              {doneTodos.length !== 1 ? "s" : ""}
-            </button>
-            {showDone && (
-              <div className="divide-y divide-border">
-                {doneTodos.map((todo) => (
-                  <div
+            <div className="divide-y divide-border">
+              {sortedActive.length === 0 && (
+                <p className="px-4 py-6 text-center text-muted text-sm">
+                  {kind === "idea" ? "Aucune idée pour l'instant" : "Aucune tâche en cours"}
+                </p>
+              )}
+              {sortedActive.map((todo) => {
+                const origin =
+                  isHome
+                    ? todo.project_id
+                      ? projectNameById.get(todo.project_id) ?? null
+                      : { name: "Dev", emoji: "🧪" }
+                    : null;
+                return (
+                  <TodoRow
                     key={todo.id}
-                    className="px-4 py-2 flex items-center gap-3 opacity-50"
-                  >
-                    <button
-                      onClick={() => toggleDone(todo)}
-                      className="w-5 h-5 rounded-full border-2 border-green-600 bg-green-600/20 flex items-center justify-center flex-shrink-0"
-                      aria-label="Rouvrir"
-                    >
-                      <span className="text-green-500 text-xs">✓</span>
-                    </button>
-                    <span className="text-sm flex-1 line-through break-words">{todo.text}</span>
-                    <button
-                      onClick={() => setDetailId(todo.id)}
-                      className="text-muted hover:text-foreground text-xs shrink-0"
-                      aria-label="Voir détail"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      onClick={() => deleteTodo(todo.id)}
-                      className="text-muted hover:text-red-400 text-xs shrink-0"
-                      aria-label="Supprimer"
-                    >
-                      ✕
-                    </button>
+                    todo={todo}
+                    kind={kind}
+                    isProject={isProject}
+                    origin={origin}
+                    expanded={expandedId === todo.id}
+                    onExpandToggle={() =>
+                      setExpandedId(expandedId === todo.id ? null : todo.id)
+                    }
+                    onToggleDone={() => toggleDone(todo)}
+                    onUpdate={(patch) => updateTodo(todo.id, patch)}
+                    onDelete={() => deleteTodo(todo.id)}
+                  />
+                );
+              })}
+            </div>
+
+            {doneTodos.length > 0 && (
+              <>
+                <button
+                  onClick={() => setShowDone(!showDone)}
+                  className="w-full px-4 py-2 text-xs text-muted hover:text-foreground border-t border-border transition-colors text-left"
+                >
+                  {showDone ? "▾" : "▸"} {doneTodos.length} terminée
+                  {doneTodos.length !== 1 ? "s" : ""}
+                </button>
+                {showDone && (
+                  <div className="divide-y divide-border">
+                    {doneTodos.map((todo) => (
+                      <div
+                        key={todo.id}
+                        className="px-4 py-2 flex items-center gap-3 opacity-50"
+                      >
+                        <button
+                          onClick={() => toggleDone(todo)}
+                          className="w-5 h-5 rounded-full border-2 border-green-600 bg-green-600/20 flex items-center justify-center flex-shrink-0"
+                          aria-label="Rouvrir"
+                        >
+                          <span className="text-green-500 text-xs">✓</span>
+                        </button>
+                        <span className="text-sm flex-1 line-through break-words">
+                          {todo.text}
+                        </span>
+                        <button
+                          onClick={() => deleteTodo(todo.id)}
+                          className="text-muted hover:text-red-400 text-xs shrink-0"
+                          aria-label="Supprimer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </>
         )}
-        </>
-        )}
       </div>
 
-      {/* Kanban view */}
       {view === "kanban" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
           {KANBAN_COLUMNS.map((col) => {
@@ -636,9 +574,7 @@ export default function TodoList({
                 </div>
                 <div className="space-y-2">
                   {columnTodos.length === 0 && (
-                    <p className="text-[11px] text-muted/60 italic text-center py-2">
-                      —
-                    </p>
+                    <p className="text-[11px] text-muted/60 italic text-center py-2">—</p>
                   )}
                   {columnTodos.map((todo) => {
                     const score = todoScore(todo);
@@ -652,7 +588,10 @@ export default function TodoList({
                       <button
                         key={todo.id}
                         type="button"
-                        onClick={() => setDetailId(todo.id)}
+                        onClick={() => {
+                          setExpandedId(todo.id);
+                          changeView("list");
+                        }}
                         className={`w-full text-left bg-background/60 border border-border border-l-4 ${priorityBg[todo.priority]} rounded-xl p-2.5 group hover:border-accent/40 transition-colors`}
                       >
                         <p
@@ -703,52 +642,173 @@ export default function TodoList({
           })}
         </div>
       )}
+    </div>
+  );
+}
 
-      {detailTodo && (
-        <TodoDetailModal
-          key={detailTodo.id}
-          todo={detailTodo}
-          isProject={isProject}
-          onClose={() => setDetailId(null)}
-          onUpdate={(patch) => updateTodo(detailTodo.id, patch)}
-          onDelete={() => {
-            setDetailId(null);
-            deleteTodo(detailTodo.id);
+function TodoRow({
+  todo,
+  kind,
+  isProject,
+  origin,
+  expanded,
+  onExpandToggle,
+  onToggleDone,
+  onUpdate,
+  onDelete,
+}: {
+  todo: Todo;
+  kind: TodoKind;
+  isProject: boolean;
+  origin: { name: string; emoji: string } | null;
+  expanded: boolean;
+  onExpandToggle: () => void;
+  onToggleDone: () => void;
+  onUpdate: (patch: Partial<Todo>) => void;
+  onDelete: () => void;
+}) {
+  const urgency = todoUrgency(todo);
+  const score = todoScore(todo);
+  const hasDescription = (todo.description ?? "").trim().length > 0;
+  const highlight =
+    urgency?.urgency === "overdue" || urgency?.urgency === "today"
+      ? "bg-red-500/5"
+      : urgency?.urgency === "soon"
+        ? "bg-red-500/5"
+        : urgency?.urgency === "near"
+          ? "bg-orange-500/5"
+          : "";
+
+  return (
+    <div className={`border-l-4 ${priorityBg[todo.priority]} ${highlight}`}>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onExpandToggle}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onExpandToggle();
+          }
+        }}
+        className="px-3 sm:px-4 py-3.5 flex items-center gap-2 sm:gap-3 group hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer select-none"
+        aria-expanded={expanded}
+        aria-label={`Ouvrir détail : ${todo.text}`}
+      >
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleDone();
           }}
+          className="w-6 h-6 rounded-full border-2 border-border hover:border-accent flex-shrink-0 transition-colors"
+          aria-label="Marquer comme terminé"
+        />
+        <span
+          className="text-base cursor-default shrink-0"
+          title={TODO_STATUSES.find((s) => s.value === todo.status)?.label}
+        >
+          {statusIcon[todo.status]}
+        </span>
+        <span className="text-xs font-semibold text-muted shrink-0">
+          {TODO_PRIORITIES.find((p) => p.value === todo.priority)?.short}
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm break-words leading-snug">{todo.text}</div>
+          {hasDescription && (
+            <div className="text-[11px] text-muted mt-0.5 line-clamp-1">
+              {todo.description}
+            </div>
+          )}
+        </div>
+        {todo.effort && (
+          <span
+            className={`hidden sm:inline-flex text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0 ${effortBadge[todo.effort]}`}
+            title={TODO_EFFORTS.find((e) => e.value === todo.effort)?.hint}
+          >
+            {todo.effort}
+          </span>
+        )}
+        {origin &&
+          (todo.project_id ? (
+            <Link
+              href={`/project/${todo.project_id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="hidden sm:inline-flex text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium shrink-0 max-w-[140px] truncate hover:bg-accent/20 transition-colors"
+              title={origin.name}
+            >
+              {origin.emoji} {origin.name}
+            </Link>
+          ) : (
+            <span
+              className="hidden sm:inline-flex text-[10px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-500 font-medium shrink-0"
+              title="Tâche Dev (hors projet)"
+            >
+              {origin.emoji} {origin.name}
+            </span>
+          ))}
+        {score != null && (
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/15 text-accent font-semibold shrink-0">
+            {todo.score_method.toUpperCase()} {score}
+          </span>
+        )}
+        {urgency && (
+          <span
+            className={`text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 inline-flex items-center gap-1 ${urgency.className}`}
+            title={
+              todo.deadline
+                ? `Deadline : ${new Date(todo.deadline).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`
+                : undefined
+            }
+          >
+            <span>{urgency.emoji}</span>
+            <span className="hidden sm:inline">{urgency.label}</span>
+          </span>
+        )}
+        <span
+          className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-base transition-all ${
+            expanded
+              ? "bg-accent/15 text-accent"
+              : "text-muted group-hover:bg-background/60"
+          }`}
+          aria-hidden="true"
+        >
+          {expanded ? "▾" : "✎"}
+        </span>
+      </div>
+
+      {expanded && (
+        <TodoEditPanel
+          todo={todo}
+          kind={kind}
+          isProject={isProject}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          onClose={onExpandToggle}
         />
       )}
     </div>
   );
 }
 
-function TodoDetailModal({
+function TodoEditPanel({
   todo,
+  kind,
   isProject,
-  onClose,
   onUpdate,
   onDelete,
+  onClose,
 }: {
   todo: Todo;
+  kind: TodoKind;
   isProject: boolean;
-  onClose: () => void;
   onUpdate: (patch: Partial<Todo>) => void;
   onDelete: () => void;
+  onClose: () => void;
 }) {
   const [name, setName] = useState(todo.text);
   const [description, setDescription] = useState(todo.description ?? "");
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [onClose]);
+  const [problem, setProblem] = useState(todo.problem ?? "");
+  const [newTag, setNewTag] = useState("");
 
   function commitName() {
     const trimmed = name.trim();
@@ -761,206 +821,282 @@ function TodoDetailModal({
     if (next !== (todo.description ?? null)) onUpdate({ description: next });
   }
 
+  function commitProblem() {
+    const next = problem.trim() ? problem.trim() : null;
+    if (next !== (todo.problem ?? null)) onUpdate({ problem: next });
+  }
+
+  function addTag() {
+    const tag = newTag.trim();
+    if (!tag) return;
+    if (todo.tags.includes(tag)) {
+      setNewTag("");
+      return;
+    }
+    onUpdate({ tags: [...todo.tags, tag] });
+    setNewTag("");
+  }
+
+  function removeTag(tag: string) {
+    onUpdate({ tags: todo.tags.filter((t) => t !== tag) });
+  }
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className="w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="sticky top-0 flex items-center justify-between gap-2 px-4 sm:px-5 py-3 border-b border-border bg-card/95 backdrop-blur-sm z-10">
-          <div className="text-xs uppercase tracking-wider text-muted font-semibold">
-            Détail
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-foreground hover:bg-background/60 transition-colors"
-            aria-label="Fermer"
+    <div className="px-3 sm:px-4 pb-4 pt-2 bg-background/40 border-t border-border space-y-3">
+      <div>
+        <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+          {kind === "idea" ? "Nom de l'idée" : "Nom"}
+        </label>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={commitName}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              (e.target as HTMLInputElement).blur();
+            }
+          }}
+          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm font-medium outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
+        />
+      </div>
+
+      <div>
+        <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+          Problème résolu
+        </label>
+        <input
+          value={problem}
+          onChange={(e) => setProblem(e.target.value)}
+          onBlur={commitProblem}
+          placeholder={
+            kind === "idea"
+              ? "Quel problème cette fonction résout ?"
+              : "Contexte, pourquoi cette tâche"
+          }
+          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
+        />
+      </div>
+
+      <div>
+        <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+          Description
+        </label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          onBlur={commitDescription}
+          rows={5}
+          placeholder="Détails, liens, sous-étapes..."
+          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 resize-y min-h-[100px] leading-relaxed"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+            Statut
+          </label>
+          <select
+            value={todo.status}
+            onChange={(e) => {
+              const status = e.target.value as TodoStatus;
+              onUpdate({ status, done: status === "done" });
+            }}
+            className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
           >
-            ✕
-          </button>
+            {TODO_STATUSES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.emoji} {s.label}
+              </option>
+            ))}
+          </select>
         </div>
-
-        <div className="px-4 sm:px-5 py-4 space-y-4">
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+            Priorité
+          </label>
+          <select
+            value={todo.priority}
+            onChange={(e) => onUpdate({ priority: e.target.value as TodoPriority })}
+            className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none"
+          >
+            {TODO_PRIORITIES.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.emoji} {p.short}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+            Deadline
+          </label>
+          <input
+            type="date"
+            value={todo.deadline ?? ""}
+            onChange={(e) => onUpdate({ deadline: e.target.value || null })}
+            className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+            Effort
+          </label>
+          <select
+            value={todo.effort ?? ""}
+            onChange={(e) =>
+              onUpdate({ effort: (e.target.value as TodoEffort) || null })
+            }
+            className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none"
+          >
+            <option value="">—</option>
+            {TODO_EFFORTS.map((eff) => (
+              <option key={eff.value} value={eff.value}>
+                {eff.emoji} {eff.label} — {eff.hint}
+              </option>
+            ))}
+          </select>
+        </div>
+        {isProject && (
           <div>
             <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-              Nom
+              Phase liée
             </label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={commitName}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  (e.target as HTMLInputElement).blur();
-                }
-              }}
-              className="w-full px-3 py-2.5 bg-background/60 border border-border rounded-xl text-base font-medium outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
-            />
+            <select
+              value={todo.phase ?? ""}
+              onChange={(e) => onUpdate({ phase: (e.target.value as Phase) || null })}
+              className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none"
+            >
+              <option value="">—</option>
+              {PHASES.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.emoji} {p.label}
+                </option>
+              ))}
+            </select>
           </div>
+        )}
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+            Scoring
+          </label>
+          <select
+            value={todo.score_method === "ice" ? "ice" : "none"}
+            onChange={(e) => onUpdate({ score_method: e.target.value as ScoreMethod })}
+            className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none"
+          >
+            <option value="none">Aucun</option>
+            <option value="ice">ICE</option>
+          </select>
+        </div>
+      </div>
 
-          <div>
-            <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              onBlur={commitDescription}
-              rows={6}
-              placeholder="Ajouter des détails, contexte, liens..."
-              className="w-full px-3 py-2.5 bg-background/60 border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 resize-y min-h-[140px] leading-relaxed"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            <div>
-              <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-                Statut
-              </label>
-              <select
-                value={todo.status}
-                onChange={(e) => {
-                  const status = e.target.value as TodoStatus;
-                  onUpdate({ status, done: status === "done" });
-                }}
-                className="w-full px-2 py-1.5 bg-background/60 border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30"
-              >
-                {TODO_STATUSES.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.emoji} {s.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-                Priorité
-              </label>
-              <select
-                value={todo.priority}
-                onChange={(e) => onUpdate({ priority: e.target.value as TodoPriority })}
-                className="w-full px-2 py-1.5 bg-background/60 border border-border rounded-lg text-xs outline-none"
-              >
-                {TODO_PRIORITIES.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.emoji} {p.short}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-                Deadline
-              </label>
-              <input
-                type="date"
-                value={todo.deadline ?? ""}
-                onChange={(e) => onUpdate({ deadline: e.target.value || null })}
-                className="w-full px-2 py-1.5 bg-background/60 border border-border rounded-lg text-xs outline-none"
-              />
-            </div>
-            {isProject && (
-              <div>
+      {todo.score_method === "ice" && (
+        <div className="space-y-2 p-3 bg-card/50 border border-border rounded-xl">
+          <p className="text-[10px] text-muted italic">
+            Note chaque critère de 1 à 10. Score = Impact × Confiance × Facilité.
+            L&apos;ease influe aussi sur l&apos;urgence deadline (complexe = déclenche plus tôt).
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                { field: "ice_impact", hintKey: "impact" },
+                { field: "ice_confidence", hintKey: "confidence" },
+                { field: "ice_ease", hintKey: "ease" },
+              ] as const
+            ).map(({ field, hintKey }) => (
+              <div key={field}>
                 <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-                  Phase
+                  {ICE_HINTS[hintKey].title}
                 </label>
-                <select
-                  value={todo.phase ?? ""}
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={todo[field] ?? ""}
                   onChange={(e) =>
-                    onUpdate({ phase: (e.target.value as Phase) || null })
+                    onUpdate({
+                      [field]: e.target.value ? Number(e.target.value) : null,
+                    } as Partial<Todo>)
                   }
-                  className="w-full px-2 py-1.5 bg-background/60 border border-border rounded-lg text-xs outline-none"
-                >
-                  <option value="">—</option>
-                  {PHASES.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.emoji} {p.label}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="1-10"
+                  title={ICE_HINTS[hintKey].hint}
+                  className="w-full px-2 py-1.5 bg-background border border-border rounded-lg text-xs outline-none"
+                />
+                <p className="text-[9px] text-muted/80 mt-1 leading-tight">
+                  {ICE_HINTS[hintKey].hint}
+                </p>
               </div>
-            )}
-            <div className={isProject ? "" : "col-span-2 md:col-span-1"}>
-              <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-                Scoring
-              </label>
-              <select
-                value={todo.score_method === "ice" ? "ice" : "none"}
-                onChange={(e) =>
-                  onUpdate({ score_method: e.target.value as ScoreMethod })
-                }
-                className="w-full px-2 py-1.5 bg-background/60 border border-border rounded-lg text-xs outline-none"
-              >
-                <option value="none">Aucun</option>
-                <option value="ice">ICE</option>
-              </select>
-            </div>
+            ))}
           </div>
+        </div>
+      )}
 
-          {todo.score_method === "ice" && (
-            <div className="space-y-2 p-3 bg-background/40 border border-border rounded-xl">
-              <p className="text-[10px] text-muted italic">
-                Note chaque critère de 1 à 10. Score = Impact × Confiance × Facilité.
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    { field: "ice_impact", hintKey: "impact" },
-                    { field: "ice_confidence", hintKey: "confidence" },
-                    { field: "ice_ease", hintKey: "ease" },
-                  ] as const
-                ).map(({ field, hintKey }) => (
-                  <div key={field}>
-                    <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-                      {ICE_HINTS[hintKey].title}
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={10}
-                      value={todo[field] ?? ""}
-                      onChange={(e) =>
-                        onUpdate({
-                          [field]: e.target.value ? Number(e.target.value) : null,
-                        } as Partial<Todo>)
-                      }
-                      placeholder="1-10"
-                      title={ICE_HINTS[hintKey].hint}
-                      className="w-full px-2 py-1.5 bg-card border border-border rounded-lg text-xs outline-none"
-                    />
-                    <p className="text-[9px] text-muted/80 mt-1 leading-tight">
-                      {ICE_HINTS[hintKey].hint}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+      <div>
+        <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+          Tags
+        </label>
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {todo.tags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium"
+            >
+              {tag}
+              <button
+                type="button"
+                onClick={() => removeTag(tag)}
+                className="hover:text-red-400 transition-colors"
+                aria-label={`Retirer le tag ${tag}`}
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+          {todo.tags.length === 0 && (
+            <span className="text-[10px] text-muted italic">Aucun tag</span>
           )}
         </div>
-
-        <div className="sticky bottom-0 flex items-center justify-between gap-2 px-4 sm:px-5 py-3 border-t border-border bg-card/95 backdrop-blur-sm">
+        <div className="flex gap-2">
+          <input
+            value={newTag}
+            onChange={(e) => setNewTag(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addTag();
+              }
+            }}
+            placeholder="Ajouter un tag (UX, Data, Perf...)"
+            className="flex-1 px-3 py-1.5 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
+          />
           <button
             type="button"
-            onClick={onDelete}
-            className="px-3 py-2 text-xs font-semibold rounded-lg bg-red-500/15 text-red-500 hover:bg-red-500/25 transition-colors"
+            onClick={addTag}
+            disabled={!newTag.trim()}
+            className="px-3 py-1.5 bg-accent text-white text-xs rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-40"
           >
-            🗑️ Supprimer
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold rounded-lg bg-accent text-white hover:bg-accent-hover transition-colors"
-          >
-            Fermer
+            +
           </button>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 pt-1">
+        <button
+          type="button"
+          onClick={onDelete}
+          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-500/15 text-red-500 hover:bg-red-500/25 transition-colors"
+        >
+          🗑️ Supprimer
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-background/60 border border-border text-muted hover:text-foreground transition-colors"
+        >
+          Fermer
+        </button>
       </div>
     </div>
   );
