@@ -68,12 +68,16 @@ export default function TodoList({
   kind = "task",
   initialTodos,
   onTodosChange,
+  tagFilter = [],
+  tagSuggestions = [],
 }: {
   userId: string;
   scope?: Scope;
   kind?: TodoKind;
   initialTodos?: Todo[];
   onTodosChange?: (todos: Todo[]) => void;
+  tagFilter?: string[];
+  tagSuggestions?: string[];
 }) {
   const [todos, setTodos] = useState<Todo[]>(initialTodos ?? []);
   const [newText, setNewText] = useState("");
@@ -86,12 +90,14 @@ export default function TodoList({
   const [newIceConfidence, setNewIceConfidence] = useState<string>("");
   const [newIceEase, setNewIceEase] = useState<string>("");
   const [newTarget, setNewTarget] = useState<TargetValue>("dev");
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [formFocused, setFormFocused] = useState(false);
   const [loading, setLoading] = useState(initialTodos == null);
   const [showDone, setShowDone] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [view, setView] = useState<ViewMode>("list");
   const supabase = createClient();
+
+  const showAdvanced = formFocused || newText.trim().length > 0;
 
   const kindInfo = useMemo(
     () => TODO_KINDS.find((k) => k.value === kind) ?? TODO_KINDS[0],
@@ -182,7 +188,6 @@ export default function TodoList({
     setNewIceConfidence("");
     setNewIceEase("");
     setNewTarget("dev");
-    setShowAdvanced(false);
   }
 
   async function addTodo(e?: React.FormEvent | React.KeyboardEvent | React.MouseEvent) {
@@ -217,6 +222,7 @@ export default function TodoList({
     if (data) {
       commit([data as Todo, ...todos]);
       resetNewForm();
+      setFormFocused(false);
     }
   }
 
@@ -248,19 +254,27 @@ export default function TodoList({
     }
   }
 
+  const matchesFilter = useMemo(() => {
+    if (tagFilter.length === 0) return () => true;
+    const filterSet = new Set(tagFilter);
+    return (t: Todo) => (t.tags ?? []).some((tag) => filterSet.has(tag));
+  }, [tagFilter]);
+
   const sortedActive = useMemo(() => {
     const order: Record<TodoPriority, number> = { urgent: 0, high: 1, normal: 2, low: 3 };
-    return [...todos.filter((t) => t.status !== "done")].sort((a, b) => {
-      const sa = todoScore(a);
-      const sb = todoScore(b);
-      if (sa != null && sb != null) return sb - sa;
-      if (sa != null) return -1;
-      if (sb != null) return 1;
-      return order[a.priority] - order[b.priority];
-    });
-  }, [todos]);
+    return [...todos.filter((t) => t.status !== "done" && matchesFilter(t))].sort(
+      (a, b) => {
+        const sa = todoScore(a);
+        const sb = todoScore(b);
+        if (sa != null && sb != null) return sb - sa;
+        if (sa != null) return -1;
+        if (sb != null) return 1;
+        return order[a.priority] - order[b.priority];
+      }
+    );
+  }, [todos, matchesFilter]);
 
-  const doneTodos = todos.filter((t) => t.status === "done");
+  const doneTodos = todos.filter((t) => t.status === "done" && matchesFilter(t));
 
   if (loading) return null;
 
@@ -308,8 +322,16 @@ export default function TodoList({
         </div>
       </div>
       <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl overflow-hidden shadow-sm">
-        {/* Add — form compact + panneau avancé */}
-        <div className="px-3 sm:px-4 py-3 border-b border-border">
+        {/* Add — form compact + panneau avancé qui s'ouvre au focus */}
+        <div
+          className="px-3 sm:px-4 py-3 border-b border-border"
+          onFocus={() => setFormFocused(true)}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+              setFormFocused(false);
+            }
+          }}
+        >
           <div className="flex gap-2 flex-wrap">
             <input
               value={newText}
@@ -349,19 +371,6 @@ export default function TodoList({
                 </option>
               ))}
             </select>
-            <button
-              type="button"
-              onClick={() => setShowAdvanced((v) => !v)}
-              className={`px-2.5 py-2 rounded-lg text-sm transition-colors border ${
-                showAdvanced
-                  ? "bg-accent/15 border-accent/40 text-accent"
-                  : "bg-background/60 border-border text-muted hover:text-foreground"
-              }`}
-              aria-label="Plus d'options"
-              title="Plus d'options"
-            >
-              ⚙️
-            </button>
             <button
               type="button"
               onClick={addTodo}
@@ -509,6 +518,7 @@ export default function TodoList({
                     onToggleDone={() => toggleDone(todo)}
                     onUpdate={(patch) => updateTodo(todo.id, patch)}
                     onDelete={() => deleteTodo(todo.id)}
+                    tagSuggestions={tagSuggestions}
                   />
                 );
               })}
@@ -656,6 +666,7 @@ function TodoRow({
   onToggleDone,
   onUpdate,
   onDelete,
+  tagSuggestions,
 }: {
   todo: Todo;
   kind: TodoKind;
@@ -666,6 +677,7 @@ function TodoRow({
   onToggleDone: () => void;
   onUpdate: (patch: Partial<Todo>) => void;
   onDelete: () => void;
+  tagSuggestions: string[];
 }) {
   const urgency = todoUrgency(todo);
   const score = todoScore(todo);
@@ -785,6 +797,7 @@ function TodoRow({
           onUpdate={onUpdate}
           onDelete={onDelete}
           onClose={onExpandToggle}
+          tagSuggestions={tagSuggestions}
         />
       )}
     </div>
@@ -798,6 +811,7 @@ function TodoEditPanel({
   onUpdate,
   onDelete,
   onClose,
+  tagSuggestions,
 }: {
   todo: Todo;
   kind: TodoKind;
@@ -805,6 +819,7 @@ function TodoEditPanel({
   onUpdate: (patch: Partial<Todo>) => void;
   onDelete: () => void;
   onClose: () => void;
+  tagSuggestions: string[];
 }) {
   const isIdea = kind === "idea";
   const [name, setName] = useState(todo.text);
@@ -1048,7 +1063,7 @@ function TodoEditPanel({
             {todo.tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium"
+                className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent/15 text-accent font-medium"
               >
                 {tag}
                 <button
@@ -1065,6 +1080,25 @@ function TodoEditPanel({
               <span className="text-[10px] text-muted italic">Aucun tag</span>
             )}
           </div>
+          {tagSuggestions.filter((t) => !todo.tags.includes(t)).length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              <span className="text-[9px] text-muted self-center uppercase tracking-wider">
+                Suggestions
+              </span>
+              {tagSuggestions
+                .filter((t) => !todo.tags.includes(t))
+                .map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => onUpdate({ tags: [...todo.tags, tag] })}
+                    className="text-[10px] px-2 py-0.5 rounded-full bg-background/60 border border-border text-muted hover:text-accent hover:border-accent/50 transition-colors"
+                  >
+                    + {tag}
+                  </button>
+                ))}
+            </div>
+          )}
           <div className="flex gap-2">
             <input
               value={newTag}
@@ -1075,7 +1109,7 @@ function TodoEditPanel({
                   addTag();
                 }
               }}
-              placeholder="Ajouter un tag (UX, Data, Perf...)"
+              placeholder="Créer un tag personnalisé..."
               className="flex-1 px-3 py-1.5 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
             />
             <button

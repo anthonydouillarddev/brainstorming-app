@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import TodoList from "./todolist";
 import DevWorkspace from "./dev-workspace";
+import TagFilter from "./tag-filter";
+import { TAG_PRESETS, mergeTagSuggestions, uniqueTags } from "@/lib/tags";
 import {
   PROJECT_STATUSES,
   PROJECT_TYPES,
@@ -84,14 +86,31 @@ export default function HomeTabs({
   const previewBlocking = blockingTodos.slice(0, MAX_PREVIEW);
   const previewRisks = topRisks.slice(0, MAX_PREVIEW);
 
+  const knownTags = useMemo(() => uniqueTags(initialTodos), [initialTodos]);
+  const tagSuggestions = useMemo(
+    () => mergeTagSuggestions(TAG_PRESETS, knownTags),
+    [knownTags]
+  );
+  const [activeTags, setActiveTags] = useState<string[]>([]);
+
   return (
     <div className="space-y-8">
       {/* Todolist main — globale, visible dans les 2 onglets */}
-      <TodoList
-        userId={userId}
-        scope={{ kind: "home", projects: activeProjects }}
-        initialTodos={initialTodos}
-      />
+      <div>
+        <TagFilter
+          knownTags={tagSuggestions}
+          activeTags={activeTags}
+          onChange={setActiveTags}
+          label="Filtrer mes tâches par tag"
+        />
+        <TodoList
+          userId={userId}
+          scope={{ kind: "home", projects: activeProjects }}
+          initialTodos={initialTodos}
+          tagFilter={activeTags}
+          tagSuggestions={tagSuggestions}
+        />
+      </div>
 
       {/* Toggle Projets / Dev */}
       <div className="flex items-center justify-center">

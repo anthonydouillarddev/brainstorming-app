@@ -2,11 +2,13 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { SectionDef } from "@/lib/sections";
 import type { Project, ProjectStatus, ProjectType, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
 import { PROJECT_STATUSES, PROJECT_TYPES } from "@/lib/types";
 import { deadlineStatus } from "@/lib/deadline";
+import { TAG_PRESETS, mergeTagSuggestions, uniqueTags } from "@/lib/tags";
+import TagFilter from "@/app/components/tag-filter";
 import ThemeToggle from "@/app/components/theme-toggle";
 import Cockpit from "./cockpit";
 import BrainstormEditor from "./editor";
@@ -395,22 +397,14 @@ export default function ProjectDashboard({
       )}
 
       {tab === "tasks" && (
-        <div className="space-y-8">
-          <TodoList
-            userId={userId}
-            scope={{ kind: "project", projectId: project.id, projectType: project.type }}
-            kind="task"
-            initialTodos={tasks}
-            onTodosChange={setTasks}
-          />
-          <TodoList
-            userId={userId}
-            scope={{ kind: "project", projectId: project.id, projectType: project.type }}
-            kind="idea"
-            initialTodos={ideas}
-            onTodosChange={setIdeas}
-          />
-        </div>
+        <TasksTab
+          userId={userId}
+          project={project}
+          tasks={tasks}
+          ideas={ideas}
+          onTasksChange={setTasks}
+          onIdeasChange={setIdeas}
+        />
       )}
 
       {tab === "decisions" && (
@@ -450,6 +444,61 @@ export default function ProjectDashboard({
           onSectionsChange={setSections}
         />
       )}
+    </div>
+  );
+}
+
+function TasksTab({
+  userId,
+  project,
+  tasks,
+  ideas,
+  onTasksChange,
+  onIdeasChange,
+}: {
+  userId: string;
+  project: Project;
+  tasks: Todo[];
+  ideas: Todo[];
+  onTasksChange: (todos: Todo[]) => void;
+  onIdeasChange: (todos: Todo[]) => void;
+}) {
+  const knownTags = useMemo(
+    () => uniqueTags([...tasks, ...ideas]),
+    [tasks, ideas]
+  );
+  const tagSuggestions = useMemo(
+    () => mergeTagSuggestions(TAG_PRESETS, knownTags),
+    [knownTags]
+  );
+  const [activeTags, setActiveTags] = useState<string[]>([]);
+
+  return (
+    <div className="space-y-8">
+      <TagFilter
+        knownTags={tagSuggestions}
+        activeTags={activeTags}
+        onChange={setActiveTags}
+        label="Filtrer tâches + idées par tag"
+      />
+      <TodoList
+        userId={userId}
+        scope={{ kind: "project", projectId: project.id, projectType: project.type }}
+        kind="task"
+        initialTodos={tasks}
+        onTodosChange={onTasksChange}
+        tagFilter={activeTags}
+        tagSuggestions={tagSuggestions}
+      />
+      <TodoList
+        userId={userId}
+        scope={{ kind: "project", projectId: project.id, projectType: project.type }}
+        kind="idea"
+        initialTodos={ideas}
+        onTodosChange={onIdeasChange}
+        tagFilter={activeTags}
+        tagSuggestions={tagSuggestions}
+      />
     </div>
   );
 }
