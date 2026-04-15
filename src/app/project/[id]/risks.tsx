@@ -248,11 +248,7 @@ function RiskRow({
   const isResolved = !!risk.resolved_at;
 
   return (
-    <div
-      className={`rounded-xl border ${color.bg} ${color.border} ${
-        isResolved ? "line-through decoration-muted" : ""
-      }`}
-    >
+    <div className={`rounded-xl border ${color.bg} ${color.border}`}>
       <div
         role="button"
         tabIndex={0}
@@ -273,14 +269,20 @@ function RiskRow({
           {crit}
         </span>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium break-words">{risk.title}</div>
+          <div
+            className={`text-sm font-medium break-words ${isResolved ? "line-through decoration-muted" : ""}`}
+          >
+            {risk.title}
+          </div>
           {risk.mitigation && (
-            <div className="text-xs text-muted mt-0.5 break-words">
+            <div
+              className={`text-xs text-muted mt-0.5 break-words ${isResolved ? "line-through decoration-muted" : ""}`}
+            >
               → {risk.mitigation}
             </div>
           )}
           {isResolved && risk.resolved_at && (
-            <div className="text-[10px] text-green-600 dark:text-green-400 mt-1 no-underline">
+            <div className="text-[10px] text-green-600 dark:text-green-400 mt-1">
               ✅ Résolu le{" "}
               {new Date(risk.resolved_at).toLocaleDateString("fr-FR", {
                 day: "numeric",
@@ -299,7 +301,7 @@ function RiskRow({
       </div>
 
       {editing && (
-        <div className="px-3 pb-3 pt-1 border-t border-border/60 bg-background/30 space-y-2 rounded-b-xl no-underline">
+        <div className="px-3 pb-3 pt-1 border-t border-border/60 bg-background/30 space-y-2 rounded-b-xl">
           <div>
             <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
               Titre
