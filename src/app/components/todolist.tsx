@@ -1054,75 +1054,73 @@ function TodoEditPanel({
         </div>
       )}
 
-      {isIdea && (
-        <div>
-          <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
-            Tags
-          </label>
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {todo.tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent/15 text-accent font-medium"
-              >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => removeTag(tag)}
-                  className="hover:text-red-400 transition-colors"
-                  aria-label={`Retirer le tag ${tag}`}
-                >
-                  ✕
-                </button>
-              </span>
-            ))}
-            {todo.tags.length === 0 && (
-              <span className="text-[10px] text-muted italic">Aucun tag</span>
-            )}
-          </div>
-          {tagSuggestions.filter((t) => !todo.tags.includes(t)).length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2">
-              <span className="text-[9px] text-muted self-center uppercase tracking-wider">
-                Suggestions
-              </span>
-              {tagSuggestions
-                .filter((t) => !todo.tags.includes(t))
-                .map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => onUpdate({ tags: [...todo.tags, tag] })}
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-background/60 border border-border text-muted hover:text-accent hover:border-accent/50 transition-colors"
-                  >
-                    + {tag}
-                  </button>
-                ))}
-            </div>
-          )}
-          <div className="flex gap-2">
-            <input
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addTag();
-                }
-              }}
-              placeholder="Créer un tag personnalisé..."
-              className="flex-1 px-3 py-1.5 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
-            />
-            <button
-              type="button"
-              onClick={addTag}
-              disabled={!newTag.trim()}
-              className="px-3 py-1.5 bg-accent text-white text-xs rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-40"
+      <div>
+        <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">
+          Tags
+        </label>
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {todo.tags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent/15 text-accent font-medium"
             >
-              +
-            </button>
-          </div>
+              {tag}
+              <button
+                type="button"
+                onClick={() => removeTag(tag)}
+                className="hover:text-red-400 transition-colors"
+                aria-label={`Retirer le tag ${tag}`}
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+          {todo.tags.length === 0 && (
+            <span className="text-[10px] text-muted italic">Aucun tag</span>
+          )}
         </div>
-      )}
+        {tagSuggestions.filter((t) => !todo.tags.includes(t)).length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            <span className="text-[9px] text-muted self-center uppercase tracking-wider">
+              Suggestions
+            </span>
+            {tagSuggestions
+              .filter((t) => !todo.tags.includes(t))
+              .map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => onUpdate({ tags: [...todo.tags, tag] })}
+                  className="text-[10px] px-2 py-0.5 rounded-full bg-background/60 border border-border text-muted hover:text-accent hover:border-accent/50 transition-colors"
+                >
+                  + {tag}
+                </button>
+              ))}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <input
+            value={newTag}
+            onChange={(e) => setNewTag(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addTag();
+              }
+            }}
+            placeholder="Créer un tag personnalisé..."
+            className="flex-1 px-3 py-1.5 bg-card border border-border rounded-lg text-xs outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50"
+          />
+          <button
+            type="button"
+            onClick={addTag}
+            disabled={!newTag.trim()}
+            className="px-3 py-1.5 bg-accent text-white text-xs rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-40"
+          >
+            +
+          </button>
+        </div>
+      </div>
 
       <div className="flex items-center justify-between gap-2 pt-1">
         <button
