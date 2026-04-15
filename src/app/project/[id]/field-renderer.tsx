@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Field } from "@/lib/sections";
 
 export type LinkStatus = "unread" | "in_progress" | "done";
@@ -159,10 +159,39 @@ function TextField({
   value: string;
   onChange: (val: string) => void;
 }) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  function insertDatedLine() {
+    const today = new Date().toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+    const prefix = `[${today}] `;
+    const next = value.trim().length > 0 ? `${prefix}\n${value}` : prefix;
+    onChange(next);
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(prefix.length, prefix.length);
+    });
+  }
+
   return (
     <div>
       <FieldHeader field={field} />
+      {field.dateButton && (
+        <button
+          type="button"
+          onClick={insertDatedLine}
+          className="mb-2 text-xs px-3 py-1.5 rounded-lg bg-accent/15 text-accent font-semibold hover:bg-accent/25 transition-colors"
+        >
+          ➕ Entrée du jour
+        </button>
+      )}
       <textarea
+        ref={textareaRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={field.placeholder}

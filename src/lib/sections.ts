@@ -22,6 +22,7 @@ export interface Field {
   suggestions?: SuggestionOption[];
   tools?: ToolLink[];
   max?: number;
+  dateButton?: boolean;
 }
 
 export interface SectionDef {
@@ -526,7 +527,13 @@ export const SECTIONS: SectionDef[] = [
     description: "Décisions importantes, pivots, apprentissages",
     defaultForTypes: ["outil", "saas", "appli", "logiciel", "business"],
     fields: [
-      { key: "journal_entries", type: "text", label: "Journal", placeholder: "[09/04/2026] Création du projet\n[10/04/2026] Première interview client → ...\n[15/04/2026] Pivot : changé la cible de ... à ..." },
+      {
+        key: "journal_entries",
+        type: "text",
+        label: "Journal",
+        dateButton: true,
+        placeholder: "[09/04/2026] Création du projet\n[10/04/2026] Première interview client → ...\n[15/04/2026] Pivot : changé la cible de ... à ...",
+      },
     ],
   },
 
