@@ -118,7 +118,12 @@ export default function Cockpit({
   const tagline = firstString(identityData, "tagline");
 
   const nextActionTask =
-    todos.find((t) => t.priority === "urgent" && t.status !== "done") ?? null;
+    todos.find(
+      (t) =>
+        t.priority === "urgent" &&
+        t.status !== "done" &&
+        t.status !== "blocked"
+    ) ?? null;
   const blockers = todos.filter((t) => t.status === "blocked");
 
   const techData = parsed["tech"] ?? {};

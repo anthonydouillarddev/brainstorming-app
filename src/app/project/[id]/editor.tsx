@@ -93,7 +93,6 @@ export default function BrainstormEditor({
       saveTimers.current[sectionKey] = setTimeout(async () => {
         setSaving(true);
         await saveSection(sectionKey, updated[sectionKey]);
-        await onProjectUpdate({ updated_at: new Date().toISOString() });
         onSectionsChange?.(
           Object.fromEntries(
             Object.entries(updated).map(([k, v]) => [k, JSON.stringify(v)])
@@ -216,10 +215,18 @@ export default function BrainstormEditor({
 
     const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
+    const slug = project.name
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${project.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-brainstorming.md`;
+    a.download = `${slug || "brainstorm"}-brainstorming.md`;
+    document.body.appendChild(a);
     a.click();
+    a.remove();
     URL.revokeObjectURL(url);
   }
 
