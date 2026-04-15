@@ -238,12 +238,12 @@ export default function BrainstormEditor({
           {lastSaved && !saving && <span className="text-green-500">✓ {lastSaved}</span>}
           {fillProgress.total > 0 && (
             <span
-              className={`font-bold ${
+              className={`inline-flex items-center gap-1 font-bold px-2.5 py-1 rounded-full border ${
                 fillProgress.percent >= 70
-                  ? "text-green-500"
+                  ? "bg-green-500/15 border-green-500/40 text-green-700 dark:text-green-400"
                   : fillProgress.percent >= 40
-                  ? "text-yellow-500"
-                  : "text-muted"
+                    ? "bg-yellow-500/15 border-yellow-500/40 text-yellow-700 dark:text-yellow-400"
+                    : "bg-accent/15 border-accent/40 text-accent"
               }`}
               title={`${fillProgress.filled}/${fillProgress.total} champs remplis`}
             >

@@ -14,6 +14,7 @@ import {
   type Risk,
   type Todo,
 } from "@/lib/types";
+import { deadlineStatus } from "@/lib/deadline";
 
 type HomeTab = "projects" | "dev";
 const STORAGE_KEY = "home_active_tab";
@@ -272,6 +273,7 @@ export default function HomeTabs({
                   const primaryTitle = hasOfficial
                     ? project.official_name!
                     : project.name;
+                  const deadline = deadlineStatus(project.deadline);
                   return (
                     <Link
                       key={project.id}
@@ -288,6 +290,15 @@ export default function HomeTabs({
                               <span>{type.emoji}</span>
                               <span>{type.label}</span>
                             </span>
+                            {deadline && (
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded-full font-semibold inline-flex items-center gap-1 ${deadline.className}`}
+                                title={`Deadline : ${new Date(project.deadline!).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`}
+                              >
+                                <span>{deadline.emoji}</span>
+                                <span>{deadline.label}</span>
+                              </span>
+                            )}
                           </div>
                           {hasOfficial && (
                             <p className="text-xs text-muted mt-0.5">
