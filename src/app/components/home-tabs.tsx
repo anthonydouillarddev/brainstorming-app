@@ -97,13 +97,13 @@ export default function HomeTabs({
         <div className="inline-flex w-full max-w-md gap-1.5 bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-1.5 shadow-sm">
           <button
             onClick={() => switchTab("projects")}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3.5 text-base font-semibold rounded-xl transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-semibold rounded-xl transition-all ${
               tab === "projects"
                 ? "bg-accent text-white shadow-md"
                 : "text-muted hover:text-foreground hover:bg-background/40"
             }`}
           >
-            <span className="text-lg">📂</span>
+            <span className="text-base sm:text-lg">📂</span>
             <span>Projets</span>
             <span
               className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
@@ -115,13 +115,13 @@ export default function HomeTabs({
           </button>
           <button
             onClick={() => switchTab("dev")}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3.5 text-base font-semibold rounded-xl transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-semibold rounded-xl transition-all ${
               tab === "dev"
                 ? "bg-accent text-white shadow-md"
                 : "text-muted hover:text-foreground hover:bg-background/40"
             }`}
           >
-            <span className="text-lg">🧪</span>
+            <span className="text-base sm:text-lg">🧪</span>
             <span>Dev</span>
             <span
               className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
