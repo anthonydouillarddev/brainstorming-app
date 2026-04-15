@@ -53,7 +53,12 @@ export default function ProjectDashboard({
 
   const [project, setProject] = useState<Project>(initialProject);
   const [sections, setSections] = useState<Record<string, string>>(initialSections);
-  const [todos, setTodos] = useState<Todo[]>(initialTodos);
+  const [tasks, setTasks] = useState<Todo[]>(
+    initialTodos.filter((t) => (t.kind ?? "task") === "task")
+  );
+  const [ideas, setIdeas] = useState<Todo[]>(
+    initialTodos.filter((t) => t.kind === "idea")
+  );
   const [decisions, setDecisions] = useState<Decision[]>(initialDecisions);
   const [roadmap, setRoadmap] = useState<RoadmapItem[]>(initialRoadmap);
   const [risks, setRisks] = useState<Risk[]>(initialRisks);
@@ -164,7 +169,7 @@ export default function ProjectDashboard({
             {/* Primary title — official_name ou name */}
             {hasOfficialName ? (
               <h1
-                className="text-4xl font-extrabold tracking-tight leading-[1.2] pb-1 break-words"
+                className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-[1.2] pb-1 break-words"
                 title="Modifiable via Brainstorm → Branding → Nom officiel"
               >
                 {displayTitle}
@@ -191,7 +196,7 @@ export default function ProjectDashboard({
                 className="group inline-flex items-center gap-2 text-left w-full"
                 title="Cliquer pour renommer"
               >
-                <h1 className="text-4xl font-extrabold tracking-tight leading-[1.2] pb-1 break-words">
+                <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-[1.2] pb-1 break-words">
                   {displayTitle}
                 </h1>
                 <span className="text-muted text-sm opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
@@ -322,7 +327,7 @@ export default function ProjectDashboard({
         {TABS.map((t) => {
           const count =
             t.value === "tasks"
-              ? todos.filter((todo) => todo.status !== "done").length
+              ? tasks.filter((todo) => todo.status !== "done").length
               : t.value === "decisions"
               ? decisions.length
               : null;
@@ -357,7 +362,7 @@ export default function ProjectDashboard({
         <Cockpit
           project={project}
           sections={sections}
-          todos={todos}
+          todos={tasks}
           decisions={decisions}
           roadmap={roadmap}
           risks={risks}
@@ -379,12 +384,22 @@ export default function ProjectDashboard({
       )}
 
       {tab === "tasks" && (
-        <TodoList
-          userId={userId}
-          scope={{ kind: "project", projectId: project.id, projectType: project.type }}
-          initialTodos={todos}
-          onTodosChange={setTodos}
-        />
+        <div className="space-y-8">
+          <TodoList
+            userId={userId}
+            scope={{ kind: "project", projectId: project.id, projectType: project.type }}
+            kind="task"
+            initialTodos={tasks}
+            onTodosChange={setTasks}
+          />
+          <TodoList
+            userId={userId}
+            scope={{ kind: "project", projectId: project.id, projectType: project.type }}
+            kind="idea"
+            initialTodos={ideas}
+            onTodosChange={setIdeas}
+          />
+        </div>
       )}
 
       {tab === "decisions" && (

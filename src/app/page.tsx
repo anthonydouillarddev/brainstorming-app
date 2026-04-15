@@ -158,8 +158,12 @@ export default async function Home({
   const devItems = (devRes.data ?? []) as DevItem[];
 
   // Exclure les items rattachés à des projets en corbeille
+  // La todolist home et les blocages ne montrent que les vraies tâches (kind='task'),
+  // pas les idées de fonctions.
   const activeTodos = allTodos.filter(
-    (t) => t.project_id == null || activeIds.has(t.project_id)
+    (t) =>
+      (t.kind ?? "task") === "task" &&
+      (t.project_id == null || activeIds.has(t.project_id))
   );
   const activeRisks = allRisks.filter((r) => activeIds.has(r.project_id));
 
@@ -178,7 +182,8 @@ export default async function Home({
         : "Dev",
     }));
 
-  const topRisks = [...activeRisks]
+  const topRisks = activeRisks
+    .filter((r) => !r.resolved_at)
     .sort((a, b) => riskCriticality(b) - riskCriticality(a))
     .map((r) => ({
       ...r,
