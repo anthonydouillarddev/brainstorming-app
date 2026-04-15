@@ -90,7 +90,7 @@ export default function DevWorkspace({
   }, [items]);
 
   const visibleItems = itemsByKind.get(activeKind) ?? [];
-  const activeKindDef = DEV_KINDS.find((k) => k.value === activeKind)!;
+  const activeKindDef = DEV_KINDS.find((k) => k.value === activeKind) ?? DEV_KINDS[0];
   const isLinkKind = activeKind === "link";
 
   function commit(next: DevItem[]) {
@@ -131,9 +131,9 @@ export default function DevWorkspace({
 
   const updateItem = useCallback(
     (id: string, patch: Partial<DevItem>) => {
+      const previous = items;
       commit(items.map((it) => (it.id === id ? { ...it, ...patch } : it)));
       if (saveTimers.current[id]) clearTimeout(saveTimers.current[id]);
-      const previous = items;
       saveTimers.current[id] = setTimeout(async () => {
         const { error } = await supabase
           .from("dev_items")

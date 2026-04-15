@@ -220,7 +220,11 @@ export default function TodoList({
       return;
     }
     if (data) {
-      commit([data as Todo, ...todos]);
+      setTodos((prev) => {
+        const next = [data as Todo, ...prev];
+        onTodosChange?.(next);
+        return next;
+      });
       resetNewForm();
       setFormFocused(false);
     }
@@ -570,7 +574,9 @@ export default function TodoList({
       {view === "kanban" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
           {KANBAN_COLUMNS.map((col) => {
-            const columnTodos = todos.filter((t) => t.status === col.status);
+            const columnTodos = todos.filter(
+              (t) => t.status === col.status && matchesFilter(t)
+            );
             return (
               <div
                 key={col.status}
