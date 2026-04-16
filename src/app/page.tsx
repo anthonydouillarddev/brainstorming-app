@@ -198,8 +198,22 @@ export default async function Home({
     <div className="max-w-6xl mx-auto px-4 py-8 w-full">
       <div className="flex items-start justify-between mb-10 gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 className="text-3xl font-extrabold tracking-tight">
-            🧠 Brainstorm
+          <h1 className="flex items-center gap-3">
+            <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
+              <circle cx="30" cy="30" r="10" fill="currentColor" />
+              <circle cx="70" cy="30" r="10" fill="currentColor" />
+              <circle cx="50" cy="55" r="10" fill="currentColor" />
+              <circle cx="25" cy="75" r="10" fill="currentColor" />
+              <circle cx="75" cy="75" r="10" fill="currentColor" />
+              <line x1="30" y1="30" x2="50" y2="55" stroke="currentColor" strokeWidth="5" />
+              <line x1="70" y1="30" x2="50" y2="55" stroke="currentColor" strokeWidth="5" />
+              <line x1="30" y1="30" x2="70" y2="30" stroke="currentColor" strokeWidth="5" />
+              <line x1="25" y1="75" x2="50" y2="55" stroke="currentColor" strokeWidth="5" />
+              <line x1="75" y1="75" x2="50" y2="55" stroke="currentColor" strokeWidth="5" />
+            </svg>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, fontSize: '1.875rem', letterSpacing: '-0.05em', lineHeight: 1 }}>
+              Mind<span className="text-accent">eck</span>
+            </span>
           </h1>
           <p className="text-muted text-sm mt-1">
             Pilote tes projets de l&apos;idée au lancement
