@@ -1,4 +1,4 @@
-# CLAUDE.md — Brainstorming App
+# CLAUDE.md — Mindeck
 
 ## C'est quoi ce projet
 

@@ -4,12 +4,13 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { SectionDef } from "@/lib/sections";
-import type { Project, ProjectStatus, ProjectType, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
+import type { Project, ProjectStatus, ProjectType, Todo, Decision, RoadmapItem, Risk, UserPreferences } from "@/lib/types";
 import { PROJECT_STATUSES, PROJECT_TYPES } from "@/lib/types";
 import { deadlineStatus } from "@/lib/deadline";
 import { TAG_PRESETS, countTags, mergeTagSuggestions, uniqueTags } from "@/lib/tags";
 import TagFilter from "@/app/components/tag-filter";
 import ThemeToggle from "@/app/components/theme-toggle";
+import UserSettings from "@/app/components/user-settings";
 import Cockpit from "./cockpit";
 import BrainstormEditor from "./editor";
 import DecisionsPanel from "./decisions";
@@ -32,6 +33,8 @@ const VALID_TABS = new Set<string>(TABS.map((t) => t.value));
 
 export default function ProjectDashboard({
   userId,
+  userEmail,
+  initialPreferences,
   project: initialProject,
   initialSections,
   sectionDefs,
@@ -42,6 +45,8 @@ export default function ProjectDashboard({
   initialTab,
 }: {
   userId: string;
+  userEmail: string;
+  initialPreferences: UserPreferences | null;
   project: Project;
   initialSections: Record<string, string>;
   sectionDefs: SectionDef[];
@@ -153,16 +158,20 @@ export default function ProjectDashboard({
     <div className="max-w-6xl mx-auto px-4 py-6 w-full">
       {/* Top bar */}
       <div
-        className="flex items-center justify-between mb-6 sticky top-0 z-20 -mx-4 px-4"
+        className="flex items-center justify-between mb-6 sticky top-0 z-20 -mx-4 px-4 py-2 backdrop-blur-2xl [mask-image:linear-gradient(black_80%,transparent)]"
       >
         <button
-          onClick={() => router.push("/")}
+          onClick={() => {
+            router.push("/");
+            router.refresh();
+          }}
           className="px-4 py-3 -ml-4 text-muted hover:text-foreground text-sm transition-colors rounded-xl"
         >
           ← Retour
         </button>
         <div className="flex items-center gap-3">
           <ThemeToggle />
+          <UserSettings userEmail={userEmail} userId={userId} initialPreferences={initialPreferences} />
         </div>
       </div>
 
@@ -340,7 +349,8 @@ export default function ProjectDashboard({
         {TABS.map((t) => {
           const count =
             t.value === "tasks"
-              ? tasks.filter((todo) => todo.status !== "done").length
+              ? tasks.filter((todo) => todo.status !== "done").length +
+                ideas.filter((todo) => todo.status !== "done").length
               : t.value === "decisions"
               ? decisions.length
               : null;

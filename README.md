@@ -1,4 +1,4 @@
-# 🧠 Brainstorm — Gestion de projets
+# 🧠 Mindeck — Gestion de projets
 
 Outil perso de gestion de projet de bout en bout : de l'idée brute au lancement. Cockpit de pilotage, brainstorming guidé en 13 sections, todolist centralisée avec scoring ICE, workspace Dev, roadmap trimestrielle, risk matrix, ADR et plus.
 

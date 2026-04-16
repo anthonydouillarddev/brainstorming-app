@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import HomeTabs from "./components/home-tabs";
 import ThemeToggle from "./components/theme-toggle";
+import UserSettings from "./components/user-settings";
 import TrashActions from "./components/trash-actions";
 import {
   PROJECT_TYPES,
@@ -11,6 +12,7 @@ import {
   type Project,
   type Risk,
   type Todo,
+  type UserPreferences,
 } from "@/lib/types";
 
 export default async function Home({
@@ -26,6 +28,12 @@ export default async function Home({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const { data: preferences } = await supabase
+    .from("user_preferences")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
 
   const { data: allProjects } = await supabase
     .from("projects")
@@ -52,11 +60,7 @@ export default async function Home({
           </div>
           <div className="flex gap-2 items-center shrink-0">
             <ThemeToggle />
-            <form action="/auth/signout" method="post">
-              <button className="px-3 py-2 text-muted text-sm hover:text-foreground transition-colors">
-                Déco
-              </button>
-            </form>
+            <UserSettings userEmail={user.email ?? ""} userId={user.id} initialPreferences={(preferences as UserPreferences) ?? null} />
           </div>
         </div>
 
@@ -227,11 +231,7 @@ export default async function Home({
             + Nouvelle idée
           </Link>
           <ThemeToggle />
-          <form action="/auth/signout" method="post">
-            <button className="px-3 py-2 text-muted text-sm hover:text-foreground transition-colors">
-              Déco
-            </button>
-          </form>
+          <UserSettings userEmail={user.email ?? ""} userId={user.id} initialPreferences={(preferences as UserPreferences) ?? null} />
         </div>
       </div>
 

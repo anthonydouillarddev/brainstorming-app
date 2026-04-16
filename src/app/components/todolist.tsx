@@ -865,7 +865,7 @@ function TodoEditPanel({
   }
 
   return (
-    <div className="px-3 sm:px-4 pb-4 pt-2 bg-background/40 border-t border-border space-y-3">
+    <div className="px-3 sm:px-4 pb-4 pt-3 bg-accent/10 border-t-2 border-accent/40 space-y-3 shadow-[inset_0_4px_12px_rgba(0,0,0,0.06)]">
       {isIdea && (
         <div>
           <label className="block text-[10px] uppercase tracking-wider text-muted mb-1">

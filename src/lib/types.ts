@@ -241,3 +241,42 @@ export function statusIndex(status: ProjectStatus): number {
   const idx = PROJECT_STATUSES.findIndex((s) => s.value === status);
   return idx < 0 ? 0 : idx;
 }
+
+// ---------- User Preferences ----------
+
+export type Theme = "light" | "dark" | "system";
+export type DisplayDensity = "compact" | "normal" | "comfortable";
+export type DefaultTaskView = "list" | "kanban";
+export type UserRole = "admin" | "free" | "demo" | "pro" | "vip";
+
+export interface UserPreferences {
+  id: string;
+  user_id: string;
+  theme: Theme;
+  display_density: DisplayDensity;
+  default_task_view: DefaultTaskView;
+  role: UserRole;
+  locale: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const THEMES: { value: Theme; label: string; icon: string }[] = [
+  { value: "light", label: "Clair", icon: "sun" },
+  { value: "dark", label: "Sombre", icon: "moon" },
+  { value: "system", label: "Système", icon: "monitor" },
+];
+
+export const DISPLAY_DENSITIES: { value: DisplayDensity; label: string; description: string }[] = [
+  { value: "compact", label: "Compact", description: "Moins d'espace, plus de contenu" },
+  { value: "normal", label: "Normal", description: "Espacement par défaut" },
+  { value: "comfortable", label: "Confortable", description: "Plus d'espace, lecture facile" },
+];
+
+export const DEFAULT_PREFERENCES: Omit<UserPreferences, "id" | "user_id" | "created_at" | "updated_at"> = {
+  theme: "system",
+  display_density: "normal",
+  default_task_view: "list",
+  role: "admin",
+  locale: "fr",
+};

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { SECTIONS } from "@/lib/sections";
-import type { Project, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
+import type { Project, Todo, Decision, RoadmapItem, Risk, UserPreferences } from "@/lib/types";
 import ProjectDashboard from "./dashboard";
 
 export default async function ProjectPage({
@@ -34,6 +34,7 @@ export default async function ProjectPage({
     { data: decisions },
     { data: roadmap },
     { data: risks },
+    { data: preferences },
   ] = await Promise.all([
     supabase.from("sections").select("*").eq("project_id", id),
     supabase.from("todos").select("*").eq("project_id", id),
@@ -54,6 +55,11 @@ export default async function ProjectPage({
       .select("*")
       .eq("project_id", id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("user_preferences")
+      .select("*")
+      .eq("user_id", user.id)
+      .single(),
   ]);
 
   const sectionMap: Record<string, string> = {};
@@ -64,6 +70,8 @@ export default async function ProjectPage({
   return (
     <ProjectDashboard
       userId={user.id}
+      userEmail={user.email ?? ""}
+      initialPreferences={(preferences as UserPreferences) ?? null}
       project={project as Project}
       initialSections={sectionMap}
       sectionDefs={SECTIONS}

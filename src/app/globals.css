@@ -64,6 +64,20 @@ textarea {
   resize: vertical;
 }
 
+/* Densité d'affichage */
+html.density-compact { font-size: 14px; }
+html.density-comfortable { font-size: 17px; }
+
+/* Settings modal animations */
+@keyframes settings-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes settings-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 /* Smooth page transitions */
 @view-transition {
   navigation: auto;

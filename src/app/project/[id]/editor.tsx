@@ -33,10 +33,8 @@ function syncFromBrainstorm(
     patch.description = tagline;
     updates.push("description");
   }
-  if (brainstormNextAction) {
-    patch.next_action = brainstormNextAction;
-    updates.push("prochaine action");
-  }
+  patch.next_action = brainstormNextAction || null;
+  updates.push("prochaine action");
   if (officialName) {
     patch.official_name = officialName;
     updates.push("nom officiel");
