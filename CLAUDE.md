@@ -23,7 +23,14 @@ Outil perso de **gestion de projet de bout en bout** : de l'idée brute au lance
   - 🔗 **Ressources** — liens sauvegardés avec tags, statuts et drag & drop. Inspirations et docs en texte libre.
 - **Deep linking** : `?tab=tasks` dans l'URL ouvre directement le bon onglet du projet.
 - **Soft delete** : corbeille discrète (lien en bas si > 0). Restauration ou suppression définitive (avec retape du nom).
-- **Thème** clair/sombre avec persistance localStorage.
+- **Thème** clair/sombre/système avec persistance localStorage + DB.
+- **Settings utilisateur** : modal plein écran (style Linear) accessible via avatar dans le header. 6 sections :
+  - 👤 Profil — nom d'affichage éditable (user_metadata), email, identifiant
+  - 🎨 Apparence — thème (clair/sombre/système), densité d'affichage (compact/normal/confortable), vue tâches par défaut (liste/kanban)
+  - 🔔 Notifications — placeholder (bientôt)
+  - 📊 Plan — badge "Solo Gratuit", rôle
+  - 🔒 Sécurité — changement mot de passe, déconnexion, suppression compte (double confirmation)
+  - 📤 Données — placeholder export (bientôt)
 
 ## Stack
 
@@ -39,11 +46,11 @@ Outil perso de **gestion de projet de bout en bout** : de l'idée brute au lance
 src/
 ├── app/
 │   ├── page.tsx                  # Accueil : Server Component → fetch all → HomeTabs client
-│   ├── layout.tsx                # Root layout, fonts, PWA manifest
+│   ├── layout.tsx                # Root layout, fonts, PWA manifest, portal root (#modal-root)
 │   ├── loading.tsx
 │   ├── new/page.tsx              # Création projet (nom + type obligatoire)
 │   ├── project/[id]/
-│   │   ├── page.tsx              # Server Component : fetch project + sections + todos + decisions + roadmap + risks + searchParams(?tab=)
+│   │   ├── page.tsx              # Server Component : fetch project + sections + todos + decisions + roadmap + risks + preferences + searchParams(?tab=)
 │   │   ├── dashboard.tsx         # Orchestrateur client : header + tabs + panels + initialTab support
 │   │   ├── cockpit.tsx           # Onglet Cockpit (8 blocs pilotage)
 │   │   ├── editor.tsx            # Onglet Brainstorm (sections adaptatives + sync button)
@@ -61,11 +68,12 @@ src/
 │       ├── home-tabs.tsx         # Toggle Projets/Dev + blocs blocages/risques + liste projets
 │       ├── dev-workspace.tsx     # CRUD dev_items (5 catégories) + drag & drop
 │       ├── todolist.tsx          # Todolist liste/kanban — 3 scopes : home (centralisée) / project / global
-│       ├── theme-toggle.tsx
+│       ├── theme-toggle.tsx      # Toggle clair/sombre + sync via custom event mindeck:theme-changed
+│       ├── user-settings.tsx     # Modal settings plein écran (avatar + 6 sections) — rendu via portal #modal-root
 │       └── trash-actions.tsx     # Restore + hard delete avec double confirmation
 ├── lib/
 │   ├── sections.ts               # SOURCE DE VÉRITÉ des 15 sections + mapping type→sections + parseSections/isFieldFilled
-│   ├── types.ts                  # Types partagés : Project, Todo, Decision, RoadmapItem, Risk, DevItem + constantes UI
+│   ├── types.ts                  # Types partagés : Project, Todo, Decision, RoadmapItem, Risk, DevItem, UserPreferences + constantes UI
 │   ├── scoring.ts                # Scoring ICE (Impact × Confiance × Facilité) + hints
 │   └── supabase/
 │       ├── client.ts             # createBrowserClient
@@ -79,13 +87,17 @@ src/
 │           ├── 005_update_existing_types.sql
 │           ├── 006_simplify_scoring.sql
 │           ├── 007_official_name.sql
-│           └── 008_dev_workspace.sql
+│           ├── 008_dev_workspace.sql
+│           ├── 009_todos_kind_description.sql
+│           ├── 010_risks_resolved.sql
+│           ├── 011_todos_effort_problem_tags.sql
+│           └── 012_user_preferences.sql
 └── middleware.ts                 # Refresh session Supabase
 ```
 
 ## Modèle de données (Supabase)
 
-7 tables, toutes protégées par RLS (chaque user ne voit que ses données).
+8 tables, toutes protégées par RLS (chaque user ne voit que ses données).
 
 ### `projects`
 ```
@@ -142,6 +154,17 @@ id, user_id, kind, title, content, url, tags text[], status, position, created_a
 - `position` : pour le drag & drop au sein d'une catégorie
 - Index `(user_id, kind, position)`
 
+### `user_preferences`
+```
+id, user_id (unique), theme, display_density, default_task_view, role, locale, created_at, updated_at
+```
+- `theme` ∈ `light | dark | system`
+- `display_density` ∈ `compact | normal | comfortable`
+- `default_task_view` ∈ `list | kanban`
+- `role` ∈ `admin | free | demo | pro | vip`
+- Une seule ligne par user (upsert). Créée au premier changement de préférence.
+- Fallback localStorage pour thème et densité (SSR hydration).
+
 **Schéma cible complet** dans `src/lib/supabase/schema.sql`. Migrations incrémentales dans `migrations/`. Ne jamais modifier le schéma sans validation d'Anthony.
 
 ## Palette de couleurs
@@ -166,10 +189,12 @@ Gradient de fond via `body::before` (3 radial-gradients floutés).
 - **UI française** : tous les labels, placeholders, hints en français. Code / variables / fonctions en anglais.
 - **Auth** : pages protégées par `supabase.auth.getUser()` + `redirect("/login")` dans les Server Components. Ne pas utiliser `getSession()` côté serveur. Auth callback vérifie les erreurs et valide le type OTP.
 - **Supabase client** : `createClient()` de `@/lib/supabase/server` pour les Server Components, `@/lib/supabase/client` pour les Client Components.
-- **Theme** : variables CSS custom (`bg-card`, `text-muted`, `bg-accent`, `bg-accent-hover`, etc.) définies dans `globals.css`. Pas de `dark:` prefix Tailwind — les variables CSS changent via `.dark` class.
+- **Theme** : variables CSS custom (`bg-card`, `text-muted`, `bg-accent`, `bg-accent-hover`, etc.) définies dans `globals.css`. Pas de `dark:` prefix Tailwind — les variables CSS changent via `.dark` class. Sync entre ThemeToggle et UserSettings via custom event `mindeck:theme-changed` sur `window`.
+- **Densité d'affichage** : classes CSS `html.density-compact` (14px) et `html.density-comfortable` (17px) sur `<html>`. Persisté en localStorage `display_density` + DB `user_preferences`.
+- **Portal modal** : `<div id="modal-root" />` dans `layout.tsx`. Les modals utilisent `createPortal` vers ce conteneur pour échapper aux stacking contexts (`backdrop-blur`, `sticky`).
 - **Style visuel** : palette beige/moka en clair, navy/caramel en sombre. `bg-card/80 backdrop-blur-sm border border-border rounded-2xl` partout. Max-width `max-w-6xl` pour les pages. Boutons : `bg-accent text-white hover:bg-accent-hover`.
 - **Updates optimistes Supabase** : toujours avec rollback en cas d'erreur (`const previous = ...; commit(next); if (error) commit(previous)`).
-- **Debounced save** : `Record<key, Timeout>` map pour éviter les collisions entre champs modifiés en parallèle. Utilisé dans editor.tsx, cockpit.tsx, dev-workspace.tsx.
+- **Debounced save** : `Record<key, Timeout>` map pour éviter les collisions entre champs modifiés en parallèle. Utilisé dans editor.tsx, cockpit.tsx, dev-workspace.tsx, user-settings.tsx.
 - **Live-sync state** : le dashboard est propriétaire du state (`sections`, `todos`, `decisions`, `roadmap`, `risks`). Les panels appellent des callbacks pour propager les changements et permettre au cockpit de refléter les modifs en temps réel.
 - **Todolist 3 scopes** : `home` (centralisée, tous les todos + badge + sélecteur), `project` (filtré par projet), `global` (legacy, project_id null).
 - **Filtrage corbeille en cascade** : page.tsx fetch tous les todos/risks du user, puis exclut côté JS ceux rattachés à des projets soft-deleted.
