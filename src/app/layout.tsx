@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Brainstorm — Gestion de projets",
+  title: "Mindeck — Gestion de projets",
   description: "Pilote tes projets de l'idée au lancement",
 };
 
@@ -14,6 +14,9 @@ export default function RootLayout({
   return (
     <html lang="fr" className="h-full antialiased">
       <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#E8E0D8" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0c0c14" />
