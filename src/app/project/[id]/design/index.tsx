@@ -6,6 +6,7 @@ import { DESIGN_CHAPTERS, type DesignChapterKey } from "./chapters";
 import ChapterPlaceholder from "./chapter-placeholder";
 import VisualChapter from "./visual";
 import FoundationsChapter from "./foundations";
+import IdentityChapter from "./identity";
 
 const LS_ACTIVE_CHAPTER = "mindeck_design_active_chapter";
 
@@ -86,8 +87,8 @@ export default function DesignPanel({
         </nav>
 
         <div className="mt-3 text-[11px] text-muted px-2 leading-relaxed">
-          12 chapitres issus de la recherche design. <strong>2 prêts</strong> (Fondations, Visuel)
-          · 10 en dev.
+          12 chapitres issus de la recherche design. <strong>3 prêts</strong> (Fondations, Identité,
+          Visuel) · 9 en dev.
         </div>
       </aside>
 
@@ -102,6 +103,13 @@ export default function DesignPanel({
           />
         ) : activeKey === "foundations" ? (
           <FoundationsChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : activeKey === "identity" ? (
+          <IdentityChapter
             project={project}
             initialSections={initialSections}
             onProjectUpdate={onProjectUpdate}
