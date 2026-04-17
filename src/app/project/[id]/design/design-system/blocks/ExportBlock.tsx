@@ -4,7 +4,41 @@ import { useMemo, useState } from "react";
 import type { Project } from "@/lib/types";
 import { useToast } from "@/app/components/toast";
 import { exportDesignSystemMd } from "../exports/markdown";
+import { exportDesignSystemDtcg } from "../exports/json";
+import { exportDesignSystemClaudeBrief } from "../exports/claude-brief";
 import type { DesignSystemState } from "../state";
+
+type Format = "markdown" | "claude" | "json";
+
+const FORMATS: {
+  key: Format;
+  label: string;
+  emoji: string;
+  filename: string;
+  hint: string;
+}[] = [
+  {
+    key: "markdown",
+    label: "DS Markdown",
+    emoji: "📄",
+    filename: "design-system.md",
+    hint: "Doc lisible · brief designer / Storybook",
+  },
+  {
+    key: "claude",
+    label: "Brief Claude / ChatGPT",
+    emoji: "🤖",
+    filename: "brief-ds.md",
+    hint: "Prompt pour générer composants React/CSS",
+  },
+  {
+    key: "json",
+    label: "W3C DTCG JSON",
+    emoji: "📦",
+    filename: "design-system.dtcg.json",
+    hint: "Format W3C 2025.10 · interop Figma / Style Dictionary",
+  },
+];
 
 export default function DsExportBlock({
   state,
@@ -15,15 +49,27 @@ export default function DsExportBlock({
 }) {
   const toast = useToast();
   const [collapsed, setCollapsed] = useState(true);
+  const [format, setFormat] = useState<Format>("markdown");
   const [copied, setCopied] = useState(false);
 
-  const content = useMemo(() => exportDesignSystemMd(state, project), [state, project]);
+  const content = useMemo(() => {
+    switch (format) {
+      case "markdown":
+        return exportDesignSystemMd(state, project);
+      case "claude":
+        return exportDesignSystemClaudeBrief(state, project);
+      case "json":
+        return exportDesignSystemDtcg(state, project);
+    }
+  }, [format, state, project]);
+
+  const currentFormat = FORMATS.find((f) => f.key === format)!;
 
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);
-      toast.success("Design system copié dans le presse-papier");
+      toast.success(`${currentFormat.label} copié`);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Copie impossible");
@@ -35,12 +81,12 @@ export default function DsExportBlock({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "design-system.md";
+    a.download = currentFormat.filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success("design-system.md téléchargé");
+    toast.success(`${currentFormat.filename} téléchargé`);
   }
 
   return (
@@ -52,7 +98,7 @@ export default function DsExportBlock({
       >
         {collapsed ? "▶" : "▼"}
         📤 Export design system
-        <span className="text-muted font-normal text-sm">(markdown)</span>
+        <span className="text-muted font-normal text-sm">(3 formats)</span>
       </button>
 
       {collapsed && (
@@ -60,15 +106,35 @@ export default function DsExportBlock({
           onClick={() => setCollapsed(false)}
           className="w-full text-sm font-medium px-4 py-3 rounded-lg bg-card border border-border hover:border-accent hover:bg-accent/5 transition flex items-center justify-center gap-2"
         >
-          ▼ Voir l&apos;export (prêt à coller dans Claude / brief)
+          ▼ Voir les exports (MD · Claude brief · W3C DTCG)
         </button>
       )}
 
       {!collapsed && (
         <>
           <div className="bg-card/40 border border-border rounded-lg p-3 text-xs text-muted leading-relaxed">
-            <strong className="text-foreground">Usage</strong> : colle dans Claude pour qu&apos;il
-            génère les composants React/CSS, les specs Storybook, ou les checklists Figma.
+            <strong className="text-foreground">3 formats</strong> — Markdown pour brief
+            designer/Storybook, Brief Claude pour générer React/CSS, JSON DTCG 2025.10 pour interop
+            Figma / Style Dictionary.
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            {FORMATS.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setFormat(f.key)}
+                className={`p-3 rounded-lg border transition text-left ${
+                  format === f.key
+                    ? "bg-accent/10 border-accent"
+                    : "border-border hover:bg-accent/5"
+                }`}
+              >
+                <div className="text-sm font-semibold">
+                  {f.emoji} {f.label}
+                </div>
+                <div className="text-[10px] text-muted mt-0.5">{f.hint}</div>
+              </button>
+            ))}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -82,7 +148,7 @@ export default function DsExportBlock({
               onClick={handleDownload}
               className="text-sm px-4 py-2 rounded border border-border hover:bg-accent/10 transition flex items-center gap-2"
             >
-              ⬇ Télécharger design-system.md
+              ⬇ Télécharger {currentFormat.filename}
             </button>
             <span className="text-xs text-muted ml-auto">
               {content.length.toLocaleString("fr-FR")} caractères

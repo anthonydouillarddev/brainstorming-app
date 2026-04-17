@@ -7,6 +7,9 @@ import SemanticTokensBlock from "./blocks/SemanticTokensBlock";
 import ComponentChecklistBlock from "./blocks/ComponentChecklistBlock";
 import PatternLibraryBlock from "./blocks/PatternLibraryBlock";
 import ContrastPairsBlock from "./blocks/ContrastPairsBlock";
+import VariantMatrixBlock from "./blocks/VariantMatrixBlock";
+import A11yCheckBlock from "./blocks/A11yCheckBlock";
+import DensitySwitcherBlock from "./blocks/DensitySwitcherBlock";
 import DsExportBlock from "./blocks/ExportBlock";
 import {
   DESIGN_SYSTEM_SECTION_KEY,
@@ -151,12 +154,16 @@ export default function DesignSystemChapter({
       <PatternLibraryBlock state={state} onChange={updateState} />
       <ContrastPairsBlock state={state} onChange={updateState} />
 
+      {/* V2 SHOULD */}
+      <VariantMatrixBlock state={state} onChange={updateState} />
+      <A11yCheckBlock state={state} onChange={updateState} />
+      <DensitySwitcherBlock state={state} onChange={updateState} />
+
       <DsExportBlock state={state} project={project} />
 
       <div className="border-t border-border pt-4 text-xs text-muted text-center">
-        <strong>V1 MUST</strong> active. V2 ajoutera : matrix variants × sizes × states, specs
-        détaillées par composant, a11y checklist WCAG, density switcher, exports JSON DTCG +
-        Claude brief. V3 : token versioning, mode Débutant, carte PDF.
+        <strong>V2 SHOULD</strong> active. V3 ajoutera : token versioning (deprecate workflow),
+        mode Débutant conversationnel, carte PDF imprimable.
       </div>
     </div>
   );
