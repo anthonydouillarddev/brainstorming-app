@@ -7,9 +7,11 @@ import UserSettings from "./components/user-settings";
 import TrashActions from "./components/trash-actions";
 import {
   PROJECT_TYPES,
+  priorityRank,
   riskCriticality,
   type DevItem,
   type Project,
+  type ProjectHealthInputs,
   type Risk,
   type Todo,
   type UserPreferences,
@@ -41,7 +43,14 @@ export default async function Home({
     .order("updated_at", { ascending: false });
 
   const typedAll = (allProjects ?? []) as Project[];
-  const activeProjects = typedAll.filter((p) => !p.deleted_at);
+  const activeProjects = typedAll
+    .filter((p) => !p.deleted_at)
+    .sort((a, b) => {
+      const prDiff = priorityRank(b.priority) - priorityRank(a.priority);
+      if (prDiff !== 0) return prDiff;
+      if (a.position !== b.position) return a.position - b.position;
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+    });
   const trashedProjects = typedAll.filter((p) => p.deleted_at);
   const activeIds = new Set(activeProjects.map((p) => p.id));
 
@@ -198,6 +207,23 @@ export default async function Home({
       _projectName: projectNameById.get(r.project_id),
     }));
 
+  // Inputs de santé par projet (pour score auto B)
+  const healthByProject: Record<string, ProjectHealthInputs> = {};
+  for (const p of activeProjects) {
+    const blockingCount = activeTodos.filter(
+      (t) => t.project_id === p.id && t.status === "blocked"
+    ).length;
+    const criticalRiskCount = activeRisks.filter(
+      (r) => r.project_id === p.id && !r.resolved_at && riskCriticality(r) >= 6
+    ).length;
+    healthByProject[p.id] = {
+      blockingCount,
+      criticalRiskCount,
+      deadline: p.deadline,
+      status: p.status,
+    };
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 w-full">
       <div className="flex items-start justify-between mb-10 gap-4 flex-wrap">
@@ -243,6 +269,7 @@ export default async function Home({
         initialDevItems={devItems}
         blockingTodos={blockingTodos}
         topRisks={topRisks}
+        healthByProject={healthByProject}
       />
     </div>
   );

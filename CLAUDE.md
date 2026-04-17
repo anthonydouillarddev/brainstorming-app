@@ -91,7 +91,8 @@ src/
 │           ├── 009_todos_kind_description.sql
 │           ├── 010_risks_resolved.sql
 │           ├── 011_todos_effort_problem_tags.sql
-│           └── 012_user_preferences.sql
+│           ├── 012_user_preferences.sql
+│           └── 013_project_priority_position.sql
 └── middleware.ts                 # Refresh session Supabase
 ```
 
@@ -102,10 +103,12 @@ src/
 ### `projects`
 ```
 id, user_id, name, official_name, type, description, status, north_star, next_action, deadline,
-disabled_sections text[], metric_users, metric_mrr, deleted_at, created_at, updated_at
+disabled_sections text[], metric_users, metric_mrr, priority, position, deleted_at, created_at, updated_at
 ```
 - `type` ∈ `outil | saas | appli | logiciel | business`
 - `status` ∈ `idea | validating | building | mvp | testing | launched | continuous_improvement | final`
+- `priority` ∈ `none | urgent | high | normal | low` (affiché P1/P2/P3/P4 + "—")
+- `position` : ordre manuel à l'intérieur d'un niveau de priorité (drag & drop)
 - `deleted_at` : null = actif, timestamp = corbeille
 - `disabled_sections` : override manuel des sections désactivées
 - `description`, `next_action` : peuvent être synchronisés depuis le brainstorm

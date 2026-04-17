@@ -12,6 +12,7 @@ export type ProjectStatus =
 
 export type TodoStatus = "todo" | "in_progress" | "blocked" | "done";
 export type TodoPriority = "low" | "normal" | "high" | "urgent";
+export type ProjectPriority = "none" | "urgent" | "high" | "normal" | "low";
 export type TodoKind = "task" | "idea";
 export type TodoEffort = "S" | "M" | "L" | "XL";
 export type Phase = "discovery" | "build" | "test" | "launch";
@@ -31,6 +32,8 @@ export interface Project {
   disabled_sections: string[];
   metric_users: number | null;
   metric_mrr: number | null;
+  priority: ProjectPriority;
+  position: number;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
@@ -155,6 +158,57 @@ export function riskColor(criticality: number): { bg: string; text: string; bord
   if (criticality >= 4) return { bg: "bg-orange-500/25", text: "text-orange-600 dark:text-orange-400", border: "border-orange-500/50" };
   if (criticality >= 2) return { bg: "bg-yellow-500/20", text: "text-yellow-700 dark:text-yellow-400", border: "border-yellow-500/50" };
   return { bg: "bg-green-500/20", text: "text-green-700 dark:text-green-400", border: "border-green-500/50" };
+}
+
+export const PROJECT_PRIORITIES: {
+  value: ProjectPriority;
+  label: string;
+  short: string;
+  emoji: string;
+  rank: number;
+  color: string;
+}[] = [
+  { value: "urgent", label: "P1 — Prioritaire", short: "P1", emoji: "🔴", rank: 4, color: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/40" },
+  { value: "high", label: "P2 — Important", short: "P2", emoji: "🟠", rank: 3, color: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/40" },
+  { value: "normal", label: "P3 — Normal", short: "P3", emoji: "🔵", rank: 2, color: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/40" },
+  { value: "low", label: "P4 — Plus tard", short: "P4", emoji: "⚪", rank: 1, color: "bg-gray-500/15 text-muted border-border" },
+  { value: "none", label: "Non classé", short: "—", emoji: "⚫", rank: 0, color: "bg-background/60 text-muted border-border" },
+];
+
+export function priorityRank(priority: ProjectPriority): number {
+  return PROJECT_PRIORITIES.find((p) => p.value === priority)?.rank ?? 0;
+}
+
+export interface ProjectHealthInputs {
+  blockingCount: number;
+  criticalRiskCount: number;
+  deadline: string | null;
+  status: ProjectStatus;
+}
+
+export function projectHealthScore(inputs: ProjectHealthInputs): number {
+  let score = 0;
+  score += inputs.blockingCount * 3;
+  score += inputs.criticalRiskCount * 2;
+  if (inputs.deadline) {
+    const days = Math.ceil(
+      (new Date(inputs.deadline).getTime() - Date.now()) / 86400000
+    );
+    if (days < 0) score += 5;
+    else if (days <= 30) score += 2;
+  }
+  if (["building", "mvp", "testing"].includes(inputs.status)) score += 1;
+  return score;
+}
+
+export function healthScoreTone(score: number): {
+  badge: string;
+  label: string;
+} {
+  if (score >= 10) return { badge: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/40", label: "Critique" };
+  if (score >= 5) return { badge: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/40", label: "Attention" };
+  if (score >= 2) return { badge: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/40", label: "À surveiller" };
+  return { badge: "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/40", label: "Sain" };
 }
 
 export const PROJECT_TYPES: { value: ProjectType; label: string; emoji: string; description: string }[] = [
