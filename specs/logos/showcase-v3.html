@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mindeck — Logos v3 (mind + deck)</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #fff; }
+      .grid { display: grid; grid-template-columns: repeat(5, 1fr); }
+      .cell {
+        aspect-ratio: 1;
+        border: 1px solid #e5e5e5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .cell svg {
+        width: 100%;
+        height: 100%;
+        max-width: 140px;
+        max-height: 140px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grid">
+      <!-- 1. Bulle de pensée qui devient 3 cartes -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="150" cy="160" r="70" fill="#000"/>
+          <circle cx="95" cy="240" r="30" fill="#000"/>
+          <circle cx="65" cy="290" r="16" fill="#000"/>
+          <rect x="230" y="230" width="70" height="160" rx="10" fill="#000"/>
+          <rect x="315" y="230" width="70" height="160" rx="10" fill="#000" opacity="0.65"/>
+          <rect x="400" y="230" width="70" height="160" rx="10" fill="#000" opacity="0.35"/>
+        </svg>
+      </div>
+
+      <!-- 2. Cerveau stylisé = pile de cartes avec un spark au-dessus -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M250 60 L265 115 L320 100 L285 145 L340 170 L285 185 L310 240 L260 215 L250 270 L240 215 L190 240 L215 185 L160 170 L215 145 L180 100 L235 115 Z" fill="#000"/>
+          <rect x="110" y="290" width="280" height="50" rx="10" fill="#000"/>
+          <rect x="110" y="355" width="280" height="50" rx="10" fill="#000" opacity="0.65"/>
+          <rect x="110" y="420" width="280" height="30" rx="8" fill="#000" opacity="0.35"/>
+        </svg>
+      </div>
+
+      <!-- 3. Carte-cerveau : silhouette cerveau dans une carte -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="90" y="90" width="320" height="320" rx="28" fill="#000"/>
+          <path d="M200 180 C 170 180, 160 220, 180 240 C 160 260, 170 300, 200 310 C 210 330, 240 335, 250 320 C 260 335, 290 330, 300 310 C 330 300, 340 260, 320 240 C 340 220, 330 180, 300 180 C 290 165, 260 165, 250 180 C 240 165, 210 165, 200 180 Z" fill="#fff"/>
+          <line x1="250" y1="180" x2="250" y2="320" stroke="#000" stroke-width="8"/>
+        </svg>
+      </div>
+
+      <!-- 4. Ampoule = tête + filament, avec 3 cartes en "rayons" -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="250" cy="180" r="100" fill="#000"/>
+          <rect x="215" y="270" width="70" height="30" fill="#000"/>
+          <rect x="225" y="305" width="50" height="20" fill="#000"/>
+          <rect x="60" y="370" width="110" height="80" rx="10" fill="#000"/>
+          <rect x="195" y="370" width="110" height="80" rx="10" fill="#000" opacity="0.7"/>
+          <rect x="330" y="370" width="110" height="80" rx="10" fill="#000" opacity="0.4"/>
+        </svg>
+      </div>
+
+      <!-- 5. Deck qui jaillit d'un point/idée (explosion) -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="250" cy="420" r="22" fill="#000"/>
+          <rect x="225" y="120" width="50" height="260" rx="8" fill="#000" transform="rotate(-30 250 380)"/>
+          <rect x="225" y="120" width="50" height="260" rx="8" fill="#000" transform="rotate(-10 250 380)" opacity="0.8"/>
+          <rect x="225" y="120" width="50" height="260" rx="8" fill="#000" transform="rotate(10 250 380)" opacity="0.6"/>
+          <rect x="225" y="120" width="50" height="260" rx="8" fill="#000" transform="rotate(30 250 380)" opacity="0.4"/>
+        </svg>
+      </div>
+
+      <!-- 6. Deux cartes + bulle de pensée entre elles -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="70" y="140" width="140" height="220" rx="14" fill="#000"/>
+          <rect x="290" y="140" width="140" height="220" rx="14" fill="#000"/>
+          <circle cx="250" cy="250" r="42" fill="#000"/>
+          <line x1="210" y1="250" x2="230" y2="250" stroke="#fff" stroke-width="10"/>
+          <line x1="270" y1="250" x2="290" y2="250" stroke="#fff" stroke-width="10"/>
+        </svg>
+      </div>
+
+      <!-- 7. Ampoule-carte : carte en forme d'ampoule -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M170 80 H330 Q 400 80 400 180 Q 400 280 340 320 V380 H160 V320 Q 100 280 100 180 Q 100 80 170 80 Z" fill="#000"/>
+          <rect x="180" y="390" width="140" height="20" rx="4" fill="#000"/>
+          <rect x="190" y="420" width="120" height="18" rx="4" fill="#000" opacity="0.6"/>
+          <path d="M220 170 V220 M280 170 V220 M220 220 H280" stroke="#fff" stroke-width="14" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <!-- 8. Cerveau = deck de cartes vu de dessus avec connexions -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="90" y="120" width="150" height="100" rx="14" fill="#000"/>
+          <rect x="260" y="120" width="150" height="100" rx="14" fill="#000" opacity="0.65"/>
+          <rect x="90" y="280" width="150" height="100" rx="14" fill="#000" opacity="0.65"/>
+          <rect x="260" y="280" width="150" height="100" rx="14" fill="#000"/>
+          <line x1="240" y1="170" x2="260" y2="170" stroke="#000" stroke-width="8"/>
+          <line x1="165" y1="220" x2="165" y2="280" stroke="#000" stroke-width="8"/>
+          <line x1="335" y1="220" x2="335" y2="280" stroke="#000" stroke-width="8"/>
+          <line x1="240" y1="330" x2="260" y2="330" stroke="#000" stroke-width="8"/>
+          <line x1="240" y1="170" x2="335" y2="280" stroke="#000" stroke-width="4" opacity="0.4"/>
+          <line x1="260" y1="170" x2="165" y2="280" stroke="#000" stroke-width="4" opacity="0.4"/>
+        </svg>
+      </div>
+
+      <!-- 9. Nuage de pensée + 3 cartes en dessous (comme une citation) -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M130 180 C 130 140, 170 120, 200 130 C 210 100, 260 90, 280 120 C 320 110, 360 140, 350 180 C 380 190, 380 230, 350 240 H150 C 120 230, 120 190, 130 180 Z" fill="#000"/>
+          <path d="M200 240 L210 280 L230 240 Z" fill="#000"/>
+          <rect x="90" y="320" width="100" height="120" rx="10" fill="#000"/>
+          <rect x="200" y="320" width="100" height="120" rx="10" fill="#000" opacity="0.7"/>
+          <rect x="310" y="320" width="100" height="120" rx="10" fill="#000" opacity="0.4"/>
+        </svg>
+      </div>
+
+      <!-- 10. Œil (vision, focus) au centre d'un deck fanné -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="210" y="140" width="80" height="230" rx="10" fill="#000" transform="rotate(-18 250 370)" opacity="0.45"/>
+          <rect x="210" y="140" width="80" height="230" rx="10" fill="#000" transform="rotate(18 250 370)" opacity="0.45"/>
+          <rect x="210" y="140" width="80" height="230" rx="10" fill="#000"/>
+          <circle cx="250" cy="250" r="36" fill="#fff"/>
+          <circle cx="250" cy="250" r="16" fill="#000"/>
+        </svg>
+      </div>
+
+      <!-- 11. Spark/étoile à 4 branches posée sur une carte -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="90" y="160" width="320" height="260" rx="24" fill="#000"/>
+          <path d="M250 200 L270 275 L345 295 L270 315 L250 390 L230 315 L155 295 L230 275 Z" fill="#fff"/>
+        </svg>
+      </div>
+
+      <!-- 12. Deck qui forme une pensée : cartes empilées avec "?" -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="90" y="140" width="260" height="280" rx="24" fill="#000" opacity="0.35"/>
+          <rect x="130" y="110" width="260" height="280" rx="24" fill="#000" opacity="0.65"/>
+          <rect x="170" y="80" width="260" height="280" rx="24" fill="#000"/>
+          <path d="M265 150 Q 300 130 325 160 Q 340 190 300 210 V235" stroke="#fff" stroke-width="24" stroke-linecap="round" fill="none"/>
+          <circle cx="300" cy="285" r="15" fill="#fff"/>
+        </svg>
+      </div>
+
+      <!-- 13. Cerveau-circuit : demi-cercle + cartes comme lobes -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M100 250 Q 100 100 250 100 Q 400 100 400 250 Q 400 400 250 400 Q 100 400 100 250 Z" fill="#000"/>
+          <rect x="160" y="170" width="70" height="160" rx="10" fill="#fff"/>
+          <rect x="270" y="170" width="70" height="160" rx="10" fill="#fff"/>
+          <line x1="250" y1="100" x2="250" y2="400" stroke="#fff" stroke-width="10"/>
+        </svg>
+      </div>
+
+      <!-- 14. Spark → carte : étoile qui pointe vers une carte -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M130 170 L155 230 L215 255 L155 280 L130 340 L105 280 L45 255 L105 230 Z" fill="#000"/>
+          <path d="M220 250 H280 M260 230 L280 250 L260 270" stroke="#000" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <rect x="300" y="140" width="170" height="220" rx="18" fill="#000"/>
+        </svg>
+      </div>
+
+      <!-- 15. Tête + cartes dedans (profil qui pense) -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M160 110 Q 100 110 100 220 V360 H180 L210 430 L210 360 H340 Q 400 360 400 280 V220 Q 400 110 300 110 Z" fill="#000"/>
+          <rect x="180" y="200" width="50" height="110" rx="8" fill="#fff"/>
+          <rect x="245" y="180" width="50" height="130" rx="8" fill="#fff"/>
+          <rect x="310" y="200" width="50" height="110" rx="8" fill="#fff"/>
+        </svg>
+      </div>
+
+      <!-- 16. Deck qui se transforme en nuage (morph) -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="80" y="290" width="90" height="140" rx="10" fill="#000"/>
+          <rect x="185" y="250" width="90" height="180" rx="12" fill="#000" opacity="0.75"/>
+          <path d="M290 240 C 290 200, 330 180, 360 200 C 380 170, 430 180, 430 220 C 450 230, 450 270, 430 280 C 430 310, 390 320, 370 300 C 340 310, 300 290, 300 260 C 280 260, 280 240, 290 240 Z" fill="#000"/>
+        </svg>
+      </div>
+
+      <!-- 17. Pile de cartes = lobes d'un cerveau (vue 3/4) -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M100 220 Q 80 160 150 150 Q 170 100 240 130 Q 260 90 330 120 Q 400 110 400 180 Q 430 220 390 260 L390 310 Q 390 350 340 350 Q 300 390 240 360 Q 190 390 140 350 Q 100 350 100 310 Z" fill="#000"/>
+          <path d="M130 240 H380 M150 290 H360 M180 340 H330" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <!-- 18. Carte ouverte avec spark intérieur (concept : projet qui s'illumine) -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M90 110 H410 V390 H90 Z" stroke="#000" stroke-width="24" fill="none" stroke-linejoin="round"/>
+          <path d="M250 170 L270 245 L345 250 L285 295 L305 370 L250 325 L195 370 L215 295 L155 250 L230 245 Z" fill="#000"/>
+        </svg>
+      </div>
+
+      <!-- 19. Triple arche (trinity : idée, projet, exécution) -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M80 400 Q 80 240 180 240 Q 280 240 280 400" stroke="#000" stroke-width="40" fill="none" stroke-linecap="round"/>
+          <path d="M220 400 Q 220 180 320 180 Q 420 180 420 400" stroke="#000" stroke-width="40" fill="none" stroke-linecap="round" opacity="0.55"/>
+          <circle cx="180" cy="160" r="24" fill="#000"/>
+        </svg>
+      </div>
+
+      <!-- 20. Hexagone + cartes (brain cell + deck structuré) -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M250 70 L400 160 L400 340 L250 430 L100 340 L100 160 Z" stroke="#000" stroke-width="22" fill="none" stroke-linejoin="round"/>
+          <rect x="175" y="180" width="50" height="140" rx="8" fill="#000"/>
+          <rect x="235" y="180" width="50" height="140" rx="8" fill="#000" opacity="0.65"/>
+          <rect x="295" y="180" width="50" height="140" rx="8" fill="#000" opacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+  </body>
+</html>

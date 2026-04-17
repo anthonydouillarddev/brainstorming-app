@@ -21,12 +21,15 @@ create table projects (
   disabled_sections text[] not null default '{}',
   metric_users integer,
   metric_mrr integer,
+  priority text not null default 'none' check (priority in ('none','urgent','high','normal','low')),
+  position integer not null default 0,
   deleted_at timestamptz,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
 
 create index if not exists idx_projects_deleted_at on projects(deleted_at);
+create index if not exists projects_priority_position_idx on projects(user_id, priority, position);
 
 -- ═══════════════════════════════════════════════
 -- SECTIONS (brainstorming fields)
@@ -139,6 +142,41 @@ create table dev_items (
 create index idx_dev_items_user_kind on dev_items(user_id, kind, position);
 
 -- ═══════════════════════════════════════════════
+-- USER_PREFERENCES (theme, density, task view, role, saved colors)
+-- ═══════════════════════════════════════════════
+create table user_preferences (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  theme text default 'system' check (theme in ('light', 'dark', 'system')),
+  display_density text default 'normal' check (display_density in ('compact', 'normal', 'comfortable')),
+  default_task_view text default 'list' check (default_task_view in ('list', 'kanban')),
+  role text default 'admin' check (role in ('admin', 'free', 'demo', 'pro', 'vip')),
+  locale text default 'fr',
+  saved_colors jsonb not null default '[]'::jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(user_id)
+);
+
+-- ═══════════════════════════════════════════════
+-- CUSTOM_COLOR_COMBOS (combos de couleurs personnels)
+-- ═══════════════════════════════════════════════
+create table custom_color_combos (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  name text not null,
+  style text default 'custom' check (style in (
+    'vintage','modern','natural','pastel','corporate',
+    'playful','tech','ancient','brand','custom'
+  )),
+  colors text[] not null,
+  note text,
+  created_at timestamptz default now()
+);
+
+create index idx_custom_color_combos_user_id on custom_color_combos(user_id, created_at desc);
+
+-- ═══════════════════════════════════════════════
 -- ROW LEVEL SECURITY
 -- ═══════════════════════════════════════════════
 alter table projects enable row level security;
@@ -148,6 +186,8 @@ alter table decisions enable row level security;
 alter table roadmap_items enable row level security;
 alter table risks enable row level security;
 alter table dev_items enable row level security;
+alter table user_preferences enable row level security;
+alter table custom_color_combos enable row level security;
 
 -- Projects : chaque user ne voit que SES projets
 create policy "Users can view own projects"
@@ -250,6 +290,14 @@ create policy "Users can update own dev_items"
   on dev_items for update using (auth.uid() = user_id);
 create policy "Users can delete own dev_items"
   on dev_items for delete using (auth.uid() = user_id);
+
+-- User preferences : par user_id
+create policy "Users see own preferences" on user_preferences
+  for all using (auth.uid() = user_id);
+
+-- Custom color combos : par user_id
+create policy "Users see own color combos" on custom_color_combos
+  for all using (auth.uid() = user_id);
 
 -- ═══════════════════════════════════════════════
 -- TRIGGERS

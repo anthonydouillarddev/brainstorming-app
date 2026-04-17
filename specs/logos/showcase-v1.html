@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mindeck — Logos v1</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #fff; }
+      .grid { display: grid; grid-template-columns: repeat(5, 1fr); }
+      .cell {
+        aspect-ratio: 1;
+        border: 1px solid #e5e5e5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .cell svg {
+        width: 100%;
+        height: 100%;
+        max-width: 140px;
+        max-height: 140px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grid">
+      <!-- 1. M-Stack : M formé de 3 cartes empilées décalées -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="80" y="140" width="120" height="220" rx="14" fill="#000"/>
+          <rect x="190" y="180" width="120" height="220" rx="14" fill="#000" opacity="0.55"/>
+          <rect x="300" y="140" width="120" height="220" rx="14" fill="#000"/>
+        </svg>
+      </div>
+
+      <!-- 2. M-Brutaliste : M géométrique épais -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M70 400 V120 H150 L250 260 L350 120 H430 V400 H360 V240 L270 360 H230 L140 240 V400 Z" fill="#000"/>
+        </svg>
+      </div>
+
+      <!-- 3. M-Split : deux couches qui se chevauchent -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M80 380 V140 L200 280 L250 220 L300 280 L420 140 V380" stroke="#000" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M120 380 V180 L250 340 L380 180 V380" stroke="#000" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.35"/>
+        </svg>
+      </div>
+
+      <!-- 4. M-Fanned : M avec jambages fannés comme des cartes -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g>
+            <rect x="70" y="140" width="60" height="240" rx="10" fill="#000" transform="rotate(-12 100 260)"/>
+            <rect x="170" y="140" width="60" height="240" rx="10" fill="#000" transform="rotate(-4 200 260)"/>
+            <rect x="270" y="140" width="60" height="240" rx="10" fill="#000" transform="rotate(4 300 260)"/>
+            <rect x="370" y="140" width="60" height="240" rx="10" fill="#000" transform="rotate(12 400 260)"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- 5. M-Circle : M dans un cercle -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="250" cy="250" r="210" stroke="#000" stroke-width="24"/>
+          <path d="M150 350 V170 L250 290 L350 170 V350" stroke="#000" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </div>
+
+      <!-- 6. Fan : 3 cartes en éventail -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="180" y="120" width="140" height="220" rx="18" fill="#000" transform="rotate(-18 250 300)"/>
+          <rect x="180" y="120" width="140" height="220" rx="18" fill="#000" opacity="0.7"/>
+          <rect x="180" y="120" width="140" height="220" rx="18" fill="#000" transform="rotate(18 250 300)" opacity="0.5"/>
+        </svg>
+      </div>
+
+      <!-- 7. Stack-Iso : 3 cartes empilées isométriques -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M100 340 L250 260 L400 340 L250 420 Z" fill="#000"/>
+          <path d="M100 270 L250 190 L400 270 L250 350 Z" fill="#000" opacity="0.65"/>
+          <path d="M100 200 L250 120 L400 200 L250 280 Z" fill="#000" opacity="0.35"/>
+        </svg>
+      </div>
+
+      <!-- 8. Fold : carte avec pli central formant M -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M90 110 H410 V390 H90 Z" fill="#000"/>
+          <path d="M90 110 L250 290 L410 110 L410 390 L250 210 L90 390 Z" fill="#fff"/>
+        </svg>
+      </div>
+
+      <!-- 9. Deck-Side : vue de côté d'un deck -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="80" y="150" width="340" height="30" rx="6" fill="#000"/>
+          <rect x="80" y="200" width="340" height="30" rx="6" fill="#000" opacity="0.75"/>
+          <rect x="80" y="250" width="340" height="30" rx="6" fill="#000" opacity="0.55"/>
+          <rect x="80" y="300" width="340" height="30" rx="6" fill="#000" opacity="0.35"/>
+          <rect x="80" y="350" width="340" height="30" rx="6" fill="#000" opacity="0.2"/>
+        </svg>
+      </div>
+
+      <!-- 10. Corner-Lift : carte avec coin relevé -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M100 120 H380 L400 140 V400 H100 Z" fill="#000"/>
+          <path d="M380 120 L400 140 L360 140 Z" fill="#fff"/>
+          <path d="M380 120 L360 140 L380 140 Z" fill="#000" opacity="0.4"/>
+        </svg>
+      </div>
+
+      <!-- 11. Brain-Node : 3 nœuds reliés -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="250" y1="130" x2="130" y2="360" stroke="#000" stroke-width="18"/>
+          <line x1="250" y1="130" x2="370" y2="360" stroke="#000" stroke-width="18"/>
+          <line x1="130" y1="360" x2="370" y2="360" stroke="#000" stroke-width="18"/>
+          <circle cx="250" cy="130" r="50" fill="#000"/>
+          <circle cx="130" cy="360" r="50" fill="#000"/>
+          <circle cx="370" cy="360" r="50" fill="#000"/>
+        </svg>
+      </div>
+
+      <!-- 12. Prism : losange -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M250 80 L420 250 L250 420 L80 250 Z" fill="#000"/>
+          <path d="M250 80 L420 250 L250 250 Z" fill="#fff" opacity="0.2"/>
+          <path d="M250 250 L250 420 L80 250 Z" fill="#fff" opacity="0.1"/>
+        </svg>
+      </div>
+
+      <!-- 13. Orbit : cercle central + satellites -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="250" cy="250" r="70" fill="#000"/>
+          <circle cx="250" cy="110" r="30" fill="#000"/>
+          <circle cx="371" cy="320" r="30" fill="#000"/>
+          <circle cx="129" cy="320" r="30" fill="#000"/>
+          <circle cx="250" cy="250" r="170" stroke="#000" stroke-width="6" opacity="0.2"/>
+        </svg>
+      </div>
+
+      <!-- 14. Cross-Deck : 2 rectangles croisés -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="160" y="80" width="180" height="340" rx="22" fill="#000" transform="rotate(-22 250 250)"/>
+          <rect x="160" y="80" width="180" height="340" rx="22" fill="#000" transform="rotate(22 250 250)" opacity="0.55"/>
+        </svg>
+      </div>
+
+      <!-- 15. Grid-M : M composé de points -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g fill="#000">
+            <circle cx="110" cy="140" r="22"/>
+            <circle cx="110" cy="220" r="22"/>
+            <circle cx="110" cy="300" r="22"/>
+            <circle cx="110" cy="380" r="22"/>
+            <circle cx="180" cy="210" r="22"/>
+            <circle cx="250" cy="280" r="22"/>
+            <circle cx="320" cy="210" r="22"/>
+            <circle cx="390" cy="140" r="22"/>
+            <circle cx="390" cy="220" r="22"/>
+            <circle cx="390" cy="300" r="22"/>
+            <circle cx="390" cy="380" r="22"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- 16. Wave-M : M ondulé fluide -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M80 380 C 80 180, 140 140, 200 260 C 230 320, 270 320, 300 260 C 360 140, 420 180, 420 380" stroke="#000" stroke-width="40" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+
+      <!-- 17. Arrow-Deck : deck avec flèche -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="80" y="140" width="220" height="280" rx="18" fill="#000" opacity="0.35"/>
+          <rect x="120" y="110" width="220" height="280" rx="18" fill="#000" opacity="0.65"/>
+          <rect x="160" y="80" width="220" height="280" rx="18" fill="#000"/>
+          <path d="M240 180 H340 M300 140 L340 180 L300 220" stroke="#fff" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </div>
+
+      <!-- 18. Infinity-M : courbe continue -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M90 250 C 90 150, 210 150, 250 250 C 290 350, 410 350, 410 250 C 410 150, 290 150, 250 250 C 210 350, 90 350, 90 250 Z" stroke="#000" stroke-width="34" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+
+      <!-- 19. Chevron-Stack : chevrons empilés -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M100 200 L250 320 L400 200" stroke="#000" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M100 130 L250 250 L400 130" stroke="#000" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.55"/>
+          <path d="M100 270 L250 390 L400 270" stroke="#000" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.3"/>
+        </svg>
+      </div>
+
+      <!-- 20. Dot-M : 5 points minimalistes -->
+      <div class="cell">
+        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g fill="#000">
+            <circle cx="110" cy="380" r="38"/>
+            <circle cx="110" cy="150" r="38"/>
+            <circle cx="250" cy="290" r="38"/>
+            <circle cx="390" cy="150" r="38"/>
+            <circle cx="390" cy="380" r="38"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </body>
+</html>

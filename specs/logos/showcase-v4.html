@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mindeck — Logos v4 (wordmarks + combos)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600;700&family=Playfair+Display:wght@700;900&family=DM+Serif+Display&family=Archivo:wght@600;800;900&family=Archivo+Black&family=Bricolage+Grotesque:wght@600;700;800&family=Fraunces:wght@700;900&family=Manrope:wght@700;800&family=Instrument+Serif&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #fff; font-family: 'Inter', sans-serif; }
+      h2 {
+        padding: 40px 24px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #888;
+        border-bottom: 1px solid #e5e5e5;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .cell {
+        min-height: 160px;
+        border: 1px solid #e5e5e5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 24px;
+        color: #000;
+      }
+      .wm {
+        font-size: 56px;
+        line-height: 1;
+        color: #000;
+      }
+      .combo {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .combo-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      .combo svg, .combo-stack svg { flex-shrink: 0; }
+      .label {
+        position: absolute;
+        font-size: 10px;
+        color: #bbb;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        margin-top: -120px;
+        margin-left: -40%;
+      }
+    </style>
+  </head>
+  <body>
+
+    <h2>Palette 1 — wordmarks (mot seul)</h2>
+    <div class="grid">
+
+      <!-- W1 : Inter 900, tracking serré -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'Inter'; font-weight: 900; letter-spacing: -0.05em;">mindeck</div>
+      </div>
+
+      <!-- W2 : Space Grotesk 700, moderne -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'Space Grotesk'; font-weight: 700; letter-spacing: -0.03em;">mindeck</div>
+      </div>
+
+      <!-- W3 : JetBrains Mono 800, tech -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'JetBrains Mono'; font-weight: 800; letter-spacing: -0.04em; font-size: 48px;">mindeck</div>
+      </div>
+
+      <!-- W4 : IBM Plex Mono 700, dev -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'IBM Plex Mono'; font-weight: 700; font-size: 46px;">mindeck<span style="color:#C9956B">_</span></div>
+      </div>
+
+      <!-- W5 : Archivo Black, impact -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'Archivo Black'; letter-spacing: -0.04em;">mindeck</div>
+      </div>
+
+      <!-- W6 : Playfair 900, classe / serif -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'Playfair Display'; font-weight: 900; letter-spacing: -0.02em;">Mindeck</div>
+      </div>
+
+      <!-- W7 : Instrument Serif, italic élégant -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'Instrument Serif'; font-style: italic; font-size: 68px; letter-spacing: -0.01em;">Mindeck</div>
+      </div>
+
+      <!-- W8 : DM Serif Display, éditorial -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'DM Serif Display'; letter-spacing: -0.02em; font-size: 62px;">Mindeck</div>
+      </div>
+
+      <!-- W9 : Bricolage Grotesque, contemporain -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'Bricolage Grotesque'; font-weight: 800; letter-spacing: -0.04em;">mindeck</div>
+      </div>
+
+      <!-- W10 : Fraunces 900, display serif moderne -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'Fraunces'; font-weight: 900; letter-spacing: -0.03em;">mindeck</div>
+      </div>
+
+      <!-- W11 : Inter 800, accent couleur sur "deck" -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'Inter'; font-weight: 800; letter-spacing: -0.05em;">mind<span style="color:#7C6A4F">deck</span></div>
+      </div>
+
+      <!-- W12 : Space Grotesk, point moka entre les 2 mots -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'Space Grotesk'; font-weight: 700; letter-spacing: -0.03em;">mind<span style="color:#7C6A4F">·</span>deck</div>
+      </div>
+
+      <!-- W13 : Manrope 800, ultra-épuré -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'Manrope'; font-weight: 800; letter-spacing: -0.05em;">mindeck</div>
+      </div>
+
+      <!-- W14 : Archivo 900 + point coloré sur le i -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'Archivo'; font-weight: 900; letter-spacing: -0.04em; position: relative;">
+          m<span style="position:relative;">i<span style="position:absolute; top:-2px; left:4px; width:10px; height:10px; background:#C9956B; border-radius:50%;"></span></span>ndeck
+        </div>
+      </div>
+
+      <!-- W15 : Inter capitalisé, wide tracking -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'Inter'; font-weight: 700; letter-spacing: 0.12em; font-size: 36px;">MINDECK</div>
+      </div>
+
+      <!-- W16 : JetBrains Mono avec curseur -->
+      <div class="cell">
+        <div class="wm" style="font-family: 'JetBrains Mono'; font-weight: 800; font-size: 44px;">
+          mindeck<span style="display:inline-block; width:14px; height:36px; background:#000; margin-left:4px; vertical-align:-4px;"></span>
+        </div>
+      </div>
+    </div>
+
+    <h2>Palette 2 — M monogramme + wordmark mindeck</h2>
+    <div class="grid">
+
+      <!-- C1 : M carré plein + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100">
+            <rect x="0" y="0" width="100" height="100" rx="18" fill="#000"/>
+            <path d="M22 75 V25 L50 55 L78 25 V75" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span style="font-family:'Inter'; font-weight:800; font-size:40px; letter-spacing:-0.04em;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C2 : M en cartes empilées + Space Grotesk -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="64" height="64" viewBox="0 0 100 100">
+            <rect x="10" y="20" width="22" height="60" rx="4" fill="#000"/>
+            <rect x="39" y="30" width="22" height="60" rx="4" fill="#000" opacity="0.65"/>
+            <rect x="68" y="20" width="22" height="60" rx="4" fill="#000"/>
+          </svg>
+          <span style="font-family:'Space Grotesk'; font-weight:700; font-size:42px; letter-spacing:-0.03em;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C3 : M circle outline + JetBrains -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="60" height="60" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="44" stroke="#000" stroke-width="6" fill="none"/>
+            <path d="M28 70 V32 L50 55 L72 32 V70" stroke="#000" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span style="font-family:'JetBrains Mono'; font-weight:700; font-size:32px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C4 : M split / 2 couches + Manrope -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="60" height="60" viewBox="0 0 100 100">
+            <path d="M12 85 V25 L40 55 L50 45 L60 55 L88 25 V85" stroke="#000" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span style="font-family:'Manrope'; font-weight:800; font-size:40px; letter-spacing:-0.04em;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C5 : M fanned cartes + Archivo Black -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="60" height="60" viewBox="0 0 100 100">
+            <rect x="10" y="25" width="16" height="55" rx="3" fill="#000" transform="rotate(-12 18 75)"/>
+            <rect x="34" y="25" width="16" height="55" rx="3" fill="#000" transform="rotate(-4 42 75)" opacity="0.75"/>
+            <rect x="58" y="25" width="16" height="55" rx="3" fill="#000" transform="rotate(4 66 75)" opacity="0.5"/>
+            <rect x="74" y="25" width="16" height="55" rx="3" fill="#000" transform="rotate(12 82 75)" opacity="0.3"/>
+          </svg>
+          <span style="font-family:'Archivo Black'; font-size:36px; letter-spacing:-0.03em;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C6 : M avec point caramel + Inter (type Stripe) -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100">
+            <path d="M15 82 V22 L50 60 L85 22 V82" stroke="#000" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <circle cx="50" cy="20" r="8" fill="#C9956B"/>
+          </svg>
+          <span style="font-family:'Inter'; font-weight:700; font-size:38px; letter-spacing:-0.04em;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C7 : M dans une carte + Bricolage -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100">
+            <rect x="8" y="8" width="84" height="84" rx="14" fill="#000"/>
+            <path d="M26 74 V28 L50 50 L74 28 V74" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span style="font-family:'Bricolage Grotesque'; font-weight:800; font-size:40px; letter-spacing:-0.04em;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C8 : M cockpit (cercles) + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="60" height="60" viewBox="0 0 100 100">
+            <circle cx="22" cy="30" r="10" fill="#000"/>
+            <circle cx="22" cy="70" r="10" fill="#000"/>
+            <circle cx="50" cy="50" r="10" fill="#000"/>
+            <circle cx="78" cy="30" r="10" fill="#000"/>
+            <circle cx="78" cy="70" r="10" fill="#000"/>
+          </svg>
+          <span style="font-family:'Inter'; font-weight:800; font-size:40px; letter-spacing:-0.04em;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C9 : M minimal ligne fine + Instrument Serif italic -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="60" height="60" viewBox="0 0 100 100">
+            <path d="M15 80 V25 L50 60 L85 25 V80" stroke="#000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span style="font-family:'Instrument Serif'; font-style:italic; font-size:52px;">Mindeck</span>
+        </div>
+      </div>
+
+      <!-- C10 : M en losange + Fraunces -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="60" height="60" viewBox="0 0 100 100">
+            <path d="M50 8 L92 50 L50 92 L8 50 Z" fill="#000"/>
+            <path d="M30 65 V35 L50 55 L70 35 V65" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span style="font-family:'Fraunces'; font-weight:900; font-size:44px; letter-spacing:-0.03em;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C11 : M stacké au-dessus de mindeck + Space Grotesk -->
+      <div class="cell">
+        <div class="combo-stack">
+          <svg width="56" height="56" viewBox="0 0 100 100">
+            <rect x="0" y="0" width="100" height="100" rx="20" fill="#000"/>
+            <path d="M22 75 V25 L50 55 L78 25 V75" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span style="font-family:'Space Grotesk'; font-weight:700; font-size:28px; letter-spacing:-0.02em;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C12 : M-deck (M dessiné comme 3 cartes fines) + Archivo -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="60" height="60" viewBox="0 0 100 100">
+            <rect x="14" y="20" width="12" height="60" rx="3" fill="#000"/>
+            <path d="M26 20 L50 55 L74 20" stroke="#000" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <rect x="74" y="20" width="12" height="60" rx="3" fill="#000"/>
+          </svg>
+          <span style="font-family:'Archivo'; font-weight:900; font-size:40px; letter-spacing:-0.04em;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C13 : M demi-cercle + JetBrains -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="60" height="60" viewBox="0 0 100 100">
+            <path d="M15 80 V50 Q 15 20 42 20 Q 50 20 50 30 Q 50 20 58 20 Q 85 20 85 50 V80" stroke="#000" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span style="font-family:'JetBrains Mono'; font-weight:700; font-size:32px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C14 : M géométrique serif (empattements) + DM Serif -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100">
+            <path d="M8 20 H28 L50 55 L72 20 H92 V30 H82 V75 H92 V85 H60 V75 H70 V35 L50 65 L30 35 V75 H40 V85 H8 V75 H18 V30 H8 Z" fill="#000"/>
+          </svg>
+          <span style="font-family:'DM Serif Display'; font-size:46px; letter-spacing:-0.02em;">Mindeck</span>
+        </div>
+      </div>
+
+      <!-- C15 : M avec underline moka + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="60" height="60" viewBox="0 0 100 100">
+            <path d="M15 70 V25 L50 55 L85 25 V70" stroke="#000" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <rect x="15" y="82" width="70" height="6" rx="3" fill="#7C6A4F"/>
+          </svg>
+          <span style="font-family:'Inter'; font-weight:800; font-size:40px; letter-spacing:-0.04em;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C16 : M chevron stack + Bricolage -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="60" height="60" viewBox="0 0 100 100">
+            <path d="M15 40 L50 65 L85 40" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M15 25 L50 50 L85 25" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.5"/>
+            <path d="M15 55 L50 80 L85 55" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.3"/>
+          </svg>
+          <span style="font-family:'Bricolage Grotesque'; font-weight:700; font-size:40px; letter-spacing:-0.04em;">mindeck</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mindeck — Logos v5 (cerveaux + wordmarks favoris)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #fff; font-family: 'Inter', sans-serif; }
+      h2 {
+        padding: 40px 24px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #888;
+        border-bottom: 1px solid #e5e5e5;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .cell {
+        min-height: 180px;
+        border: 1px solid #e5e5e5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 24px;
+      }
+      .combo {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .combo-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+      .wm {
+        font-size: 48px;
+        line-height: 1;
+        color: #000;
+      }
+    </style>
+  </head>
+  <body>
+
+    <h2>Wordmarks favoris (Inter 800 + Space Grotesk 700) — sans double d</h2>
+    <div class="grid">
+
+      <!-- W1 : Inter 800, tout noir, pas de séparation -->
+      <div class="cell">
+        <div class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em;">mindeck</div>
+      </div>
+
+      <!-- W2 : Space Grotesk 700, tout noir -->
+      <div class="cell">
+        <div class="wm" style="font-family:'Space Grotesk'; font-weight:700; letter-spacing:-0.03em;">mindeck</div>
+      </div>
+
+      <!-- W3 : Inter 800, accent moka subtil sur "eck" (après le d partagé) -->
+      <div class="cell">
+        <div class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em;">mind<span style="color:#7C6A4F">eck</span></div>
+      </div>
+
+      <!-- W4 : Space Grotesk, accent moka sur "eck" -->
+      <div class="cell">
+        <div class="wm" style="font-family:'Space Grotesk'; font-weight:700; letter-spacing:-0.03em;">mind<span style="color:#7C6A4F">eck</span></div>
+      </div>
+
+      <!-- W5 : Inter 800, dot moka sur le i -->
+      <div class="cell">
+        <div class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em; font-size:52px;">
+          m<span style="position:relative; display:inline-block;">i<span style="position:absolute; top:-1px; left:5px; width:9px; height:9px; background:#C9956B; border-radius:50%;"></span></span>ndeck
+        </div>
+      </div>
+
+      <!-- W6 : Space Grotesk 700, dot moka sur le i -->
+      <div class="cell">
+        <div class="wm" style="font-family:'Space Grotesk'; font-weight:700; letter-spacing:-0.03em; font-size:52px;">
+          m<span style="position:relative; display:inline-block;">i<span style="position:absolute; top:-1px; left:4px; width:9px; height:9px; background:#C9956B; border-radius:50%;"></span></span>ndeck
+        </div>
+      </div>
+    </div>
+
+    <h2>Combos — Cerveau stylisé + mindeck</h2>
+    <div class="grid">
+
+      <!-- C1 : Cerveau profil minimaliste (2 lobes outline) + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M42 85 V55 Q 15 50 15 30 Q 15 10 42 10 Q 50 10 50 10 Q 58 10 58 10 Q 85 10 85 30 Q 85 50 58 55 V85" stroke="#000" stroke-width="7" stroke-linecap="round" fill="none"/>
+            <path d="M42 55 Q 50 40 58 55" stroke="#000" stroke-width="5" fill="none"/>
+            <line x1="50" y1="10" x2="50" y2="55" stroke="#000" stroke-width="5"/>
+          </svg>
+          <span class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C2 : Cerveau 2 lobes plein symétrique + Space Grotesk -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M48 15 Q 20 15 18 40 Q 16 60 35 68 Q 30 75 30 85 H48 Z" fill="#000"/>
+            <path d="M52 15 Q 80 15 82 40 Q 84 60 65 68 Q 70 75 70 85 H52 Z" fill="#000"/>
+          </svg>
+          <span class="wm" style="font-family:'Space Grotesk'; font-weight:700; letter-spacing:-0.03em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C3 : Cerveau géométrique (rectangles = lobes) + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="12" y="14" width="34" height="52" rx="17" fill="#000"/>
+            <rect x="54" y="14" width="34" height="52" rx="17" fill="#000"/>
+            <rect x="36" y="70" width="28" height="18" rx="4" fill="#000"/>
+            <line x1="50" y1="14" x2="50" y2="66" stroke="#fff" stroke-width="6"/>
+          </svg>
+          <span class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C4 : Cerveau circuit (nœuds reliés) + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="30" cy="30" r="10" fill="#000"/>
+            <circle cx="70" cy="30" r="10" fill="#000"/>
+            <circle cx="50" cy="55" r="10" fill="#000"/>
+            <circle cx="25" cy="75" r="10" fill="#000"/>
+            <circle cx="75" cy="75" r="10" fill="#000"/>
+            <line x1="30" y1="30" x2="50" y2="55" stroke="#000" stroke-width="5"/>
+            <line x1="70" y1="30" x2="50" y2="55" stroke="#000" stroke-width="5"/>
+            <line x1="30" y1="30" x2="70" y2="30" stroke="#000" stroke-width="5"/>
+            <line x1="25" y1="75" x2="50" y2="55" stroke="#000" stroke-width="5"/>
+            <line x1="75" y1="75" x2="50" y2="55" stroke="#000" stroke-width="5"/>
+          </svg>
+          <span class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C5 : Cerveau outline épuré dans un cercle + Space Grotesk -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="44" stroke="#000" stroke-width="6" fill="none"/>
+            <path d="M38 28 Q 20 28 22 45 Q 24 58 38 62 L38 72 H50 V62 Q 62 58 64 48" stroke="#000" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <path d="M62 28 Q 78 28 76 45 Q 74 58 62 62 L62 72 H50 V62" stroke="#000" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <line x1="50" y1="28" x2="50" y2="62" stroke="#000" stroke-width="4"/>
+          </svg>
+          <span class="wm" style="font-family:'Space Grotesk'; font-weight:700; letter-spacing:-0.03em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C6 : Cerveau plein + spark/étincelle + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M46 18 Q 18 18 18 42 Q 18 62 36 66 Q 34 72 34 82 H46 Z" fill="#000"/>
+            <path d="M54 18 Q 82 18 82 42 Q 82 62 64 66 Q 66 72 66 82 H54 Z" fill="#000"/>
+            <path d="M78 12 L80 20 L88 18 L84 26 L92 30 L84 34 L88 42 L80 38 L78 46 L76 38 L68 42 L72 34 L64 30 L72 26 L68 18 L76 20 Z" fill="#000"/>
+          </svg>
+          <span class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C7 : Demi-cerveau (profil côté) minimaliste + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="52" height="56" viewBox="0 0 90 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M40 85 V65 Q 10 60 10 35 Q 10 10 45 10 Q 80 10 80 35 Q 80 48 65 55 Q 75 60 75 70 Q 75 85 55 85 Z" fill="#000"/>
+            <path d="M40 55 Q 50 45 60 55" stroke="#fff" stroke-width="4" fill="none"/>
+            <line x1="45" y1="25" x2="45" y2="55" stroke="#fff" stroke-width="4"/>
+          </svg>
+          <span class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C8 : Cerveau ondes (WiFi mind waves) + Space Grotesk -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="70" r="14" fill="#000"/>
+            <path d="M30 55 Q 50 35 70 55" stroke="#000" stroke-width="7" stroke-linecap="round" fill="none"/>
+            <path d="M18 40 Q 50 12 82 40" stroke="#000" stroke-width="7" stroke-linecap="round" fill="none"/>
+            <path d="M8 28 Q 50 -8 92 28" stroke="#000" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.5"/>
+          </svg>
+          <span class="wm" style="font-family:'Space Grotesk'; font-weight:700; letter-spacing:-0.03em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C9 : Cerveau = 2 feuilles qui s'embrassent + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 90 Q 50 60 28 45 Q 8 30 25 15 Q 38 4 50 18" fill="#000"/>
+            <path d="M50 90 Q 50 60 72 45 Q 92 30 75 15 Q 62 4 50 18" fill="#000" opacity="0.65"/>
+          </svg>
+          <span class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C10 : Cerveau abstrait (3 courbes) + Space Grotesk -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 10 Q 15 10 15 45 Q 15 80 50 90 Q 85 80 85 45 Q 85 10 50 10 Z" stroke="#000" stroke-width="7" fill="none"/>
+            <path d="M50 10 Q 40 50 50 90" stroke="#000" stroke-width="5" fill="none"/>
+            <path d="M20 35 Q 50 50 80 35" stroke="#000" stroke-width="5" fill="none"/>
+            <path d="M22 60 Q 50 70 78 60" stroke="#000" stroke-width="5" fill="none"/>
+          </svg>
+          <span class="wm" style="font-family:'Space Grotesk'; font-weight:700; letter-spacing:-0.03em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C11 : Cerveau pixel (grille 4x4 arrondie) + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g fill="#000">
+              <rect x="28" y="10" width="18" height="18" rx="4"/>
+              <rect x="54" y="10" width="18" height="18" rx="4"/>
+              <rect x="10" y="32" width="18" height="18" rx="4"/>
+              <rect x="36" y="32" width="18" height="18" rx="4"/>
+              <rect x="62" y="32" width="18" height="18" rx="4"/>
+              <rect x="10" y="54" width="18" height="18" rx="4"/>
+              <rect x="36" y="54" width="18" height="18" rx="4"/>
+              <rect x="62" y="54" width="18" height="18" rx="4"/>
+              <rect x="36" y="76" width="28" height="16" rx="4"/>
+            </g>
+          </svg>
+          <span class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C12 : Cerveau ampoule (brain + lightbulb base) + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="52" height="60" viewBox="0 0 90 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M43 12 Q 12 12 12 38 Q 12 58 32 65 V75 H43 Z" fill="#000"/>
+            <path d="M47 12 Q 78 12 78 38 Q 78 58 58 65 V75 H47 Z" fill="#000"/>
+            <rect x="32" y="78" width="26" height="6" rx="3" fill="#000"/>
+            <rect x="35" y="88" width="20" height="6" rx="3" fill="#000"/>
+          </svg>
+          <span class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C13 : Cerveau stacké au-dessus + Space Grotesk -->
+      <div class="cell">
+        <div class="combo-stack">
+          <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M46 15 Q 15 15 15 42 Q 15 65 38 68 Q 36 76 36 85 H46 Z" fill="#000"/>
+            <path d="M54 15 Q 85 15 85 42 Q 85 65 62 68 Q 64 76 64 85 H54 Z" fill="#000"/>
+          </svg>
+          <span class="wm" style="font-family:'Space Grotesk'; font-weight:700; letter-spacing:-0.03em; font-size:32px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C14 : Cerveau dans carré arrondi + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="4" width="92" height="92" rx="20" fill="#000"/>
+            <path d="M44 22 Q 20 22 20 42 Q 20 58 38 62 L38 72 H44 Z" fill="#fff"/>
+            <path d="M56 22 Q 80 22 80 42 Q 80 58 62 62 L62 72 H56 Z" fill="#fff"/>
+            <rect x="38" y="74" width="24" height="8" rx="2" fill="#fff"/>
+          </svg>
+          <span class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C15 : Cerveau minimal (juste la fissure) + Space Grotesk -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="45" r="38" fill="#000"/>
+            <path d="M50 10 Q 45 30 52 45 Q 48 60 50 80" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <rect x="38" y="86" width="24" height="8" rx="4" fill="#000"/>
+          </svg>
+          <span class="wm" style="font-family:'Space Grotesk'; font-weight:700; letter-spacing:-0.03em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+
+      <!-- C16 : Cerveau outline avec neurone central + Inter -->
+      <div class="cell">
+        <div class="combo">
+          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M48 15 Q 18 15 18 42 Q 18 60 35 66 V78 H48 Z" stroke="#000" stroke-width="6" fill="none"/>
+            <path d="M52 15 Q 82 15 82 42 Q 82 60 65 66 V78 H52 Z" stroke="#000" stroke-width="6" fill="none"/>
+            <circle cx="50" cy="42" r="10" fill="#000"/>
+            <line x1="50" y1="32" x2="50" y2="18" stroke="#000" stroke-width="4"/>
+            <line x1="40" y1="38" x2="28" y2="30" stroke="#000" stroke-width="4"/>
+            <line x1="60" y1="38" x2="72" y2="30" stroke="#000" stroke-width="4"/>
+            <line x1="42" y1="48" x2="28" y2="56" stroke="#000" stroke-width="4"/>
+            <line x1="58" y1="48" x2="72" y2="56" stroke="#000" stroke-width="4"/>
+          </svg>
+          <span class="wm" style="font-family:'Inter'; font-weight:800; letter-spacing:-0.05em; font-size:40px;">mindeck</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
