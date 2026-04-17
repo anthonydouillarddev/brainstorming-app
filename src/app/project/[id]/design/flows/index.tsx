@@ -10,15 +10,23 @@ import FrictionCounterBlock from "./blocks/FrictionCounterBlock";
 import FlowBuilderBlock from "./blocks/FlowBuilderBlock";
 import JourneyMapBlock from "./blocks/JourneyMapBlock";
 import EmptyStateBlock from "./blocks/EmptyStateBlock";
+import CriticalPathBlock from "./blocks/CriticalPathBlock";
+import AARRRBlock from "./blocks/AARRRBlock";
 import FlowsExportBlock from "./blocks/ExportBlock";
+import ModeToggle from "./components/ModeToggle";
+import BeginnerChat from "./components/BeginnerChat";
+import PrintableFlowCard from "./components/PrintableFlowCard";
 import {
   FLOWS_SECTION_KEY,
   computeFlowsCompleteness,
   mergeFlowsState,
   parseFlowsState,
+  type FlowsMode,
   type FlowsState,
 } from "./state";
 import { validateFlows } from "./validators";
+
+const LS_MODE = "mindeck:design:flows:mode";
 
 export default function FlowsChapter({
   project,
@@ -38,6 +46,20 @@ export default function FlowsChapter({
   const [state, setState] = useState<FlowsState>(() =>
     parseFlowsState(initialSections[FLOWS_SECTION_KEY])
   );
+  const [mode, setMode] = useState<FlowsMode>("intermediate");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(LS_MODE);
+    if (saved === "beginner" || saved === "intermediate") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMode(saved);
+    }
+  }, []);
+
+  function changeMode(m: FlowsMode) {
+    setMode(m);
+    window.localStorage.setItem(LS_MODE, m);
+  }
 
   const completeness = computeFlowsCompleteness(state);
   const issues = validateFlows(state);
@@ -120,6 +142,7 @@ export default function FlowsChapter({
             {!saving && lastSaved && (
               <span className="text-xs text-green-600">✓ Sauvé à {lastSaved}</span>
             )}
+            <ModeToggle mode={mode} onChange={changeMode} />
           </div>
         </div>
 
@@ -160,30 +183,46 @@ export default function FlowsChapter({
         UserOnboard.com.
       </div>
 
-      <FlowStepsBlock
-        state={state}
-        projectType={project.type ?? null}
-        onChange={updateState}
-      />
-      <OnboardingPatternBlock
-        state={state}
-        projectType={project.type ?? null}
-        onChange={updateState}
-      />
-      <NorthStarActionBlock state={state} onChange={updateState} />
-      <FrictionCounterBlock state={state} />
+      {mode === "beginner" ? (
+        <BeginnerChat
+          state={state}
+          projectType={project.type ?? null}
+          onChange={updateState}
+          onSwitchMode={() => changeMode("intermediate")}
+        />
+      ) : (
+        <>
+          <FlowStepsBlock
+            state={state}
+            projectType={project.type ?? null}
+            onChange={updateState}
+          />
+          <OnboardingPatternBlock
+            state={state}
+            projectType={project.type ?? null}
+            onChange={updateState}
+          />
+          <NorthStarActionBlock state={state} onChange={updateState} />
+          <FrictionCounterBlock state={state} />
 
-      {/* V2 SHOULD */}
-      <FlowBuilderBlock state={state} onChange={updateState} />
-      <JourneyMapBlock state={state} onChange={updateState} />
-      <EmptyStateBlock state={state} onChange={updateState} />
+          {/* V2 SHOULD */}
+          <FlowBuilderBlock state={state} onChange={updateState} />
+          <JourneyMapBlock state={state} onChange={updateState} />
+          <EmptyStateBlock state={state} onChange={updateState} />
 
-      <FlowsExportBlock state={state} project={project} />
+          {/* V3 NICE */}
+          <CriticalPathBlock state={state} onChange={updateState} />
+          <AARRRBlock state={state} onChange={updateState} />
+        </>
+      )}
 
-      <div className="border-t border-border pt-4 text-xs text-muted text-center">
-        <strong>V2 SHOULD</strong> active. V3 ajoutera : critical path analyzer, dashboard AARRR
-        metrics, mode Débutant conversationnel, carte PDF imprimable.
-      </div>
+      {mode !== "beginner" && <FlowsExportBlock state={state} project={project} />}
+
+      {mode !== "beginner" && completeness >= 50 && (
+        <div className="border-t border-border pt-6">
+          <PrintableFlowCard state={state} project={project} />
+        </div>
+      )}
     </div>
   );
 }
