@@ -4,7 +4,41 @@ import { useMemo, useState } from "react";
 import type { Project } from "@/lib/types";
 import { useToast } from "@/app/components/toast";
 import { exportIdentityMd } from "../exports/markdown";
+import { exportIdentityJson } from "../exports/json";
+import { exportClaudeBrief } from "../exports/claude-brief";
 import type { IdentityState } from "../state";
+
+type Format = "markdown" | "claude" | "json";
+
+const FORMATS: {
+  key: Format;
+  label: string;
+  emoji: string;
+  filename: string;
+  hint: string;
+}[] = [
+  {
+    key: "markdown",
+    label: "Brand card Markdown",
+    emoji: "📄",
+    filename: "brand-card.md",
+    hint: "Doc lisible · coller dans Notion / brief freelance",
+  },
+  {
+    key: "claude",
+    label: "Brief Claude / ChatGPT",
+    emoji: "🤖",
+    filename: "brief-voice.md",
+    hint: "Prompt pré-formaté pour générer du copy aligné",
+  },
+  {
+    key: "json",
+    label: "JSON structuré",
+    emoji: "📦",
+    filename: "brand.json",
+    hint: "Format structuré pour réinjection chap 3-12 ou AI tooling",
+  },
+];
 
 export default function IdentityExportBlock({
   state,
@@ -15,15 +49,27 @@ export default function IdentityExportBlock({
 }) {
   const toast = useToast();
   const [collapsed, setCollapsed] = useState(true);
+  const [format, setFormat] = useState<Format>("markdown");
   const [copied, setCopied] = useState(false);
 
-  const content = useMemo(() => exportIdentityMd(state, project), [state, project]);
+  const content = useMemo(() => {
+    switch (format) {
+      case "markdown":
+        return exportIdentityMd(state, project);
+      case "claude":
+        return exportClaudeBrief(state, project);
+      case "json":
+        return exportIdentityJson(state, project);
+    }
+  }, [format, state, project]);
+
+  const currentFormat = FORMATS.find((f) => f.key === format)!;
 
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);
-      toast.success("Brand card copiée dans le presse-papier");
+      toast.success(`${currentFormat.label} copié dans le presse-papier`);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Copie impossible");
@@ -35,12 +81,12 @@ export default function IdentityExportBlock({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "brand-card.md";
+    a.download = currentFormat.filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success("brand-card.md téléchargé");
+    toast.success(`${currentFormat.filename} téléchargé`);
   }
 
   return (
@@ -52,7 +98,7 @@ export default function IdentityExportBlock({
       >
         {collapsed ? "▶" : "▼"}
         📤 Export brand card
-        <span className="text-muted font-normal text-sm">(markdown)</span>
+        <span className="text-muted font-normal text-sm">(3 formats)</span>
       </button>
 
       {collapsed && (
@@ -60,16 +106,35 @@ export default function IdentityExportBlock({
           onClick={() => setCollapsed(false)}
           className="w-full text-sm font-medium px-4 py-3 rounded-lg bg-card border border-border hover:border-accent hover:bg-accent/5 transition flex items-center justify-center gap-2"
         >
-          ▼ Voir l&apos;export (prêt à coller dans Claude / brief)
+          ▼ Voir les exports (Markdown · Claude brief · JSON)
         </button>
       )}
 
       {!collapsed && (
         <>
           <div className="bg-card/40 border border-border rounded-lg p-3 text-xs text-muted leading-relaxed">
-            <strong className="text-foreground">Usage</strong> : colle ce document dans
-            Claude/ChatGPT pour qu&apos;il écrive du copy, des emails ou des messages
-            d&apos;erreur dans ton ton exact.
+            <strong className="text-foreground">3 formats</strong> — Markdown pour brief
+            designer/freelance, Brief Claude pour générer du copy aligné, JSON pour réinjecter
+            dans les chapitres suivants ou un outil AI.
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            {FORMATS.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setFormat(f.key)}
+                className={`p-3 rounded-lg border transition text-left ${
+                  format === f.key
+                    ? "bg-accent/10 border-accent"
+                    : "border-border hover:bg-accent/5"
+                }`}
+              >
+                <div className="text-sm font-semibold">
+                  {f.emoji} {f.label}
+                </div>
+                <div className="text-[10px] text-muted mt-0.5">{f.hint}</div>
+              </button>
+            ))}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -83,7 +148,7 @@ export default function IdentityExportBlock({
               onClick={handleDownload}
               className="text-sm px-4 py-2 rounded border border-border hover:bg-accent/10 transition flex items-center gap-2"
             >
-              ⬇ Télécharger brand-card.md
+              ⬇ Télécharger {currentFormat.filename}
             </button>
             <span className="text-xs text-muted ml-auto">
               {content.length.toLocaleString("fr-FR")} caractères

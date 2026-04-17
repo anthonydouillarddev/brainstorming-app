@@ -8,6 +8,9 @@ import VoiceSlidersBlock from "./blocks/VoiceSlidersBlock";
 import GlossaryBlock from "./blocks/GlossaryBlock";
 import BrandPromiseBlock from "./blocks/BrandPromiseBlock";
 import ToneMatrixBlock from "./blocks/ToneMatrixBlock";
+import ReferencesBlock from "./blocks/ReferencesBlock";
+import MoodKeywordsBlock from "./blocks/MoodKeywordsBlock";
+import LivePreviewBlock from "./blocks/LivePreviewBlock";
 import IdentityExportBlock from "./blocks/ExportBlock";
 import {
   IDENTITY_SECTION_KEY,
@@ -166,17 +169,22 @@ export default function IdentityChapter({
         state={state}
         projectType={project.type ?? null}
         onChange={updateState}
-        showExtraSliders={false}
+        showExtraSliders={true}
       />
       <GlossaryBlock state={state} onChange={updateState} />
       <BrandPromiseBlock state={state} onChange={updateState} />
       <ToneMatrixBlock state={state} onChange={updateState} />
 
+      {/* V2 SHOULD */}
+      <ReferencesBlock state={state} onChange={updateState} />
+      <MoodKeywordsBlock state={state} onChange={updateState} />
+      <LivePreviewBlock state={state} projectName={project.official_name || project.name} />
+
       <IdentityExportBlock state={state} project={project} />
 
       <div className="border-t border-border pt-4 text-xs text-muted text-center">
-        <strong>V1 MUST</strong> active. V2 ajoutera : 3 sliders complémentaires, références
-        (👍 / 👎), live preview, mood keywords, 2 exports (JSON + Claude brief).
+        <strong>V2 SHOULD</strong> active. V3 ajoutera : Kapferer Prism (6 facettes), carte PDF
+        imprimable, mode Débutant conversationnel.
       </div>
     </div>
   );
