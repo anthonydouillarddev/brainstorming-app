@@ -5,6 +5,8 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -32,26 +34,37 @@ const TIMEOUT_MS = 3500;
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPortalRoot(document.getElementById("modal-root") ?? document.body);
+    const timeouts = timeoutsRef.current;
+    return () => {
+      timeouts.forEach((t) => clearTimeout(t));
+      timeouts.clear();
+    };
   }, []);
 
   const show = useCallback((message: string, kind: ToastKind = "info") => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     setToasts((prev) => [...prev, { id, kind, message }]);
-    setTimeout(() => {
+    const handle = setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
+      timeoutsRef.current.delete(handle);
     }, TIMEOUT_MS);
+    timeoutsRef.current.add(handle);
   }, []);
 
-  const value: ToastContextValue = {
-    show,
-    success: (m) => show(m, "success"),
-    error: (m) => show(m, "error"),
-    info: (m) => show(m, "info"),
-  };
+  const value = useMemo<ToastContextValue>(
+    () => ({
+      show,
+      success: (m) => show(m, "success"),
+      error: (m) => show(m, "error"),
+      info: (m) => show(m, "info"),
+    }),
+    [show]
+  );
 
   return (
     <ToastContext.Provider value={value}>
@@ -111,15 +124,14 @@ function ToastItem({
   );
 }
 
+const FALLBACK_TOAST: ToastContextValue = {
+  show: (m) => console.info("[toast fallback]", m),
+  success: (m) => console.info("[toast fallback success]", m),
+  error: (m) => console.error("[toast fallback error]", m),
+  info: (m) => console.info("[toast fallback info]", m),
+};
+
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);
-  if (!ctx) {
-    return {
-      show: (m) => console.info("[toast fallback]", m),
-      success: (m) => console.info("[toast fallback success]", m),
-      error: (m) => console.error("[toast fallback error]", m),
-      info: (m) => console.info("[toast fallback info]", m),
-    };
-  }
-  return ctx;
+  return ctx ?? FALLBACK_TOAST;
 }
