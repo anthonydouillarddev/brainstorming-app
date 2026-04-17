@@ -10,15 +10,22 @@ import ContrastPairsBlock from "./blocks/ContrastPairsBlock";
 import VariantMatrixBlock from "./blocks/VariantMatrixBlock";
 import A11yCheckBlock from "./blocks/A11yCheckBlock";
 import DensitySwitcherBlock from "./blocks/DensitySwitcherBlock";
+import TokenVersioningBlock from "./blocks/TokenVersioningBlock";
 import DsExportBlock from "./blocks/ExportBlock";
+import ModeToggle from "./components/ModeToggle";
+import BeginnerChat from "./components/BeginnerChat";
+import PrintableDsCard from "./components/PrintableCard";
 import {
   DESIGN_SYSTEM_SECTION_KEY,
   computeDsCompleteness,
   mergeDesignSystemState,
   parseDesignSystemState,
+  type DesignSystemMode,
   type DesignSystemState,
 } from "./state";
 import { validateDesignSystem } from "./validators";
+
+const LS_MODE = "mindeck:design:design-system:mode";
 
 export default function DesignSystemChapter({
   project,
@@ -38,6 +45,20 @@ export default function DesignSystemChapter({
   const [state, setState] = useState<DesignSystemState>(() =>
     parseDesignSystemState(initialSections[DESIGN_SYSTEM_SECTION_KEY])
   );
+  const [mode, setMode] = useState<DesignSystemMode>("intermediate");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(LS_MODE);
+    if (saved === "beginner" || saved === "intermediate") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMode(saved);
+    }
+  }, []);
+
+  function changeMode(m: DesignSystemMode) {
+    setMode(m);
+    window.localStorage.setItem(LS_MODE, m);
+  }
 
   const completeness = computeDsCompleteness(state);
   const issues = validateDesignSystem(state);
@@ -103,6 +124,7 @@ export default function DesignSystemChapter({
             {!saving && lastSaved && (
               <span className="text-xs text-green-600">✓ Sauvé à {lastSaved}</span>
             )}
+            <ModeToggle mode={mode} onChange={changeMode} />
           </div>
         </div>
 
@@ -145,26 +167,41 @@ export default function DesignSystemChapter({
         Brad Frost, Radix/shadcn, WCAG 2.2.
       </div>
 
-      <SemanticTokensBlock state={state} onChange={updateState} />
-      <ComponentChecklistBlock
-        state={state}
-        projectType={project.type ?? null}
-        onChange={updateState}
-      />
-      <PatternLibraryBlock state={state} onChange={updateState} />
-      <ContrastPairsBlock state={state} onChange={updateState} />
+      {mode === "beginner" ? (
+        <BeginnerChat
+          state={state}
+          projectType={project.type ?? null}
+          onChange={updateState}
+          onSwitchMode={() => changeMode("intermediate")}
+        />
+      ) : (
+        <>
+          <SemanticTokensBlock state={state} onChange={updateState} />
+          <ComponentChecklistBlock
+            state={state}
+            projectType={project.type ?? null}
+            onChange={updateState}
+          />
+          <PatternLibraryBlock state={state} onChange={updateState} />
+          <ContrastPairsBlock state={state} onChange={updateState} />
 
-      {/* V2 SHOULD */}
-      <VariantMatrixBlock state={state} onChange={updateState} />
-      <A11yCheckBlock state={state} onChange={updateState} />
-      <DensitySwitcherBlock state={state} onChange={updateState} />
+          {/* V2 SHOULD */}
+          <VariantMatrixBlock state={state} onChange={updateState} />
+          <A11yCheckBlock state={state} onChange={updateState} />
+          <DensitySwitcherBlock state={state} onChange={updateState} />
 
-      <DsExportBlock state={state} project={project} />
+          {/* V3 NICE */}
+          <TokenVersioningBlock state={state} onChange={updateState} />
+        </>
+      )}
 
-      <div className="border-t border-border pt-4 text-xs text-muted text-center">
-        <strong>V2 SHOULD</strong> active. V3 ajoutera : token versioning (deprecate workflow),
-        mode Débutant conversationnel, carte PDF imprimable.
-      </div>
+      {mode !== "beginner" && <DsExportBlock state={state} project={project} />}
+
+      {mode !== "beginner" && completeness >= 50 && (
+        <div className="border-t border-border pt-6">
+          <PrintableDsCard state={state} project={project} />
+        </div>
+      )}
     </div>
   );
 }
