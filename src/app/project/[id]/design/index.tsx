@@ -10,6 +10,7 @@ import IdentityChapter from "./identity";
 import InfoNavChapter from "./info-nav";
 import FlowsChapter from "./flows";
 import PrinciplesChapter from "./principles";
+import DesignSystemChapter from "./design-system";
 
 const LS_ACTIVE_CHAPTER = "mindeck_design_active_chapter";
 
@@ -90,8 +91,8 @@ export default function DesignPanel({
         </nav>
 
         <div className="mt-3 text-[11px] text-muted px-2 leading-relaxed">
-          12 chapitres issus de la recherche design. <strong>6 prêts</strong> (Fondations,
-          Identité, Info &amp; Nav, Parcours, Principes UX, Visuel) · 6 en dev.
+          12 chapitres issus de la recherche design. <strong>7 prêts</strong> (Fondations,
+          Identité, Info &amp; Nav, Parcours, Principes UX, Visuel, Design System) · 5 en dev.
         </div>
       </aside>
 
@@ -134,6 +135,13 @@ export default function DesignPanel({
           />
         ) : activeKey === "principles" ? (
           <PrinciplesChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : activeKey === "design-system" ? (
+          <DesignSystemChapter
             project={project}
             initialSections={initialSections}
             onProjectUpdate={onProjectUpdate}
