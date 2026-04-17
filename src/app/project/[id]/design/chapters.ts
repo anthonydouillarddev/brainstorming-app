@@ -28,7 +28,7 @@ export const DESIGN_CHAPTERS: DesignChapter[] = [
   { key: "foundations", num: 1, emoji: "📐", label: "Fondations", hint: "JTBD, personas, principes", status: "ready" },
   { key: "identity", num: 2, emoji: "🎭", label: "Identité & Ton", hint: "Archétype, voice & tone", status: "ready" },
   { key: "info-nav", num: 3, emoji: "🧭", label: "Info & Nav", hint: "Sitemap, navigation", status: "ready" },
-  { key: "flows", num: 4, emoji: "🛣️", label: "Parcours", hint: "User flows, onboarding", status: "bientot" },
+  { key: "flows", num: 4, emoji: "🛣️", label: "Parcours", hint: "User flows, onboarding", status: "ready" },
   { key: "principles", num: 5, emoji: "🧠", label: "Principes UX", hint: "Lois Nielsen, Norman, Yablonski", status: "bientot" },
   { key: "visual", num: 6, emoji: "🎨", label: "Visuel", hint: "Couleurs, typo, spacing, tokens", status: "ready" },
   { key: "design-system", num: 7, emoji: "🧱", label: "Design System", hint: "Tokens, composants, patterns", status: "bientot" },
