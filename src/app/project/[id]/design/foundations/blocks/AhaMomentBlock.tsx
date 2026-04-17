@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { validateAhaMoment } from "../validators";
 import type { FoundationsState } from "../state";
 import BlockStatus from "../components/BlockStatus";
@@ -19,24 +20,43 @@ export default function AhaMomentBlock({
   state: FoundationsState;
   onChange: (patch: Partial<FoundationsState>) => void;
 }) {
+  const [expanded, setExpanded] = useState(true);
   const issues = validateAhaMoment(state);
   const hasError = issues.some((i) => i.severity === "error");
   const hasWarn = issues.some((i) => i.severity === "warn");
   const ok =
     !!state.ahaMomentEvent.trim() && !!state.ahaMomentThreshold.trim() && !hasError;
 
+  const summary =
+    state.ahaMomentEvent.trim() && state.ahaMomentThreshold.trim()
+      ? `${state.ahaMomentEvent.trim()} — ${state.ahaMomentThreshold.trim()}`
+      : null;
+
   return (
     <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 space-y-4">
       <div className="flex items-baseline justify-between flex-wrap gap-2">
-        <h2 className="text-xl font-bold flex items-center gap-2">
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="text-xl font-bold flex items-center gap-2 hover:text-accent transition text-left"
+          aria-expanded={expanded}
+        >
+          <span aria-hidden>{expanded ? "▼" : "▶"}</span>
           💡 Aha moment
           <span className="text-[11px] px-2 py-0.5 bg-accent/10 text-accent rounded font-normal">
             MUST
           </span>
-        </h2>
+        </button>
         <BlockStatus ok={ok} hasError={hasError} hasWarn={hasWarn} />
       </div>
 
+      {!expanded && summary && (
+        <div className="text-xs text-muted italic border-l-2 border-border pl-3">
+          {summary}
+        </div>
+      )}
+
+      {expanded && (
+      <>
       <div className="bg-card/40 border border-border rounded-lg p-3 text-xs text-muted leading-relaxed">
         <strong className="text-foreground">Ce n&apos;est pas un ressenti, c&apos;est un événement</strong>
         . Mesurable. Exemple Facebook : <em>&laquo; 7 amis en 10 jours &raquo;</em>. Slack :{" "}
@@ -97,6 +117,8 @@ export default function AhaMomentBlock({
       </div>
 
       <IssueList issues={issues} />
+      </>
+      )}
     </div>
   );
 }

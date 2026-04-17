@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { validateJtbd } from "../validators";
 import type { FoundationsState } from "../state";
 import BlockStatus from "../components/BlockStatus";
@@ -12,6 +13,7 @@ export default function JtbdBlock({
   state: FoundationsState;
   onChange: (patch: Partial<FoundationsState>) => void;
 }) {
+  const [expanded, setExpanded] = useState(true);
   const issues = validateJtbd(state);
   const hasError = issues.some((i) => i.severity === "error");
   const hasWarn = issues.some((i) => i.severity === "warn");
@@ -20,15 +22,28 @@ export default function JtbdBlock({
   return (
     <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 space-y-4">
       <div className="flex items-baseline justify-between flex-wrap gap-2">
-        <h2 className="text-xl font-bold flex items-center gap-2">
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="text-xl font-bold flex items-center gap-2 hover:text-accent transition text-left"
+          aria-expanded={expanded}
+        >
+          <span aria-hidden>{expanded ? "▼" : "▶"}</span>
           🎯 Job-to-be-Done
           <span className="text-[11px] px-2 py-0.5 bg-accent/10 text-accent rounded font-normal">
             MUST
           </span>
-        </h2>
+        </button>
         <BlockStatus ok={ok} hasError={hasError} hasWarn={hasWarn} />
       </div>
 
+      {!expanded && state.jtbdCore.trim() && (
+        <div className="text-xs text-muted italic border-l-2 border-border pl-3">
+          « {state.jtbdCore.trim()} »
+        </div>
+      )}
+
+      {expanded && (
+      <>
       <div className="bg-card/40 border border-border rounded-lg p-3 text-xs text-muted leading-relaxed">
         <strong className="text-foreground">Qu&apos;est-ce que c&apos;est ?</strong> Un JTBD n&apos;est
         pas une fonctionnalité. C&apos;est un <em>progrès</em> que ton user cherche dans sa vie.
@@ -67,6 +82,8 @@ export default function JtbdBlock({
       </div>
 
       <IssueList issues={issues} />
+      </>
+      )}
     </div>
   );
 }

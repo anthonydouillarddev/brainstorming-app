@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { validatePrinciples } from "../validators";
 import {
   makePrincipleId,
@@ -25,11 +26,20 @@ export default function PrinciplesBlock({
   state: FoundationsState;
   onChange: (patch: Partial<FoundationsState>) => void;
 }) {
+  const [expanded, setExpanded] = useState(true);
   const issues = validatePrinciples(state);
   const hasError = issues.some((i) => i.severity === "error");
   const hasWarn = issues.some((i) => i.severity === "warn");
   const opposableCount = state.designPrinciples.filter((p) => p.principle.includes(">")).length;
   const ok = opposableCount >= 3 && !hasError;
+
+  const summary =
+    state.designPrinciples.length > 0
+      ? state.designPrinciples
+          .filter((p) => p.principle.trim())
+          .map((p) => p.principle.trim())
+          .join(" · ")
+      : null;
 
   function addPrinciple(seed?: Partial<FoundationsPrinciple>) {
     if (state.designPrinciples.length >= 5) return;
@@ -66,7 +76,12 @@ export default function PrinciplesBlock({
   return (
     <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 space-y-4">
       <div className="flex items-baseline justify-between flex-wrap gap-2">
-        <h2 className="text-xl font-bold flex items-center gap-2">
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="text-xl font-bold flex items-center gap-2 hover:text-accent transition text-left"
+          aria-expanded={expanded}
+        >
+          <span aria-hidden>{expanded ? "▼" : "▶"}</span>
           🧭 Principes design
           <span className="text-[11px] px-2 py-0.5 bg-accent/10 text-accent rounded font-normal">
             MUST
@@ -74,10 +89,18 @@ export default function PrinciplesBlock({
           <span className="text-muted text-sm font-normal">
             ({state.designPrinciples.length}/5)
           </span>
-        </h2>
+        </button>
         <BlockStatus ok={ok} hasError={hasError} hasWarn={hasWarn} />
       </div>
 
+      {!expanded && summary && (
+        <div className="text-xs text-muted italic border-l-2 border-border pl-3">
+          {summary}
+        </div>
+      )}
+
+      {expanded && (
+      <>
       <div className="bg-card/40 border border-border rounded-lg p-3 text-xs text-muted leading-relaxed">
         <strong className="text-foreground">Un bon principe tranche un dilemme.</strong>{" "}
         <em>&laquo; Clarté &gt; Richesse &raquo;</em> force un choix. <em>&laquo; Simple et
@@ -166,6 +189,8 @@ export default function PrinciplesBlock({
       )}
 
       <IssueList issues={issues} />
+      </>
+      )}
     </div>
   );
 }
