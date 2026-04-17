@@ -289,6 +289,155 @@ export function suggestBestPairs(palette: PaletteShade[]): PairSuggestion[] {
   return suggestions.slice(0, 5);
 }
 
+// Inverse perceptuellement une palette light en palette dark.
+// Asymétrique : les lights deviennent darks et vice versa, mais avec ajustements
+// non-linéaires pour lisibilité optimale + réduction de chroma pour éviter la fatigue.
+export function generateDarkFromLight(
+  lightPalette: PaletteShade[],
+  chromaReduction: number = 0.85 // 0 = pas de réduction, 1 = saturation totale conservée
+): PaletteShade[] {
+  return lightPalette.map((shade, i) => {
+    // Inversion asymétrique de la lightness : 50%→62%, 97%→10%, 13%→92% etc.
+    // L_dark = 0.10 + (0.97 - 0.10) * (1 - L_light - 0.02)
+    // Mais on prend la valeur miroir dans la palette (index inversé) pour cohérence
+    const mirrorIdx = lightPalette.length - 1 - i;
+    const mirrorL = lightPalette[mirrorIdx].oklch.l;
+
+    // Garde la chroma de la position originale mais réduite
+    const C = shade.oklch.c * chromaReduction;
+    const hue = shade.oklch.h;
+    const raw = { mode: "oklch" as const, l: mirrorL, c: C, h: hue };
+    const clamped = clampChroma(raw, "oklch");
+    const hex = formatHex(clamped) ?? "#000000";
+    const oklch: OklchColor = {
+      l: clamped.l ?? mirrorL,
+      c: clamped.c ?? C,
+      h: clamped.h ?? hue,
+    };
+    return {
+      name: shade.name,
+      oklch,
+      hex,
+      css: `oklch(${(oklch.l * 100).toFixed(1)}% ${oklch.c.toFixed(3)} ${oklch.h.toFixed(1)})`,
+      ratioVsWhite: contrastRatio(hex, "#ffffff"),
+      ratioVsBlack: contrastRatio(hex, "#000000"),
+    };
+  });
+}
+
+// Génère une palette de gris teintés à partir d'une couleur primary.
+// La hue de la primary est conservée mais la chroma est très faible (5-2% du max).
+// Refactoring UI : "Don't use gray. Use a tinted neutral."
+export function generateNeutralPalette(
+  primaryHex: string,
+  tintStrength: number = 0.5 // 0 = gris pur, 1 = teinte bien visible
+): PaletteShade[] {
+  const source = toOklch(primaryHex);
+  if (!source) throw new Error(`Invalid color: ${primaryHex}`);
+  const hue = source.h ?? 0;
+  // Chroma cible : courbe exponentielle pour voir un vrai effet à partir de 30-40%
+  // 0 = 0 (gris pur), 0.5 = 0.025, 1 = 0.06 (bien visible)
+  const peakChroma = 0.06 * Math.pow(tintStrength, 1.5);
+
+  return BASE_LIGHTNESS_CURVE.map((L, i) => {
+    // Cloche douce centrée sur le milieu, pour mettre un soupçon de teinte
+    const factor = Math.exp(-Math.pow(i - 6, 2) / (2 * 4 * 4));
+    const C = peakChroma * factor;
+    const raw = { mode: "oklch" as const, l: L, c: C, h: hue };
+    const clamped = clampChroma(raw, "oklch");
+    const hex = formatHex(clamped) ?? "#000000";
+    const oklch: OklchColor = {
+      l: clamped.l ?? L,
+      c: clamped.c ?? C,
+      h: clamped.h ?? hue,
+    };
+    return {
+      name: SHADE_NAMES[i],
+      oklch,
+      hex,
+      css: `oklch(${(oklch.l * 100).toFixed(1)}% ${oklch.c.toFixed(3)} ${oklch.h.toFixed(1)})`,
+      ratioVsWhite: contrastRatio(hex, "#ffffff"),
+      ratioVsBlack: contrastRatio(hex, "#000000"),
+    };
+  });
+}
+
+// Options de hues canoniques par rôle sémantique (inspiré Radix Colors)
+export const SEMANTIC_OPTIONS = {
+  success: [
+    { name: "Emerald", hue: 155 },
+    { name: "Green", hue: 145 },
+    { name: "Grass", hue: 130 },
+    { name: "Mint", hue: 170 },
+    { name: "Lime", hue: 120 },
+  ],
+  warning: [
+    { name: "Amber", hue: 70 },
+    { name: "Yellow", hue: 90 },
+    { name: "Orange", hue: 55 },
+    { name: "Gold", hue: 80 },
+  ],
+  error: [
+    { name: "Red", hue: 25 },
+    { name: "Crimson", hue: 10 },
+    { name: "Ruby", hue: 355 },
+    { name: "Tomato", hue: 35 },
+    { name: "Rose", hue: 345 },
+  ],
+  info: [
+    { name: "Blue", hue: 245 },
+    { name: "Indigo", hue: 265 },
+    { name: "Sky", hue: 225 },
+    { name: "Cyan", hue: 200 },
+    { name: "Violet", hue: 280 },
+  ],
+} as const;
+
+export type SemanticRole = keyof typeof SEMANTIC_OPTIONS;
+
+// Options par défaut (premier de chaque liste)
+export const DEFAULT_SEMANTIC_HUES: Record<SemanticRole, number> = {
+  success: 155,
+  warning: 70,
+  error: 25,
+  info: 245,
+};
+
+// Génère une palette sémantique à partir d'une hue donnée.
+export function generateSemanticPalette(hue: number): PaletteShade[] {
+  const peakChroma = 0.18;
+  return BASE_LIGHTNESS_CURVE.map((L, i) => {
+    const factor = Math.exp(-Math.pow(i - 6, 2) / (2 * 3.2 * 3.2));
+    const C = peakChroma * factor;
+    const raw = { mode: "oklch" as const, l: L, c: C, h: hue };
+    const clamped = clampChroma(raw, "oklch");
+    const hex = formatHex(clamped) ?? "#000000";
+    const oklch: OklchColor = {
+      l: clamped.l ?? L,
+      c: clamped.c ?? C,
+      h: clamped.h ?? hue,
+    };
+    return {
+      name: SHADE_NAMES[i],
+      oklch,
+      hex,
+      css: `oklch(${(oklch.l * 100).toFixed(1)}% ${oklch.c.toFixed(3)} ${oklch.h.toFixed(1)})`,
+      ratioVsWhite: contrastRatio(hex, "#ffffff"),
+      ratioVsBlack: contrastRatio(hex, "#000000"),
+    };
+  });
+}
+
+// Compat : utilise les hues par défaut
+export function generateSemanticPalettes(): Record<SemanticRole, PaletteShade[]> {
+  return {
+    success: generateSemanticPalette(DEFAULT_SEMANTIC_HUES.success),
+    warning: generateSemanticPalette(DEFAULT_SEMANTIC_HUES.warning),
+    error: generateSemanticPalette(DEFAULT_SEMANTIC_HUES.error),
+    info: generateSemanticPalette(DEFAULT_SEMANTIC_HUES.info),
+  };
+}
+
 export function generatePalette(
   primaryHex: string,
   tuning: PaletteTuning = {}

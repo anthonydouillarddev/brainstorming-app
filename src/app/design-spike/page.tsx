@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   generatePalette,
+  generateDarkFromLight,
   SHADE_NAMES,
   contrastRatio,
   suggestFiveColors,
@@ -10,6 +11,25 @@ import {
   type PaletteTuning,
 } from "@/lib/design/oklch";
 import { COLOR_COMBOS, COMBO_STYLES, type ColorCombo } from "@/lib/design/combos";
+import {
+  RADIUS_PRESETS,
+  SHADOW_PRESETS,
+  DENSITY_MULTIPLIERS,
+  generateTypoScale,
+} from "@/lib/design/tokens";
+import TokensBlock, {
+  DEFAULT_TOKENS,
+  getFontPairing,
+  resolveFonts,
+  mergeTokens,
+  type TokensState,
+} from "./tokens-block";
+import ExportBlock from "./export-block";
+import type { DesignSystemSnapshot } from "@/lib/design/export";
+import ValidationBanner from "./validation-banner";
+import ExtraColorsBlock from "./extra-colors-block";
+import GradientBlock from "./gradient-block";
+import { Help } from "./help";
 import {
   fetchSavedColors,
   updateSavedColors,
@@ -38,6 +58,35 @@ function rowToCombo(row: CustomComboRow): ColorCombo {
     colors: row.colors,
     note: row.note ?? undefined,
   };
+}
+
+const LS_SPIKE_STATE = "mindeck_spike_design_state";
+
+interface SpikeLocalState {
+  customColor: string;
+  contrast: number;
+  chromaPeakIndex: number;
+  chromaAmount: number;
+  tokens: TokensState;
+}
+
+function loadSpikeState(): Partial<SpikeLocalState> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(LS_SPIKE_STATE);
+    return raw ? (JSON.parse(raw) as Partial<SpikeLocalState>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSpikeState(state: SpikeLocalState) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(LS_SPIKE_STATE, JSON.stringify(state));
+  } catch {
+    // Quota exceeded ou autre — pas grave
+  }
 }
 
 const TEST_COLORS = [
@@ -162,6 +211,83 @@ function PaletteRow({
 
 type FilterMode = "all" | "aa" | "aa-large" | "aaa";
 
+function DarkPalettePreview({
+  lightPalette,
+  darkPalette,
+}: {
+  lightPalette: PaletteShade[];
+  darkPalette: PaletteShade[];
+}) {
+  const [collapsed, setCollapsed] = useState(true);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-baseline justify-between flex-wrap gap-2">
+        <button
+          onClick={() => setCollapsed((v) => !v)}
+          className="text-base font-semibold flex items-center gap-2 hover:text-accent transition cursor-pointer text-left"
+          aria-label={collapsed ? "Déplier" : "Replier"}
+        >
+          {collapsed ? "▶" : "▼"}
+          🌙 Dark mode auto-généré<Help topic="darkPerceptual" />
+        </button>
+        <span className="text-[11px] text-muted">Inversion OKLCH perceptuelle (chroma -15%)</span>
+      </div>
+      {collapsed ? (
+        <button
+          onClick={() => setCollapsed(false)}
+          className="w-full text-sm font-medium px-4 py-3 rounded-lg bg-card border border-border hover:border-accent hover:bg-accent/5 transition flex items-center justify-center gap-2"
+        >
+          ▼ Voir la palette dark générée automatiquement
+        </button>
+      ) : (
+        <>
+          <div className="bg-card/40 border border-border rounded-lg p-3 text-xs text-muted leading-relaxed">
+            <strong className="text-foreground">Comment ça marche ?</strong> Au lieu d&apos;inverser
+            bêtement les couleurs en RGB (qui produit des darks moches et sursaturés), on inverse
+            la <strong>lightness OKLCH de manière asymétrique</strong> : les shades 50-100 (bg
+            clair) deviennent 950-900 (bg sombre), avec une <strong>réduction de chroma de
+            15%</strong> pour éviter la fatigue oculaire. C&apos;est ce que font Material 3 et
+            Apple HIG.
+          </div>
+          <div className="space-y-1">
+            <div className="text-[10px] font-mono text-muted">Light :</div>
+            <div className="overflow-x-auto -mx-1 pb-1">
+              <div className="grid grid-cols-12 gap-0.5 min-w-[600px] px-1">
+                {lightPalette.map((s) => (
+                  <div
+                    key={`l-${s.name}`}
+                    className="aspect-square rounded border border-border/50"
+                    style={{ background: s.hex }}
+                    title={`${s.name} · ${s.hex}`}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="text-[10px] font-mono text-muted mt-2">Dark (auto) :</div>
+            <div className="overflow-x-auto -mx-1 pb-1">
+              <div className="grid grid-cols-12 gap-0.5 min-w-[600px] px-1">
+                {darkPalette.map((s) => (
+                  <div
+                    key={`d-${s.name}`}
+                    className="aspect-square rounded border border-border/50"
+                    style={{ background: s.hex }}
+                    title={`${s.name} · ${s.hex}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          <p className="text-[11px] text-muted">
+            💡 Les shades restent dans le même ordre (50 à gauche, 950 à droite) mais en dark mode,
+            le shade 50 sert de bg sombre et le shade 950 sert de texte clair.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
 function ContrastMatrix({
   palette,
   onLoadFiveColors,
@@ -207,19 +333,17 @@ function ContrastMatrix({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h3 className="text-base font-semibold flex items-center gap-2">
-          <button
-            onClick={() => setCollapsed((v) => !v)}
-            className="text-muted hover:text-foreground transition text-sm"
-            aria-label={collapsed ? "Déplier" : "Replier"}
-          >
-            {collapsed ? "▶" : "▼"}
-          </button>
-          Matrice de contraste{" "}
+        <button
+          onClick={() => setCollapsed((v) => !v)}
+          className="text-base font-semibold flex items-center gap-2 hover:text-accent transition cursor-pointer text-left"
+          aria-label={collapsed ? "Déplier" : "Replier"}
+        >
+          {collapsed ? "▶" : "▼"}
+          Matrice de contraste<Help topic="wcag" />{" "}
           <span className="text-muted font-normal text-sm">
             ({palette.length}×{palette.length} paires · text sur bg)
           </span>
-        </h3>
+        </button>
         {!collapsed && (
           <div className="flex gap-1 text-[11px]">
             {(["all", "aa-large", "aa", "aaa"] as FilterMode[]).map((m) => (
@@ -691,13 +815,16 @@ function MarriagePreview({
   onMove,
   onClear,
   onChangeColor,
+  tokens,
 }: {
   selected: SelectedShade[];
   onRemove: (id: string) => void;
   onMove: (from: number, to: number) => void;
   onClear: () => void;
   onChangeColor: (id: string, newHex: string) => void;
+  tokens: TokensState;
 }) {
+  const [darkMode, setDarkMode] = useState(false);
   if (selected.length === 0) {
     return (
       <div className="bg-card/60 border border-dashed border-border rounded-2xl p-8 text-center text-sm text-muted">
@@ -707,12 +834,10 @@ function MarriagePreview({
     );
   }
 
-  const [bg, text, accent, secondary] = [
-    selected[0]?.hex,
-    selected[1]?.hex,
-    selected[2]?.hex,
-    selected[3]?.hex,
-  ];
+  // En mode dark, on swap bg ↔ text pour simuler un thème sombre
+  const [bg, text, accent, secondary] = darkMode
+    ? [selected[1]?.hex, selected[0]?.hex, selected[2]?.hex, selected[3]?.hex]
+    : [selected[0]?.hex, selected[1]?.hex, selected[2]?.hex, selected[3]?.hex];
 
   return (
     <div className="space-y-5">
@@ -723,12 +848,21 @@ function MarriagePreview({
             (réorganise avec ◀ ▶)
           </span>
         </h3>
-        <button
-          onClick={onClear}
-          className="text-xs px-3 py-1.5 rounded border border-border hover:bg-accent/10 transition"
-        >
-          Tout retirer
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setDarkMode((v) => !v)}
+            className="text-xs px-3 py-1.5 rounded border border-border hover:bg-accent/10 transition flex items-center gap-1.5"
+            title={darkMode ? "Passer en mode clair" : "Passer en mode sombre (swap bg↔text)"}
+          >
+            {darkMode ? "🌙 Dark" : "🌞 Light"}
+          </button>
+          <button
+            onClick={onClear}
+            className="text-xs px-3 py-1.5 rounded border border-border hover:bg-accent/10 transition"
+          >
+            Tout retirer
+          </button>
+        </div>
       </div>
 
       {/* Chips en HAUT : le popover d'édition s'ouvre AU-DESSUS dans l'espace libre */}
@@ -750,53 +884,144 @@ function MarriagePreview({
       {/* Contrôle WCAG juste en dessous des chips — toujours visible pendant l'édition */}
       <MarriageContrastReport selected={selected} />
 
-      {/* Mockup live (au moins 2 couleurs) */}
-      {selected.length >= 2 && bg && text && (
-        <div
-          className="rounded-2xl p-6 border border-border transition"
-          style={{ background: bg, color: text }}
-        >
-          <div className="space-y-4">
-            <div>
-              <h4 className="text-lg font-bold mb-1" style={{ color: text }}>
-                Exemple de mariage
-              </h4>
-              <p className="text-sm opacity-80" style={{ color: text }}>
-                C&apos;est à ça que ressemblerait ton interface. Lis le texte, regarde le contraste,
-                juge l&apos;ambiance.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <button
-                className="px-4 py-2 rounded-lg font-semibold text-sm"
-                style={{ background: accent ?? text, color: bg }}
-              >
-                Action principale
-              </button>
-              {secondary && (
-                <button
-                  className="px-4 py-2 rounded-lg font-semibold text-sm border"
-                  style={{ borderColor: secondary, color: text, background: "transparent" }}
+      {/* Mockup live — applique les tokens du bloc 3 (radius, shadow, typo, spacing, fonts, components) */}
+      {selected.length >= 2 && bg && text && (() => {
+        const cardRadius = tokens.components.card.radius ?? tokens.radius;
+        const cardShadow = tokens.components.card.shadow ?? tokens.shadow;
+        const btnPrimaryRadius = tokens.components.buttonPrimary.radius ?? tokens.radius;
+        const btnPrimaryShadow = tokens.components.buttonPrimary.shadow ?? tokens.shadow;
+        const btnSecondaryRadius = tokens.components.buttonSecondary.radius ?? tokens.radius;
+        const btnSecondaryShadow = tokens.components.buttonSecondary.shadow ?? tokens.shadow;
+        const cardRadiusPx = RADIUS_PRESETS[cardRadius].value;
+        const radiusCss = cardRadiusPx === 9999 ? "9999px" : `${cardRadiusPx}px`;
+        const btnPrimaryRadiusPx = RADIUS_PRESETS[btnPrimaryRadius].value;
+        const btnPrimaryRadiusCss = btnPrimaryRadiusPx === 9999 ? "9999px" : `${btnPrimaryRadiusPx}px`;
+        const btnSecondaryRadiusPx = RADIUS_PRESETS[btnSecondaryRadius].value;
+        const btnSecondaryRadiusCss = btnSecondaryRadiusPx === 9999 ? "9999px" : `${btnSecondaryRadiusPx}px`;
+        const innerRadiusCss = cardRadiusPx === 9999 ? "9999px" : `${Math.max(0, cardRadiusPx - 4)}px`;
+        const shadowCss = SHADOW_PRESETS[cardShadow].value;
+        const btnPrimaryShadowCss = SHADOW_PRESETS[btnPrimaryShadow].value;
+        const btnSecondaryShadowCss = SHADOW_PRESETS[btnSecondaryShadow].value;
+        const densityMult = DENSITY_MULTIPLIERS[tokens.spacingDensity];
+        const padContainer = Math.round(24 * densityMult);
+        const padButton = Math.round(8 * densityMult);
+        const padButtonX = Math.round(16 * densityMult);
+        const gapItems = Math.round(16 * densityMult);
+        const typo = generateTypoScale(tokens.typoBaseSize, tokens.typoRatio);
+        const titleSize = typo.sizes.find((s) => s.name === "xl")?.px ?? 24;
+        const titleLh = typo.sizes.find((s) => s.name === "xl")?.lineHeight ?? 1.3;
+        const bodySize = typo.sizes.find((s) => s.name === "base")?.px ?? 16;
+        const bodyLh = typo.sizes.find((s) => s.name === "base")?.lineHeight ?? 1.6;
+        const buttonSize = typo.sizes.find((s) => s.name === "sm")?.px ?? 14;
+        const fonts = resolveFonts(tokens);
+        const headingFont = fonts.heading;
+        const bodyFont = fonts.body;
+
+        return (
+          <div
+            className="border border-border transition"
+            style={{
+              background: bg,
+              color: text,
+              borderRadius: radiusCss,
+              boxShadow: shadowCss,
+              padding: `${padContainer}px`,
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: `${gapItems}px` }}>
+              <div>
+                <h4
+                  style={{
+                    color: text,
+                    fontSize: `${titleSize}px`,
+                    lineHeight: titleLh,
+                    fontWeight: 700,
+                    fontFamily: headingFont,
+                    margin: 0,
+                    marginBottom: `${Math.round(8 * densityMult)}px`,
+                  }}
                 >
-                  Action secondaire
-                </button>
-              )}
-            </div>
-            {accent && (
+                  Exemple de mariage
+                </h4>
+                <p
+                  style={{
+                    color: text,
+                    fontSize: `${bodySize}px`,
+                    lineHeight: bodyLh,
+                    fontFamily: bodyFont,
+                    opacity: 0.8,
+                    margin: 0,
+                  }}
+                >
+                  Mockup live appliquant tes tokens : couleurs, typo, fonts, spacing, radius,
+                  shadow. Toutes les modifications du bloc 3 sont visibles ici en temps réel.
+                </p>
+              </div>
               <div
-                className="rounded-lg p-4 text-sm"
                 style={{
-                  background: `color-mix(in oklch, ${accent} 15%, ${bg})`,
-                  color: text,
-                  border: `1px solid ${accent}`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: `${Math.round(12 * densityMult)}px`,
+                  flexWrap: "wrap",
                 }}
               >
-                Une card avec fond dérivé de l&apos;accent et bordure d&apos;accent.
+                <button
+                  style={{
+                    background: accent ?? text,
+                    color: bg,
+                    borderRadius: btnPrimaryRadiusCss,
+                    boxShadow: btnPrimaryShadowCss,
+                    fontSize: `${buttonSize}px`,
+                    fontFamily: bodyFont,
+                    fontWeight: 600,
+                    padding: `${padButton}px ${padButtonX}px`,
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Action principale
+                </button>
+                {secondary && (
+                  <button
+                    style={{
+                      borderColor: secondary,
+                      color: text,
+                      background: "transparent",
+                      borderRadius: btnSecondaryRadiusCss,
+                      boxShadow: btnSecondaryShadowCss,
+                      fontSize: `${buttonSize}px`,
+                      fontFamily: bodyFont,
+                      fontWeight: 600,
+                      padding: `${padButton}px ${padButtonX}px`,
+                      border: `1px solid ${secondary}`,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Action secondaire
+                  </button>
+                )}
               </div>
-            )}
+              {accent && (
+                <div
+                  style={{
+                    background: `color-mix(in oklch, ${accent} 15%, ${bg})`,
+                    color: text,
+                    border: `1px solid ${accent}`,
+                    borderRadius: innerRadiusCss,
+                    padding: `${Math.round(16 * densityMult)}px`,
+                    fontSize: `${bodySize}px`,
+                    fontFamily: bodyFont,
+                    lineHeight: bodyLh,
+                    boxShadow: shadowCss,
+                  }}
+                >
+                  Une card avec fond dérivé de l&apos;accent + bordure + ombre selon tes tokens.
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
@@ -851,6 +1076,12 @@ export default function DesignSpikePage() {
   const [selected, setSelected] = useState<SelectedShade[]>([]);
   const [combosCollapsed, setCombosCollapsed] = useState(true);
   const [refPalettesCollapsed, setRefPalettesCollapsed] = useState(true);
+  const [tokens, setTokens] = useState<TokensState>(DEFAULT_TOKENS);
+  const [mode, setMode] = useState<"simple" | "avance" | "pro">("pro");
+
+  function updateTokens(patch: Partial<TokensState>) {
+    setTokens((prev) => ({ ...prev, ...patch }));
+  }
   const [savedColors, setSavedColors] = useState<string[]>([]);
   const [customCombos, setCustomCombos] = useState<ColorCombo[]>([]);
   const [newComboName, setNewComboName] = useState("");
@@ -862,6 +1093,24 @@ export default function DesignSpikePage() {
 
   useEffect(() => {
     let cancelled = false;
+
+    // Restaure l'état local (couleur custom, tuning, tokens) — pas de perte entre sessions
+    const local = loadSpikeState();
+    if (local) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (local.customColor) setCustomColor(local.customColor);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (local.contrast !== undefined) setContrast(local.contrast);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (local.chromaPeakIndex !== undefined) setChromaPeakIndex(local.chromaPeakIndex);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (local.chromaAmount !== undefined) setChromaAmount(local.chromaAmount);
+      // Merge safe : complète les champs manquants (customFonts, gradient, components...)
+      // pour supporter les vieilles versions de localStorage
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTokens(mergeTokens(local.tokens));
+    }
+
     (async () => {
       const [colors, combos] = await Promise.all([fetchSavedColors(), fetchCustomCombos()]);
       if (cancelled) return;
@@ -872,6 +1121,11 @@ export default function DesignSpikePage() {
       cancelled = true;
     };
   }, []);
+
+  // Sync local : à chaque change, on sauve dans localStorage
+  useEffect(() => {
+    saveSpikeState({ customColor, contrast, chromaPeakIndex, chromaAmount, tokens });
+  }, [customColor, contrast, chromaPeakIndex, chromaAmount, tokens]);
 
   async function toggleSavedColor(hex: string) {
     const normalized = hex.toLowerCase();
@@ -941,6 +1195,29 @@ export default function DesignSpikePage() {
     () => generatePalette(customColor, tuning),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [customColor, contrast, chromaPeakIndex, chromaAmount]
+  );
+
+  const customPaletteDark = useMemo(
+    () => generateDarkFromLight(customPalette, 0.85),
+    [customPalette]
+  );
+
+  const selectedAsRoles = useMemo(
+    () =>
+      selected.map((s, i) => ({
+        role:
+          i === 0
+            ? "Background"
+            : i === 1
+            ? "Text"
+            : i === 2
+            ? "Accent"
+            : i === 3
+            ? "Secondary"
+            : `Color ${i + 1}`,
+        hex: s.hex,
+      })),
+    [selected]
   );
 
   function toggleShade(shade: SelectedShade) {
@@ -1024,21 +1301,63 @@ export default function DesignSpikePage() {
 
   return (
     <main className="max-w-6xl mx-auto p-6 md:p-10 space-y-10">
-      <header className="space-y-2">
+      <header className="space-y-3">
         <h1 className="text-2xl md:text-3xl font-bold">
-          Spike OKLCH — palette + combos + mariage
+          Spike Design — chap. 6 Visuel
         </h1>
         <p className="text-sm text-muted max-w-3xl">
-          Validation de l&apos;algo OKLCH pour le chap. 6 Visuel. 3 blocs : éditeur de palette à
-          partir d&apos;1 couleur + bibliothèque de combos inspirationnels + preview mariage en
-          sélectionnant des shades ou en chargeant un combo entier.
+          Builder de design system : palette OKLCH + combos + neutrals/semantics + tokens
+          (typo/fonts/spacing/radius/shadow) + preview mariage + export multi-format.
         </p>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-xs font-medium uppercase tracking-wider text-muted">Mode :</span>
+          {(["simple", "avance", "pro"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`text-sm px-4 py-1.5 rounded-full border transition capitalize ${
+                mode === m
+                  ? "bg-accent text-white border-accent"
+                  : "border-border hover:bg-accent/10"
+              }`}
+              title={
+                m === "simple"
+                  ? "Choisis une vibe → design system complet généré"
+                  : m === "avance"
+                  ? "Pickers assistés (palette, tokens, export)"
+                  : "Tout exposé : sliders OKLCH, matrice 12×12, neutrals/semantics, validations"
+              }
+            >
+              {m === "simple"
+                ? "🌱 Simple"
+                : m === "avance"
+                ? "📐 Avancé"
+                : "🔬 Pro"}
+            </button>
+          ))}
+          <span className="text-xs text-muted">
+            {mode === "simple" && "Vibe + 5 couleurs + export markdown"}
+            {mode === "avance" && "Palette + tokens + export CSS/Tailwind"}
+            {mode === "pro" && "Tout : sliders, matrice, neutrals/semantics, validations"}
+          </span>
+        </div>
       </header>
+
+      {/* Bandeau de validation : alertes pédagogiques en temps réel */}
+      <ValidationBanner
+        primaryHex={customColor}
+        palette={customPalette}
+        selectedColors={selectedAsRoles}
+        tokens={tokens}
+      />
 
       {/* ─────────── BLOC 1 : ÉDITEUR DE PALETTE ─────────── */}
       <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 space-y-5">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <h2 className="font-semibold">1. Éditeur de palette</h2>
+          <h2 className="font-semibold">
+            1. Éditeur de palette<Help topic="oklch" />
+          </h2>
           <button
             onClick={resetTuning}
             className="text-xs px-3 py-1.5 rounded border border-border hover:bg-accent/10 transition"
@@ -1132,26 +1451,73 @@ export default function DesignSpikePage() {
             selected={selectedKeys}
             onToggleShade={toggleShade}
           />
-          <ContrastMatrix palette={customPalette} onLoadFiveColors={loadFiveColorsIntoMarriage} />
+          {mode !== "simple" && (
+            <ContrastMatrix
+              palette={customPalette}
+              onLoadFiveColors={loadFiveColorsIntoMarriage}
+            />
+          )}
+
+          {/* Dark mode preview : visible en mode Avancé/Pro */}
+          {mode !== "simple" && (
+            <DarkPalettePreview lightPalette={customPalette} darkPalette={customPaletteDark} />
+          )}
         </div>
       </div>
 
-      {/* ─────────── BLOC 2 : COMBOS INSPIRATIONNELS ─────────── */}
+      {/* ─────────── BLOC 2 : PALETTES DE RÉFÉRENCE (Pro only) ─────────── */}
+      {mode === "pro" && (
+      <div className="space-y-4 border-t border-border pt-6">
+        <button
+          onClick={() => setRefPalettesCollapsed((v) => !v)}
+          className="w-full text-xl font-bold flex items-center gap-2 hover:text-accent transition cursor-pointer text-left"
+        >
+          {refPalettesCollapsed ? "▶" : "▼"}
+          2. Palettes de référence
+          <span className="text-muted font-normal text-sm">
+            ({TEST_COLORS.length} · tuning par défaut)
+          </span>
+        </button>
+
+        {refPalettesCollapsed && (
+          <button
+            onClick={() => setRefPalettesCollapsed(false)}
+            className="w-full text-sm font-medium px-4 py-3 rounded-lg bg-card border border-border hover:border-accent hover:bg-accent/5 transition flex items-center justify-center gap-2"
+          >
+            ▼ Afficher les {TEST_COLORS.length} palettes de référence
+          </button>
+        )}
+
+        {!refPalettesCollapsed && (
+          <div className="space-y-8">
+            {TEST_COLORS.map(({ name, hex }) => (
+              <PaletteRow
+                key={hex}
+                name={name}
+                hex={hex}
+                selected={selectedKeys}
+                onToggleShade={toggleShade}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      )}
+
+      {/* ─────────── BLOC 3 : COMBOS INSPIRATIONNELS ─────────── */}
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <button
-              onClick={() => setCombosCollapsed((v) => !v)}
-              className="text-muted hover:text-foreground transition text-sm"
-              aria-label={combosCollapsed ? "Déplier" : "Replier"}
-            >
-              {combosCollapsed ? "▶" : "▼"}
-            </button>
-            2. Combos inspirationnels
+          <button
+            onClick={() => setCombosCollapsed((v) => !v)}
+            className="text-xl font-bold flex items-center gap-2 hover:text-accent transition cursor-pointer text-left"
+            aria-label={combosCollapsed ? "Déplier" : "Replier"}
+          >
+            {combosCollapsed ? "▶" : "▼"}
+            3. Combos inspirationnels
             <span className="text-muted font-normal text-sm">
               ({COLOR_COMBOS.length + customCombos.length})
             </span>
-          </h2>
+          </button>
           {!combosCollapsed && (
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted hidden md:inline">
@@ -1313,15 +1679,38 @@ export default function DesignSpikePage() {
         )}
       </div>
 
-      {/* ─────────── BLOC 3 : MARIAGE ─────────── */}
-      <div id="marriage-section" className="space-y-4 scroll-mt-4">
-        <h2 className="text-xl font-bold">3. Preview du mariage</h2>
+      {/* ─────────── BLOC 4 : NEUTRALS & SEMANTICS (Pro only) ─────────── */}
+      {mode === "pro" && <ExtraColorsBlock primaryHex={customColor} />}
+
+      {/* ─────────── BLOC 5 : GRADIENT (couleurs du design system) ─────────── */}
+      <GradientBlock
+        gradient={tokens.gradient}
+        onChange={(g) => updateTokens({ gradient: g })}
+        primaryPalette={customPalette}
+        primaryHex={customColor}
+        selectedColors={selectedAsRoles}
+      />
+
+      {/* ─────────── BLOC 6 : TOKENS VISUELS (typo, fonts, spacing, radius, shadow) ─────────── */}
+      <TokensBlock tokens={tokens} onChange={updateTokens} selectedColors={selectedAsRoles} />
+
+      {/* ─────────── BLOC 7 : MARIAGE (point final — voir le rendu réel) ─────────── */}
+      <div id="marriage-section" className="space-y-4 scroll-mt-4 border-t border-border pt-6">
+        <h2 className="text-xl font-bold flex items-center gap-1">
+          7. Preview du mariage
+          <Help topic="marriage" />
+        </h2>
+        <p className="text-xs text-muted">
+          Le test final : assemble tes choix de couleurs (cliques dans les blocs ci-dessus ou
+          charge un combo) et vois leur mariage réel sur des composants.
+        </p>
         <MarriagePreview
           selected={selected}
           onRemove={removeShade}
           onMove={moveShade}
           onClear={() => setSelected([])}
           onChangeColor={updateShadeColor}
+          tokens={tokens}
         />
         {selected.length >= 2 && (
           <div className="bg-card/60 border border-border rounded-xl p-4 flex items-center gap-3 flex-wrap">
@@ -1344,45 +1733,23 @@ export default function DesignSpikePage() {
         )}
       </div>
 
-      {/* ─────────── BLOC 4 : PALETTES DE RÉFÉRENCE ─────────── */}
-      <div className="space-y-4 border-t border-border pt-6">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <button
-            onClick={() => setRefPalettesCollapsed((v) => !v)}
-            className="text-muted hover:text-foreground transition text-sm"
-            aria-label={refPalettesCollapsed ? "Déplier" : "Replier"}
-          >
-            {refPalettesCollapsed ? "▶" : "▼"}
-          </button>
-          4. Palettes de référence
-          <span className="text-muted font-normal text-sm">
-            ({TEST_COLORS.length} · tuning par défaut)
-          </span>
-        </h2>
-
-        {refPalettesCollapsed && (
-          <button
-            onClick={() => setRefPalettesCollapsed(false)}
-            className="w-full text-sm font-medium px-4 py-3 rounded-lg bg-card border border-border hover:border-accent hover:bg-accent/5 transition flex items-center justify-center gap-2"
-          >
-            ▼ Afficher les {TEST_COLORS.length} palettes de référence
-          </button>
-        )}
-
-        {!refPalettesCollapsed && (
-          <div className="space-y-8">
-            {TEST_COLORS.map(({ name, hex }) => (
-              <PaletteRow
-                key={hex}
-                name={name}
-                hex={hex}
-                selected={selectedKeys}
-                onToggleShade={toggleShade}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {/* ─────────── BLOC 7 : EXPORT (CSS / Tailwind / JSON / Markdown) ─────────── */}
+      <ExportBlock
+        snapshot={
+          {
+            primaryHex: customColor,
+            palette: customPalette,
+            selectedColors: selectedAsRoles,
+            typoBaseSize: tokens.typoBaseSize,
+            typoRatio: tokens.typoRatio,
+            spacingPreset: tokens.spacingPreset,
+            spacingDensity: tokens.spacingDensity,
+            radius: tokens.radius,
+            shadow: tokens.shadow,
+            fontPairing: getFontPairing(tokens.fontPairingId),
+          } satisfies DesignSystemSnapshot
+        }
+      />
 
       <footer className="text-xs text-muted border-t border-border pt-6 space-y-2">
         <p>
@@ -1390,8 +1757,8 @@ export default function DesignSpikePage() {
           technique). Combo = 2-5 couleurs qui se marient bien (outil inspirationnel).
         </p>
         <p>
-          <strong>Rôles</strong> : 1ère couleur = Background, 2e = Text, 3e = Accent, 4e =
-          Secondary. Utilise ◀ ▶ pour réorganiser.
+          <strong>Rôles dans le mariage</strong> : 1ère couleur = Background, 2e = Text, 3e =
+          Accent, 4e = Secondary. Utilise ◀ ▶ pour réorganiser.
         </p>
       </footer>
     </main>
