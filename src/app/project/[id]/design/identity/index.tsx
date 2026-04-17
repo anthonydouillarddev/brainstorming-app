@@ -11,15 +11,22 @@ import ToneMatrixBlock from "./blocks/ToneMatrixBlock";
 import ReferencesBlock from "./blocks/ReferencesBlock";
 import MoodKeywordsBlock from "./blocks/MoodKeywordsBlock";
 import LivePreviewBlock from "./blocks/LivePreviewBlock";
+import KapfererPrismBlock from "./blocks/KapfererPrismBlock";
 import IdentityExportBlock from "./blocks/ExportBlock";
+import ModeToggle from "./components/ModeToggle";
+import BeginnerChat from "./components/BeginnerChat";
+import PrintableBrandCard from "./components/PrintableBrandCard";
 import {
   IDENTITY_SECTION_KEY,
   computeIdentityCompleteness,
   mergeIdentityState,
   parseIdentityState,
+  type IdentityMode,
   type IdentityState,
 } from "./state";
 import { validateIdentity } from "./validators";
+
+const LS_MODE = "mindeck:design:identity:mode";
 
 export default function IdentityChapter({
   project,
@@ -39,6 +46,20 @@ export default function IdentityChapter({
   const [state, setState] = useState<IdentityState>(() =>
     parseIdentityState(initialSections[IDENTITY_SECTION_KEY])
   );
+  const [mode, setMode] = useState<IdentityMode>("intermediate");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(LS_MODE);
+    if (saved === "beginner" || saved === "intermediate") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMode(saved);
+    }
+  }, []);
+
+  function changeMode(m: IdentityMode) {
+    setMode(m);
+    window.localStorage.setItem(LS_MODE, m);
+  }
 
   const completeness = computeIdentityCompleteness(state);
   const issues = validateIdentity(state, project.type ?? null);
@@ -122,6 +143,7 @@ export default function IdentityChapter({
             {!saving && lastSaved && (
               <span className="text-xs text-green-600">✓ Sauvé à {lastSaved}</span>
             )}
+            <ModeToggle mode={mode} onChange={changeMode} />
           </div>
         </div>
 
@@ -164,28 +186,46 @@ export default function IdentityChapter({
         NN/G (4 axes), Neumeier (promise), Frontify (verbal identity).
       </div>
 
-      <ArchetypeBlock state={state} onChange={updateState} />
-      <VoiceSlidersBlock
-        state={state}
-        projectType={project.type ?? null}
-        onChange={updateState}
-        showExtraSliders={true}
-      />
-      <GlossaryBlock state={state} onChange={updateState} />
-      <BrandPromiseBlock state={state} onChange={updateState} />
-      <ToneMatrixBlock state={state} onChange={updateState} />
+      {mode === "beginner" ? (
+        <BeginnerChat
+          state={state}
+          project={project}
+          onChange={updateState}
+          onSwitchMode={() => changeMode("intermediate")}
+        />
+      ) : (
+        <>
+          <ArchetypeBlock state={state} onChange={updateState} />
+          <VoiceSlidersBlock
+            state={state}
+            projectType={project.type ?? null}
+            onChange={updateState}
+            showExtraSliders={true}
+          />
+          <GlossaryBlock state={state} onChange={updateState} />
+          <BrandPromiseBlock state={state} onChange={updateState} />
+          <ToneMatrixBlock state={state} onChange={updateState} />
 
-      {/* V2 SHOULD */}
-      <ReferencesBlock state={state} onChange={updateState} />
-      <MoodKeywordsBlock state={state} onChange={updateState} />
-      <LivePreviewBlock state={state} projectName={project.official_name || project.name} />
+          {/* V2 SHOULD */}
+          <ReferencesBlock state={state} onChange={updateState} />
+          <MoodKeywordsBlock state={state} onChange={updateState} />
+          <LivePreviewBlock
+            state={state}
+            projectName={project.official_name || project.name}
+          />
 
-      <IdentityExportBlock state={state} project={project} />
+          {/* V3 NICE */}
+          <KapfererPrismBlock state={state} onChange={updateState} />
+        </>
+      )}
 
-      <div className="border-t border-border pt-4 text-xs text-muted text-center">
-        <strong>V2 SHOULD</strong> active. V3 ajoutera : Kapferer Prism (6 facettes), carte PDF
-        imprimable, mode Débutant conversationnel.
-      </div>
+      {mode !== "beginner" && <IdentityExportBlock state={state} project={project} />}
+
+      {mode !== "beginner" && completeness >= 40 && (
+        <div className="border-t border-border pt-6">
+          <PrintableBrandCard state={state} project={project} />
+        </div>
+      )}
     </div>
   );
 }
