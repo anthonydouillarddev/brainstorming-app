@@ -9,15 +9,23 @@ import NavPatternBlock from "./blocks/NavPatternBlock";
 import LabelDictionaryBlock from "./blocks/LabelDictionaryBlock";
 import EntityRelationBlock from "./blocks/EntityRelationBlock";
 import URLMapBlock from "./blocks/URLMapBlock";
+import CommandPaletteBlock from "./blocks/CommandPaletteBlock";
+import TreeTestBlock from "./blocks/TreeTestBlock";
 import InfoNavExportBlock from "./blocks/ExportBlock";
+import ModeToggle from "./components/ModeToggle";
+import BeginnerChat from "./components/BeginnerChat";
+import PrintableSitemapCard from "./components/PrintableSitemapCard";
 import {
   INFO_NAV_SECTION_KEY,
   computeInfoNavCompleteness,
   mergeInfoNavState,
   parseInfoNavState,
+  type InfoNavMode,
   type InfoNavState,
 } from "./state";
 import { validateInfoNav } from "./validators";
+
+const LS_MODE = "mindeck:design:info-nav:mode";
 
 export default function InfoNavChapter({
   project,
@@ -37,6 +45,20 @@ export default function InfoNavChapter({
   const [state, setState] = useState<InfoNavState>(() =>
     parseInfoNavState(initialSections[INFO_NAV_SECTION_KEY])
   );
+  const [mode, setMode] = useState<InfoNavMode>("intermediate");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(LS_MODE);
+    if (saved === "beginner" || saved === "intermediate") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMode(saved);
+    }
+  }, []);
+
+  function changeMode(m: InfoNavMode) {
+    setMode(m);
+    window.localStorage.setItem(LS_MODE, m);
+  }
 
   const completeness = computeInfoNavCompleteness(state);
   const issues = validateInfoNav(state, state.navPattern);
@@ -119,6 +141,7 @@ export default function InfoNavChapter({
             {!saving && lastSaved && (
               <span className="text-xs text-green-600">✓ Sauvé à {lastSaved}</span>
             )}
+            <ModeToggle mode={mode} onChange={changeMode} />
           </div>
         </div>
 
@@ -159,29 +182,45 @@ export default function InfoNavChapter({
         Baymard, Optimal Workshop.
       </div>
 
-      <ScreenPickerBlock
-        state={state}
-        projectType={project.type ?? null}
-        onChange={updateState}
-      />
-      <SitemapBuilderBlock state={state} onChange={updateState} />
-      <NavPatternBlock
-        state={state}
-        projectType={project.type ?? null}
-        onChange={updateState}
-      />
+      {mode === "beginner" ? (
+        <BeginnerChat
+          state={state}
+          projectType={project.type ?? null}
+          onChange={updateState}
+          onSwitchMode={() => changeMode("intermediate")}
+        />
+      ) : (
+        <>
+          <ScreenPickerBlock
+            state={state}
+            projectType={project.type ?? null}
+            onChange={updateState}
+          />
+          <SitemapBuilderBlock state={state} onChange={updateState} />
+          <NavPatternBlock
+            state={state}
+            projectType={project.type ?? null}
+            onChange={updateState}
+          />
 
-      {/* V2 SHOULD */}
-      <URLMapBlock state={state} />
-      <LabelDictionaryBlock state={state} onChange={updateState} />
-      <EntityRelationBlock state={state} onChange={updateState} />
+          {/* V2 SHOULD */}
+          <URLMapBlock state={state} />
+          <LabelDictionaryBlock state={state} onChange={updateState} />
+          <EntityRelationBlock state={state} onChange={updateState} />
 
-      <InfoNavExportBlock state={state} project={project} />
+          {/* V3 NICE */}
+          <CommandPaletteBlock state={state} onChange={updateState} />
+          <TreeTestBlock state={state} onChange={updateState} />
+        </>
+      )}
 
-      <div className="border-t border-border pt-4 text-xs text-muted text-center">
-        <strong>V2 SHOULD</strong> active. V3 ajoutera : command palette planner, tree test, mode
-        Débutant conversationnel, carte PDF imprimable.
-      </div>
+      {mode !== "beginner" && <InfoNavExportBlock state={state} project={project} />}
+
+      {mode !== "beginner" && completeness >= 50 && (
+        <div className="border-t border-border pt-6">
+          <PrintableSitemapCard state={state} project={project} />
+        </div>
+      )}
     </div>
   );
 }
