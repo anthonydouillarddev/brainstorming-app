@@ -8,6 +8,10 @@ import LawsLibraryBlock from "./blocks/LawsLibraryBlock";
 import AffordanceCheckerBlock from "./blocks/AffordanceCheckerBlock";
 import FeedbackInventoryBlock from "./blocks/FeedbackInventoryBlock";
 import DesignPrinciplesBlock from "./blocks/DesignPrinciplesBlock";
+import CognitiveLoadBlock from "./blocks/CognitiveLoadBlock";
+import HickMenuAnalyzerBlock from "./blocks/HickMenuAnalyzerBlock";
+import PeakEndMapperBlock from "./blocks/PeakEndMapperBlock";
+import MentalModelCanvasBlock from "./blocks/MentalModelCanvasBlock";
 import PrinciplesExportBlock from "./blocks/ExportBlock";
 import {
   PRINCIPLES_SECTION_KEY,
@@ -147,12 +151,17 @@ export default function PrinciplesChapter({
       <FeedbackInventoryBlock state={state} onChange={updateState} />
       <DesignPrinciplesBlock state={state} onChange={updateState} />
 
+      {/* V2 SHOULD */}
+      <CognitiveLoadBlock state={state} onChange={updateState} />
+      <HickMenuAnalyzerBlock state={state} onChange={updateState} />
+      <PeakEndMapperBlock state={state} onChange={updateState} />
+      <MentalModelCanvasBlock state={state} onChange={updateState} />
+
       <PrinciplesExportBlock state={state} project={project} />
 
       <div className="border-t border-border pt-4 text-xs text-muted text-center">
-        <strong>V1 MUST</strong> active. V2 : cognitive load meter, Hick menu analyzer, Peak-End
-        journey mapper, mental model canvas, exports JSON/Claude. V3 : audit par type d&apos;écran,
-        Doherty latency log, mode Débutant, carte PDF.
+        <strong>V2 SHOULD</strong> active. V3 ajoutera : audit par type d&apos;écran, Doherty
+        latency log, mode Débutant conversationnel, carte PDF.
       </div>
     </div>
   );
