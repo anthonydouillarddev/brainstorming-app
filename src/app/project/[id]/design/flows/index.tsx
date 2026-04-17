@@ -7,6 +7,9 @@ import FlowStepsBlock from "./blocks/FlowStepsBlock";
 import OnboardingPatternBlock from "./blocks/OnboardingPatternBlock";
 import NorthStarActionBlock from "./blocks/NorthStarActionBlock";
 import FrictionCounterBlock from "./blocks/FrictionCounterBlock";
+import FlowBuilderBlock from "./blocks/FlowBuilderBlock";
+import JourneyMapBlock from "./blocks/JourneyMapBlock";
+import EmptyStateBlock from "./blocks/EmptyStateBlock";
 import FlowsExportBlock from "./blocks/ExportBlock";
 import {
   FLOWS_SECTION_KEY,
@@ -170,12 +173,16 @@ export default function FlowsChapter({
       <NorthStarActionBlock state={state} onChange={updateState} />
       <FrictionCounterBlock state={state} />
 
+      {/* V2 SHOULD */}
+      <FlowBuilderBlock state={state} onChange={updateState} />
+      <JourneyMapBlock state={state} onChange={updateState} />
+      <EmptyStateBlock state={state} onChange={updateState} />
+
       <FlowsExportBlock state={state} project={project} />
 
       <div className="border-t border-border pt-4 text-xs text-muted text-center">
-        <strong>V1 MUST</strong> active. V2 : flow builder avec branches, journey map AARRR,
-        empty states, exports JSON/mermaid/Claude. V3 : critical path, dashboard AARRR, mode
-        Débutant, carte PDF.
+        <strong>V2 SHOULD</strong> active. V3 ajoutera : critical path analyzer, dashboard AARRR
+        metrics, mode Débutant conversationnel, carte PDF imprimable.
       </div>
     </div>
   );
