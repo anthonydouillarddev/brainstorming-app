@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Project } from "@/lib/types";
-import { generatePalette } from "@/lib/design/oklch";
+import {
+  generatePalette,
+  generateDarkFromLight,
+  type PaletteTuning,
+} from "@/lib/design/oklch";
+import type { ColorCombo } from "@/lib/design/combos";
 import TokensBlock, {
   mergeTokens,
   type TokensState,
@@ -13,6 +18,11 @@ import ExtraColorsBlock from "@/app/design-spike/extra-colors-block";
 import GradientBlock from "@/app/design-spike/gradient-block";
 import ValidationBanner from "@/app/design-spike/validation-banner";
 import type { DesignSystemSnapshot } from "@/lib/design/export";
+import PaletteBlock from "./blocks/PaletteBlock";
+import PalettesRefBlock from "./blocks/PalettesRefBlock";
+import CombosBlock from "./blocks/CombosBlock";
+import MarriageBlock from "./blocks/MarriageBlock";
+import type { SelectedShade } from "./components/shared";
 import {
   DEFAULT_VISUAL_STATE,
   VISUAL_SECTION_KEY,
@@ -21,6 +31,55 @@ import {
   type VisualState,
   type VisualSelectedShade,
 } from "./state";
+
+type ViewMode = "simple" | "advanced" | "pro";
+
+const LS_VIEW_MODE = "mindeck:design:visual:view-mode";
+
+const MODE_VISIBILITY: Record<
+  ViewMode,
+  {
+    palettesRef: boolean;
+    combos: boolean;
+    marriage: boolean;
+    extraColors: boolean;
+    gradient: boolean;
+    tokens: boolean;
+    export: boolean;
+    validation: boolean;
+  }
+> = {
+  simple: {
+    palettesRef: false,
+    combos: true,
+    marriage: true,
+    extraColors: false,
+    gradient: false,
+    tokens: true,
+    export: true,
+    validation: true,
+  },
+  advanced: {
+    palettesRef: true,
+    combos: true,
+    marriage: true,
+    extraColors: true,
+    gradient: true,
+    tokens: true,
+    export: true,
+    validation: true,
+  },
+  pro: {
+    palettesRef: true,
+    combos: true,
+    marriage: true,
+    extraColors: true,
+    gradient: true,
+    tokens: true,
+    export: true,
+    validation: true,
+  },
+};
 
 export default function VisualChapter({
   project,
@@ -37,14 +96,35 @@ export default function VisualChapter({
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
 
-  // ─── State chargé depuis sections.content ─────────────────────────────────
   const [state, setState] = useState<VisualState>(() =>
     parseVisualState(initialSections[VISUAL_SECTION_KEY])
   );
 
+  const [viewMode, setViewMode] = useState<ViewMode>("advanced");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(LS_VIEW_MODE);
+    if (saved === "simple" || saved === "advanced" || saved === "pro") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setViewMode(saved);
+    }
+  }, []);
+
+  function changeViewMode(mode: ViewMode) {
+    setViewMode(mode);
+    window.localStorage.setItem(LS_VIEW_MODE, mode);
+  }
+
   const palette = useMemo(
     () => generatePalette(state.customColor, state.tuning),
     [state.customColor, state.tuning]
+  );
+
+  const darkPalette = useMemo(() => generateDarkFromLight(palette), [palette]);
+
+  const selectedKeys = useMemo(
+    () => new Set(state.selected.map((s) => s.id)),
+    [state.selected]
   );
 
   const selectedAsRoles = useMemo(
@@ -65,7 +145,6 @@ export default function VisualChapter({
     [state.selected]
   );
 
-  // ─── Save debounced Supabase (800ms) ──────────────────────────────────────
   function updateState(patch: Partial<VisualState>) {
     setState((prev) => {
       const next = mergeVisualState({
@@ -78,8 +157,28 @@ export default function VisualChapter({
     });
   }
 
+  function updateSelected(updater: (prev: VisualSelectedShade[]) => VisualSelectedShade[]) {
+    setState((prev) => {
+      const next = mergeVisualState({
+        ...prev,
+        selected: updater(prev.selected),
+        updatedAt: new Date().toISOString(),
+      });
+      scheduleSave(next);
+      return next;
+    });
+  }
+
   function updateTokens(patch: Partial<TokensState>) {
-    updateState({ tokens: mergeTokens({ ...state.tokens, ...patch }) });
+    setState((prev) => {
+      const next = mergeVisualState({
+        ...prev,
+        tokens: mergeTokens({ ...prev.tokens, ...patch }),
+        updatedAt: new Date().toISOString(),
+      });
+      scheduleSave(next);
+      return next;
+    });
   }
 
   function scheduleSave(next: VisualState) {
@@ -113,6 +212,91 @@ export default function VisualChapter({
     };
   }, []);
 
+  // ─── Selected shades callbacks ────────────────────────────────────────────
+  function toggleShade(shade: SelectedShade) {
+    updateSelected((prev) =>
+      prev.some((s) => s.id === shade.id)
+        ? prev.filter((s) => s.id !== shade.id)
+        : [...prev, shade]
+    );
+  }
+
+  function removeShade(id: string) {
+    updateSelected((prev) => prev.filter((s) => s.id !== id));
+  }
+
+  function moveShade(from: number, to: number) {
+    updateSelected((prev) => {
+      if (to < 0 || to >= prev.length) return prev;
+      const copy = [...prev];
+      const [item] = copy.splice(from, 1);
+      copy.splice(to, 0, item);
+      return copy;
+    });
+  }
+
+  function clearSelected() {
+    updateSelected(() => []);
+  }
+
+  function updateShadeColor(id: string, newHex: string) {
+    updateSelected((prev) =>
+      prev.map((s) =>
+        s.id === id ? { ...s, hex: newHex, source: "édité manuellement" } : s
+      )
+    );
+  }
+
+  function scrollToMarriage() {
+    setTimeout(() => {
+      document
+        .getElementById("marriage-section")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }
+
+  function loadFiveColorsIntoMarriage(colors: string[]) {
+    const now = Date.now();
+    updateSelected(() =>
+      colors.map((hex, i) => ({
+        id: `comp-${now}-${i}`,
+        hex,
+        source: "5 couleurs recommandées",
+      }))
+    );
+    scrollToMarriage();
+  }
+
+  function pickFromCombo(hex: string, comboId: string, index: number, comboName: string) {
+    const id = `${comboId}-${index}`;
+    updateSelected((prev) =>
+      prev.some((s) => s.id === id)
+        ? prev.filter((s) => s.id !== id)
+        : [...prev, { id, hex, source: comboName }]
+    );
+  }
+
+  function loadComboAsMarriage(combo: ColorCombo) {
+    updateSelected(() =>
+      combo.colors.map((hex, i) => ({
+        id: `${combo.id}-${i}`,
+        hex,
+        source: combo.name,
+      }))
+    );
+    scrollToMarriage();
+  }
+
+  function resetTuning() {
+    updateState({
+      tuning: { contrast: 1, chromaPeakIndex: 6, chromaAmount: 1 },
+    });
+  }
+
+  function updateTuning(patch: Partial<PaletteTuning>) {
+    updateState({ tuning: { ...state.tuning, ...patch } });
+  }
+
   // ─── Snapshot pour l'export ───────────────────────────────────────────────
   const exportSnapshot: DesignSystemSnapshot = {
     primaryHex: state.customColor,
@@ -126,6 +310,8 @@ export default function VisualChapter({
     shadow: state.tokens.shadow,
   };
 
+  const visibility = MODE_VISIBILITY[viewMode];
+
   return (
     <div className="space-y-6">
       {/* Bandeau header */}
@@ -133,15 +319,37 @@ export default function VisualChapter({
         <div>
           <h1 className="text-xl md:text-2xl font-bold">🎨 6. Design Visuel</h1>
           <p className="text-xs text-muted mt-0.5">
-            Palette OKLCH · Neutrals & Semantics · Gradient · Tokens · Export. Sauvegarde
-            automatique dans ton projet.
+            Palette OKLCH · Matrice WCAG · Dark auto · Combos · Mariage · Tokens · Export.
+            Sauvegarde automatique.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {saving && <span className="text-xs text-muted">💾 Sauvegarde...</span>}
           {!saving && lastSaved && (
             <span className="text-xs text-green-600">✓ Sauvé à {lastSaved}</span>
           )}
+          <div className="flex items-center gap-1 border border-border rounded-lg p-1 bg-card">
+            {(["simple", "advanced", "pro"] as ViewMode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => changeViewMode(m)}
+                className={`text-xs px-2.5 py-1 rounded transition capitalize ${
+                  viewMode === m
+                    ? "bg-accent text-white"
+                    : "text-muted hover:bg-accent/10 hover:text-foreground"
+                }`}
+                title={
+                  m === "simple"
+                    ? "Vue minimale : palette + combos + mariage + tokens + export"
+                    : m === "advanced"
+                    ? "Vue complète recommandée"
+                    : "Vue experte avec tous les outils"
+                }
+              >
+                {m === "simple" ? "Simple" : m === "advanced" ? "Avancé" : "Pro"}
+              </button>
+            ))}
+          </div>
           <a
             href="/design-spike"
             target="_blank"
@@ -155,92 +363,79 @@ export default function VisualChapter({
       </div>
 
       {/* Bandeau validation */}
-      <ValidationBanner
-        primaryHex={state.customColor}
+      {visibility.validation && (
+        <ValidationBanner
+          primaryHex={state.customColor}
+          palette={palette}
+          selectedColors={selectedAsRoles}
+          tokens={state.tokens}
+        />
+      )}
+
+      {/* 1. Éditeur de palette */}
+      <PaletteBlock
+        customColor={state.customColor}
+        onCustomColorChange={(hex) => updateState({ customColor: hex })}
+        tuning={state.tuning}
+        onTuningChange={updateTuning}
+        onResetTuning={resetTuning}
         palette={palette}
-        selectedColors={selectedAsRoles}
-        tokens={state.tokens}
+        darkPalette={darkPalette}
+        selectedKeys={selectedKeys}
+        onToggleShade={toggleShade}
+        onLoadFiveColors={loadFiveColorsIntoMarriage}
       />
 
-      {/* Éditeur palette simplifié v1 */}
-      <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 space-y-4">
-        <h2 className="text-xl font-bold">1. Éditeur de palette</h2>
-        <p className="text-xs text-muted">
-          Version migrée simplifiée. Pour l&apos;éditeur complet avec sliders de tuning, matrice
-          WCAG 12×12 et dark mode auto-généré, utilise le{" "}
-          <a href="/design-spike" className="text-accent underline" target="_blank" rel="noopener">
-            spike dev
-          </a>
-          .
-        </p>
-        <div className="flex items-center gap-3 flex-wrap">
-          <input
-            type="color"
-            value={state.customColor}
-            onChange={(e) => updateState({ customColor: e.target.value })}
-            className="h-10 w-16 rounded border border-border cursor-pointer"
-          />
-          <input
-            type="text"
-            value={state.customColor}
-            onChange={(e) => updateState({ customColor: e.target.value })}
-            className="h-10 px-3 font-mono text-sm rounded border border-border bg-card w-36"
-          />
-        </div>
-        <div className="overflow-x-auto -mx-1 pb-2">
-          <div className="grid grid-cols-12 gap-1 min-w-[720px] px-1">
-            {palette.map((shade) => (
-              <div key={shade.name} className="space-y-1">
-                <div
-                  className="aspect-square rounded border border-border shadow-sm"
-                  style={{ background: shade.hex }}
-                  title={shade.css}
-                />
-                <div className="text-[10px] font-mono text-center">{shade.name}</div>
-                <div className="text-[9px] font-mono text-center text-muted truncate">
-                  {shade.hex}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* 2. Palettes de référence */}
+      {visibility.palettesRef && (
+        <PalettesRefBlock selectedKeys={selectedKeys} onToggleShade={toggleShade} />
+      )}
 
-      {/* Neutrals & Semantics */}
-      <ExtraColorsBlock primaryHex={state.customColor} />
+      {/* 3. Combos inspirationnels */}
+      {visibility.combos && (
+        <CombosBlock onPickColor={pickFromCombo} onLoadCombo={loadComboAsMarriage} />
+      )}
 
-      {/* Gradient */}
-      <GradientBlock
-        gradient={state.tokens.gradient}
-        onChange={(g) => updateTokens({ gradient: g })}
-        primaryPalette={palette}
-        primaryHex={state.customColor}
-        selectedColors={selectedAsRoles}
-      />
+      {/* 4. Neutrals & Semantics */}
+      {visibility.extraColors && <ExtraColorsBlock primaryHex={state.customColor} />}
 
-      {/* Tokens */}
-      <TokensBlock
-        tokens={state.tokens}
-        onChange={updateTokens}
-        selectedColors={selectedAsRoles}
-      />
+      {/* 5. Gradient */}
+      {visibility.gradient && (
+        <GradientBlock
+          gradient={state.tokens.gradient}
+          onChange={(g) => updateTokens({ gradient: g })}
+          primaryPalette={palette}
+          primaryHex={state.customColor}
+          selectedColors={selectedAsRoles}
+        />
+      )}
 
-      {/* Export */}
-      <ExportBlock snapshot={exportSnapshot} />
+      {/* 6. Mariage preview */}
+      {visibility.marriage && (
+        <MarriageBlock
+          selected={state.selected}
+          tokens={state.tokens}
+          onRemove={removeShade}
+          onMove={moveShade}
+          onClear={clearSelected}
+          onChangeColor={updateShadeColor}
+        />
+      )}
 
-      <div className="border-t border-border pt-4 text-xs text-muted text-center">
-        Migration v1 en cours. Éditeur palette complet (matrice WCAG, dark mode auto, mariage) et{" "}
-        <strong>composants avec vrais previews</strong> à venir dans les prochaines itérations. En
-        attendant, tous les outils complets sont disponibles dans le{" "}
-        <a href="/design-spike" className="text-accent underline" target="_blank" rel="noopener">
-          spike dev
-        </a>
-        .
-      </div>
+      {/* 7. Tokens (typo, spacing, radius, shadow, fonts, composants) */}
+      {visibility.tokens && (
+        <TokensBlock
+          tokens={state.tokens}
+          onChange={updateTokens}
+          selectedColors={selectedAsRoles}
+        />
+      )}
+
+      {/* 8. Export */}
+      {visibility.export && <ExportBlock snapshot={exportSnapshot} />}
     </div>
   );
 }
 
-// Export pour que le DesignPanel puisse l'utiliser
 export { DEFAULT_VISUAL_STATE };
 export type { VisualState, VisualSelectedShade };
