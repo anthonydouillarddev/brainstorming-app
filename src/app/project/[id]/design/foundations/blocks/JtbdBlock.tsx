@@ -13,7 +13,7 @@ export default function JtbdBlock({
   state: FoundationsState;
   onChange: (patch: Partial<FoundationsState>) => void;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(state.jtbdCore.trim().length > 0);
   const issues = validateJtbd(state);
   const hasError = issues.some((i) => i.severity === "error");
   const hasWarn = issues.some((i) => i.severity === "warn");

@@ -20,7 +20,9 @@ export default function AhaMomentBlock({
   state: FoundationsState;
   onChange: (patch: Partial<FoundationsState>) => void;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(
+    !!state.ahaMomentEvent.trim() || !!state.ahaMomentThreshold.trim()
+  );
   const issues = validateAhaMoment(state);
   const hasError = issues.some((i) => i.severity === "error");
   const hasWarn = issues.some((i) => i.severity === "warn");

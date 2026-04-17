@@ -11,15 +11,9 @@ const MODES: { key: FoundationsMode; label: string; emoji: string; hint: string 
   },
   {
     key: "intermediate",
-    label: "Intermédiaire",
+    label: "Formulaire",
     emoji: "🧑‍💼",
     hint: "Formulaire structuré · blocs collapsibles · défaut",
-  },
-  {
-    key: "expert",
-    label: "Expert",
-    emoji: "🧠",
-    hint: "Canvas libre · tous les blocs visibles · dense",
   },
 ];
 

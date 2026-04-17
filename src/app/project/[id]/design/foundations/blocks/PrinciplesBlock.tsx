@@ -26,7 +26,7 @@ export default function PrinciplesBlock({
   state: FoundationsState;
   onChange: (patch: Partial<FoundationsState>) => void;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(state.designPrinciples.length > 0);
   const issues = validatePrinciples(state);
   const hasError = issues.some((i) => i.severity === "error");
   const hasWarn = issues.some((i) => i.severity === "warn");

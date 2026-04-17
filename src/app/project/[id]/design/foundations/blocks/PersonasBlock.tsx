@@ -37,7 +37,7 @@ export default function PersonasBlock({
   projectType: ProjectType | null;
   onChange: (patch: Partial<FoundationsState>) => void;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(state.personas.length > 0);
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const templates = projectType ? PERSONA_TEMPLATES[projectType] : [];
   const issues = validatePersonas(state);

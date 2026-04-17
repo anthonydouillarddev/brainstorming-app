@@ -49,9 +49,12 @@ export default function FoundationsChapter({
 
   useEffect(() => {
     const saved = window.localStorage.getItem(LS_MODE);
-    if (saved === "beginner" || saved === "intermediate" || saved === "expert") {
+    if (saved === "beginner" || saved === "intermediate") {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMode(saved);
+    } else if (saved === "expert") {
+      // Mode Expert retiré temporairement (pas de différenciation) → fallback
+      window.localStorage.setItem(LS_MODE, "intermediate");
     }
   }, []);
 
@@ -185,29 +188,6 @@ export default function FoundationsChapter({
 
       {mode === "beginner" ? (
         <BeginnerChat state={state} project={project} onChange={updateState} />
-      ) : mode === "expert" ? (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <JtbdBlock state={state} onChange={updateState} />
-          <PersonasBlock
-            state={state}
-            projectType={project.type ?? null}
-            onChange={updateState}
-          />
-          <AhaMomentBlock state={state} onChange={updateState} />
-          <PrinciplesBlock state={state} onChange={updateState} />
-          <JobStoriesBlock
-            state={state}
-            projectType={project.type ?? null}
-            onChange={updateState}
-          />
-          <PositioningBlock state={state} onChange={updateState} />
-          <AntiGoalsBlock
-            state={state}
-            projectType={project.type ?? null}
-            onChange={updateState}
-          />
-          <ConcurrentMapperBlock state={state} onChange={updateState} />
-        </div>
       ) : (
         <>
           {/* 4 MUST */}
