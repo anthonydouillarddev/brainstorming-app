@@ -11,14 +11,21 @@ import AhaMomentBlock from "./blocks/AhaMomentBlock";
 import PrinciplesBlock from "./blocks/PrinciplesBlock";
 import AntiGoalsBlock from "./blocks/AntiGoalsBlock";
 import FoundationsExportBlock from "./blocks/ExportBlock";
+import ConcurrentMapperBlock from "./blocks/ConcurrentMapperBlock";
+import ModeToggle from "./components/ModeToggle";
+import BeginnerChat from "./components/BeginnerChat";
+import PrintableCard from "./components/PrintableCard";
 import {
   FOUNDATIONS_SECTION_KEY,
   computeCompleteness,
   mergeFoundationsState,
   parseFoundationsState,
+  type FoundationsMode,
   type FoundationsState,
 } from "./state";
 import { validateFoundations } from "./validators";
+
+const LS_MODE = "mindeck:design:foundations:mode";
 
 export default function FoundationsChapter({
   project,
@@ -38,6 +45,20 @@ export default function FoundationsChapter({
   const [state, setState] = useState<FoundationsState>(() =>
     parseFoundationsState(initialSections[FOUNDATIONS_SECTION_KEY])
   );
+  const [mode, setMode] = useState<FoundationsMode>("intermediate");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(LS_MODE);
+    if (saved === "beginner" || saved === "intermediate" || saved === "expert") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMode(saved);
+    }
+  }, []);
+
+  function changeMode(m: FoundationsMode) {
+    setMode(m);
+    window.localStorage.setItem(LS_MODE, m);
+  }
 
   const completeness = computeCompleteness(state);
   const issues = validateFoundations(state);
@@ -117,11 +138,12 @@ export default function FoundationsChapter({
               </p>
             )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {saving && <span className="text-xs text-muted">💾 Sauvegarde...</span>}
             {!saving && lastSaved && (
               <span className="text-xs text-green-600">✓ Sauvé à {lastSaved}</span>
             )}
+            <ModeToggle mode={mode} onChange={changeMode} />
           </div>
         </div>
 
@@ -161,35 +183,70 @@ export default function FoundationsChapter({
         (personas), Dunford (positioning), Airbnb/Linear (principes).
       </div>
 
-      {/* 4 MUST */}
-      <JtbdBlock state={state} onChange={updateState} />
-      <PersonasBlock state={state} projectType={project.type ?? null} onChange={updateState} />
-      <AhaMomentBlock state={state} onChange={updateState} />
-      <PrinciplesBlock state={state} onChange={updateState} />
-
-      {/* SHOULD V2 */}
-      <JobStoriesBlock
-        state={state}
-        projectType={project.type ?? null}
-        onChange={updateState}
-      />
-      <PositioningBlock state={state} onChange={updateState} />
-      <AntiGoalsBlock
-        state={state}
-        projectType={project.type ?? null}
-        onChange={updateState}
-      />
-
-      {/* Export */}
-      <FoundationsExportBlock state={state} project={project} />
-
-      {/* Teaser V3 */}
-      <div className="border-t border-border pt-4 text-xs text-muted text-center space-y-1">
-        <div>
-          <strong>V2 SHOULD</strong> active. Les blocs <strong>NICE</strong> (modes
-          Débutant/Expert conversationnel, concurrents 2×2, carte PDF imprimable) arrivent en V3.
+      {mode === "beginner" ? (
+        <BeginnerChat state={state} project={project} onChange={updateState} />
+      ) : mode === "expert" ? (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <JtbdBlock state={state} onChange={updateState} />
+          <PersonasBlock
+            state={state}
+            projectType={project.type ?? null}
+            onChange={updateState}
+          />
+          <AhaMomentBlock state={state} onChange={updateState} />
+          <PrinciplesBlock state={state} onChange={updateState} />
+          <JobStoriesBlock
+            state={state}
+            projectType={project.type ?? null}
+            onChange={updateState}
+          />
+          <PositioningBlock state={state} onChange={updateState} />
+          <AntiGoalsBlock
+            state={state}
+            projectType={project.type ?? null}
+            onChange={updateState}
+          />
+          <ConcurrentMapperBlock state={state} onChange={updateState} />
         </div>
-      </div>
+      ) : (
+        <>
+          {/* 4 MUST */}
+          <JtbdBlock state={state} onChange={updateState} />
+          <PersonasBlock
+            state={state}
+            projectType={project.type ?? null}
+            onChange={updateState}
+          />
+          <AhaMomentBlock state={state} onChange={updateState} />
+          <PrinciplesBlock state={state} onChange={updateState} />
+
+          {/* SHOULD V2 */}
+          <JobStoriesBlock
+            state={state}
+            projectType={project.type ?? null}
+            onChange={updateState}
+          />
+          <PositioningBlock state={state} onChange={updateState} />
+          <AntiGoalsBlock
+            state={state}
+            projectType={project.type ?? null}
+            onChange={updateState}
+          />
+
+          {/* NICE V3 */}
+          <ConcurrentMapperBlock state={state} onChange={updateState} />
+        </>
+      )}
+
+      {/* Export — toujours visible, peu importe le mode */}
+      {mode !== "beginner" && <FoundationsExportBlock state={state} project={project} />}
+
+      {/* Carte d'identité imprimable — seulement en intermediate/expert, si fondations posées */}
+      {mode !== "beginner" && completeness >= 50 && (
+        <div className="border-t border-border pt-6">
+          <PrintableCard state={state} project={project} />
+        </div>
+      )}
     </div>
   );
 }

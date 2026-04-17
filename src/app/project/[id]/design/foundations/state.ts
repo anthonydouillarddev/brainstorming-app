@@ -25,6 +25,22 @@ export interface FoundationsJobStory {
   soICan: string;
 }
 
+export interface ConcurrentMapperCompetitor {
+  id: string;
+  name: string;
+  x: number; // 0-100
+  y: number; // 0-100
+  isMe?: boolean;
+}
+
+export interface ConcurrentMapper {
+  xAxisLow: string;
+  xAxisHigh: string;
+  yAxisLow: string;
+  yAxisHigh: string;
+  competitors: ConcurrentMapperCompetitor[];
+}
+
 export interface FoundationsState {
   version: 1;
 
@@ -58,6 +74,9 @@ export interface FoundationsState {
   // Anti-goals — SHOULD V2
   antiGoals: string[];
 
+  // Concurrent Mapper — NICE V3
+  concurrentMapper: ConcurrentMapper;
+
   // Meta
   modeUsed: FoundationsMode;
   updatedAt: string;
@@ -83,9 +102,20 @@ export const DEFAULT_FOUNDATIONS_STATE: FoundationsState = {
   ahaMomentThreshold: "",
   designPrinciples: [],
   antiGoals: [],
+  concurrentMapper: {
+    xAxisLow: "",
+    xAxisHigh: "",
+    yAxisLow: "",
+    yAxisHigh: "",
+    competitors: [],
+  },
   modeUsed: "intermediate",
   updatedAt: new Date().toISOString(),
 };
+
+export function makeCompetitorId(): string {
+  return `cpt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+}
 
 export function makePersonaId(): string {
   return `persona-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -116,6 +146,15 @@ export function mergeFoundationsState(
     positioningValue: partial.positioningValue ?? [],
     designPrinciples: partial.designPrinciples ?? [],
     antiGoals: partial.antiGoals ?? [],
+    concurrentMapper: partial.concurrentMapper
+      ? {
+          xAxisLow: partial.concurrentMapper.xAxisLow ?? "",
+          xAxisHigh: partial.concurrentMapper.xAxisHigh ?? "",
+          yAxisLow: partial.concurrentMapper.yAxisLow ?? "",
+          yAxisHigh: partial.concurrentMapper.yAxisHigh ?? "",
+          competitors: partial.concurrentMapper.competitors ?? [],
+        }
+      : DEFAULT_FOUNDATIONS_STATE.concurrentMapper,
   };
 }
 

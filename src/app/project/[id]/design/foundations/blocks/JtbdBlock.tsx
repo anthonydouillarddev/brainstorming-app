@@ -81,9 +81,94 @@ export default function JtbdBlock({
         />
       </div>
 
+      <details className="bg-card/40 border border-border rounded-lg p-3 text-xs">
+        <summary className="cursor-pointer font-medium text-foreground">
+          🎭 Jobs émotionnels &amp; sociaux (optionnel)
+        </summary>
+        <div className="mt-3 space-y-3">
+          <p className="text-muted leading-relaxed">
+            Ulwick distingue 3 types de jobs. Le job fonctionnel (ci-dessus) est obligatoire. Les
+            jobs <em>émotionnels</em> (ce qu&apos;il ressent) et <em>sociaux</em> (comment il veut
+            être perçu) enrichissent ton positionnement.
+          </p>
+          <JtbdListField
+            label="Jobs émotionnels (ressentis recherchés)"
+            items={state.jtbdEmotional}
+            placeholder="Ex : se sentir maître de son business"
+            onChange={(jtbdEmotional) => onChange({ jtbdEmotional })}
+          />
+          <JtbdListField
+            label="Jobs sociaux (comment être perçu)"
+            items={state.jtbdSocial}
+            placeholder="Ex : paraître pro auprès de ses clients"
+            onChange={(jtbdSocial) => onChange({ jtbdSocial })}
+          />
+        </div>
+      </details>
+
       <IssueList issues={issues} />
       </>
       )}
+    </div>
+  );
+}
+
+function JtbdListField({
+  label,
+  items,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  items: string[];
+  placeholder: string;
+  onChange: (items: string[]) => void;
+}) {
+  function add(text: string) {
+    const trimmed = text.trim();
+    if (!trimmed || items.includes(trimmed)) return;
+    onChange([...items, trimmed]);
+  }
+  function remove(i: number) {
+    onChange(items.filter((_, idx) => idx !== i));
+  }
+  function update(i: number, value: string) {
+    onChange(items.map((item, idx) => (idx === i ? value : item)));
+  }
+  return (
+    <div className="space-y-1">
+      <label className="text-[11px] font-medium text-muted">{label}</label>
+      <div className="space-y-1">
+        {items.map((item, i) => (
+          <div key={i} className="flex items-center gap-1">
+            <input
+              type="text"
+              value={item}
+              onChange={(e) => update(i, e.target.value)}
+              className="h-8 px-2 text-xs rounded border border-border bg-card flex-1"
+            />
+            <button
+              onClick={() => remove(i)}
+              className="w-7 h-7 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
+              aria-label="Retirer"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        <input
+          type="text"
+          placeholder={placeholder}
+          className="h-8 px-2 text-xs rounded border border-dashed border-border bg-card w-full"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              const input = e.target as HTMLInputElement;
+              add(input.value);
+              input.value = "";
+            }
+          }}
+        />
+      </div>
     </div>
   );
 }
