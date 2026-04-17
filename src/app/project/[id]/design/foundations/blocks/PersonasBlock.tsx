@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import type { ProjectType } from "@/lib/types";
 import { validatePersonas } from "../validators";
 import {
   makePersonaId,
@@ -7,6 +9,7 @@ import {
   type FoundationsState,
   type TechLevel,
 } from "../state";
+import { PERSONA_TEMPLATES, personaFromTemplate } from "../templates";
 import BlockStatus from "../components/BlockStatus";
 import IssueList from "../components/IssueList";
 
@@ -27,11 +30,15 @@ function emptyPersona(): FoundationsPersona {
 
 export default function PersonasBlock({
   state,
+  projectType,
   onChange,
 }: {
   state: FoundationsState;
+  projectType: ProjectType | null;
   onChange: (patch: Partial<FoundationsState>) => void;
 }) {
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const templates = projectType ? PERSONA_TEMPLATES[projectType] : [];
   const issues = validatePersonas(state);
   const hasError = issues.some((i) => i.severity === "error");
   const hasWarn = issues.some((i) => i.severity === "warn");
@@ -56,6 +63,18 @@ export default function PersonasBlock({
       personas: nextPersonas,
       primaryPersonaId: state.primaryPersonaId ?? next.id,
     });
+  }
+
+  function addFromTemplate(index: number) {
+    const tpl = templates[index];
+    if (!tpl || state.personas.length >= 3) return;
+    const persona = personaFromTemplate(tpl);
+    const nextPersonas = [...state.personas, persona];
+    onChange({
+      personas: nextPersonas,
+      primaryPersonaId: state.primaryPersonaId ?? persona.id,
+    });
+    setTemplatesOpen(false);
   }
 
   function removePersona(id: string) {
@@ -89,12 +108,54 @@ export default function PersonasBlock({
       </div>
 
       {state.personas.length === 0 && (
-        <button
-          onClick={addPersona}
-          className="w-full text-sm font-medium px-4 py-3 rounded-lg bg-card border border-dashed border-accent/50 hover:border-accent hover:bg-accent/5 transition"
-        >
-          + Créer mon persona principal
-        </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <button
+            onClick={addPersona}
+            className="text-sm font-medium px-4 py-3 rounded-lg bg-card border border-dashed border-accent/50 hover:border-accent hover:bg-accent/5 transition"
+          >
+            + Créer mon persona principal
+          </button>
+          {templates.length > 0 && (
+            <button
+              onClick={() => setTemplatesOpen((v) => !v)}
+              className="text-sm font-medium px-4 py-3 rounded-lg bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20 transition"
+            >
+              📚 Choisir depuis templates ({templates.length})
+            </button>
+          )}
+        </div>
+      )}
+
+      {templatesOpen && state.personas.length < 3 && templates.length > 0 && (
+        <div className="bg-card/60 border border-accent/30 rounded-xl p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-semibold">
+              Templates pour type <strong>{projectType}</strong> — clic pour ajouter
+            </div>
+            <button
+              onClick={() => setTemplatesOpen(false)}
+              className="text-xs text-muted hover:text-foreground"
+            >
+              Fermer
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {templates.map((tpl, i) => (
+              <button
+                key={i}
+                onClick={() => addFromTemplate(i)}
+                className="text-left p-3 rounded-lg border border-border bg-card hover:border-accent hover:bg-accent/5 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{tpl.avatarEmoji}</span>
+                  <span className="font-semibold text-sm">{tpl.name}</span>
+                  <span className="text-[10px] text-muted">({tpl.ageRange})</span>
+                </div>
+                <div className="text-[11px] text-muted mt-1 line-clamp-2">{tpl.context}</div>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       <div className="space-y-3">
@@ -208,12 +269,22 @@ export default function PersonasBlock({
       </div>
 
       {state.personas.length > 0 && state.personas.length < 3 && (
-        <button
-          onClick={addPersona}
-          className="text-xs px-3 py-1.5 rounded border border-border hover:bg-accent/10 transition"
-        >
-          + Ajouter un persona secondaire
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={addPersona}
+            className="text-xs px-3 py-1.5 rounded border border-border hover:bg-accent/10 transition"
+          >
+            + Ajouter un persona secondaire
+          </button>
+          {templates.length > 0 && (
+            <button
+              onClick={() => setTemplatesOpen((v) => !v)}
+              className="text-xs px-3 py-1.5 rounded border border-accent/30 text-accent hover:bg-accent/10 transition"
+            >
+              📚 Depuis templates
+            </button>
+          )}
+        </div>
       )}
 
       <IssueList issues={issues} />

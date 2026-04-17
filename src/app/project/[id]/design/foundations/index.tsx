@@ -5,8 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import type { Project } from "@/lib/types";
 import JtbdBlock from "./blocks/JtbdBlock";
 import PersonasBlock from "./blocks/PersonasBlock";
+import JobStoriesBlock from "./blocks/JobStoriesBlock";
+import PositioningBlock from "./blocks/PositioningBlock";
 import AhaMomentBlock from "./blocks/AhaMomentBlock";
 import PrinciplesBlock from "./blocks/PrinciplesBlock";
+import AntiGoalsBlock from "./blocks/AntiGoalsBlock";
 import FoundationsExportBlock from "./blocks/ExportBlock";
 import {
   FOUNDATIONS_SECTION_KEY,
@@ -160,19 +163,31 @@ export default function FoundationsChapter({
 
       {/* 4 MUST */}
       <JtbdBlock state={state} onChange={updateState} />
-      <PersonasBlock state={state} onChange={updateState} />
+      <PersonasBlock state={state} projectType={project.type ?? null} onChange={updateState} />
       <AhaMomentBlock state={state} onChange={updateState} />
       <PrinciplesBlock state={state} onChange={updateState} />
+
+      {/* SHOULD V2 */}
+      <JobStoriesBlock
+        state={state}
+        projectType={project.type ?? null}
+        onChange={updateState}
+      />
+      <PositioningBlock state={state} onChange={updateState} />
+      <AntiGoalsBlock
+        state={state}
+        projectType={project.type ?? null}
+        onChange={updateState}
+      />
 
       {/* Export */}
       <FoundationsExportBlock state={state} project={project} />
 
-      {/* Teaser V2/V3 */}
+      {/* Teaser V3 */}
       <div className="border-t border-border pt-4 text-xs text-muted text-center space-y-1">
         <div>
-          <strong>V1 MVP</strong> active. Les blocs <strong>SHOULD</strong> (job stories,
-          positioning Dunford, anti-goals) arrivent en V2, les <strong>NICE</strong> (modes
-          Débutant/Expert, concurrents 2×2, carte PDF) en V3.
+          <strong>V2 SHOULD</strong> active. Les blocs <strong>NICE</strong> (modes
+          Débutant/Expert conversationnel, concurrents 2×2, carte PDF imprimable) arrivent en V3.
         </div>
       </div>
     </div>
