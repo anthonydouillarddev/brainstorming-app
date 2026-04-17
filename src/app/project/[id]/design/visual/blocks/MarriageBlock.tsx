@@ -6,6 +6,7 @@ import { Help } from "@/app/design-spike/help";
 import type { TokensState } from "@/app/design-spike/tokens-block";
 import MarriagePreview from "../components/MarriagePreview";
 import type { SelectedShade } from "../components/shared";
+import { useToast } from "@/app/components/toast";
 
 export default function MarriageBlock({
   selected,
@@ -22,6 +23,7 @@ export default function MarriageBlock({
   onClear: () => void;
   onChangeColor: (id: string, newHex: string) => void;
 }) {
+  const toast = useToast();
   const [comboName, setComboName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -29,16 +31,22 @@ export default function MarriageBlock({
   async function handleSaveAsCombo() {
     if (selected.length < 2 || !comboName.trim()) return;
     setSaving(true);
-    const row = await createCustomCombo({
-      name: comboName.trim(),
-      colors: selected.map((s) => s.hex),
-      style: "custom",
-    });
-    setSaving(false);
-    if (row) {
-      setSaved(true);
-      setComboName("");
-      setTimeout(() => setSaved(false), 2000);
+    try {
+      const row = await createCustomCombo({
+        name: comboName.trim(),
+        colors: selected.map((s) => s.hex),
+        style: "custom",
+      });
+      if (row) {
+        setSaved(true);
+        setComboName("");
+        toast.success(`Mariage sauvegardé sous « ${row.name} »`);
+        setTimeout(() => setSaved(false), 2000);
+      }
+    } catch {
+      toast.error("Sauvegarde du combo impossible");
+    } finally {
+      setSaving(false);
     }
   }
 

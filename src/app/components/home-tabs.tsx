@@ -75,7 +75,6 @@ export default function HomeTabs({
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored === "dev" || stored === "projects") {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setTab(stored);
       }
     } catch {

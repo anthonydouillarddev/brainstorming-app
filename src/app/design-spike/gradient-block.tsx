@@ -10,7 +10,6 @@ import {
 import {
   generateNeutralPalette,
   generateSemanticPalette,
-  SEMANTIC_OPTIONS,
   DEFAULT_SEMANTIC_HUES,
   type PaletteShade,
 } from "@/lib/design/oklch";

@@ -29,12 +29,16 @@ export async function fetchSavedColors(): Promise<string[]> {
   } = await supabase.auth.getUser();
   if (!user) return [];
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("user_preferences")
     .select("saved_colors")
     .eq("user_id", user.id)
     .maybeSingle();
 
+  if (error) {
+    console.error("[colors-api] fetchSavedColors failed:", error);
+    return [];
+  }
   if (!data) return [];
   const raw = data.saved_colors;
   return Array.isArray(raw) ? (raw as string[]) : [];
@@ -45,14 +49,19 @@ export async function updateSavedColors(colors: string[]): Promise<void> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) throw new Error("Not authenticated");
 
-  await supabase
+  const { error } = await supabase
     .from("user_preferences")
     .upsert(
       { user_id: user.id, saved_colors: colors, updated_at: new Date().toISOString() },
       { onConflict: "user_id" }
     );
+
+  if (error) {
+    console.error("[colors-api] updateSavedColors failed:", error);
+    throw error;
+  }
 }
 
 // ─── Combos personnels ──────────────────────────────────────────────────────
@@ -64,12 +73,16 @@ export async function fetchCustomCombos(): Promise<CustomComboRow[]> {
   } = await supabase.auth.getUser();
   if (!user) return [];
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("custom_color_combos")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
+  if (error) {
+    console.error("[colors-api] fetchCustomCombos failed:", error);
+    return [];
+  }
   return (data as CustomComboRow[] | null) ?? [];
 }
 
@@ -83,9 +96,9 @@ export async function createCustomCombo(input: {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user) throw new Error("Not authenticated");
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("custom_color_combos")
     .insert({
       user_id: user.id,
@@ -97,10 +110,18 @@ export async function createCustomCombo(input: {
     .select()
     .single();
 
+  if (error) {
+    console.error("[colors-api] createCustomCombo failed:", error);
+    throw error;
+  }
   return (data as CustomComboRow | null) ?? null;
 }
 
 export async function deleteCustomComboById(id: string): Promise<void> {
   const supabase = createClient();
-  await supabase.from("custom_color_combos").delete().eq("id", id);
+  const { error } = await supabase.from("custom_color_combos").delete().eq("id", id);
+  if (error) {
+    console.error("[colors-api] deleteCustomComboById failed:", error);
+    throw error;
+  }
 }

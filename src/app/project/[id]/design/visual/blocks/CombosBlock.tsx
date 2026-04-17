@@ -9,7 +9,9 @@ import {
   type CustomComboRow,
 } from "@/lib/design/colors-api";
 import ComboCard from "../components/ComboCard";
+import CollapsibleSection from "../components/CollapsibleSection";
 import { parseHexList } from "../components/shared";
+import { useToast } from "@/app/components/toast";
 
 function rowToCombo(row: CustomComboRow): ColorCombo {
   return {
@@ -28,7 +30,7 @@ export default function CombosBlock({
   onPickColor: (hex: string, comboId: string, index: number, comboName: string) => void;
   onLoadCombo: (combo: ColorCombo) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(true);
+  const toast = useToast();
   const [styleFilter, setStyleFilter] = useState<ColorCombo["style"] | "all">("all");
   const [customCombos, setCustomCombos] = useState<ColorCombo[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
@@ -65,66 +67,56 @@ export default function CombosBlock({
       return;
     }
     setDirectError(null);
-    const row = await createCustomCombo({
-      name,
-      colors,
-      style: directStyle,
-      note: "Créé depuis un import direct",
-    });
-    if (row) {
-      setCustomCombos((prev) => [rowToCombo(row), ...prev]);
-      setDirectName("");
-      setDirectHex("");
-      setDirectStyle("custom");
-      setCreateOpen(false);
+    try {
+      const row = await createCustomCombo({
+        name,
+        colors,
+        style: directStyle,
+        note: "Créé depuis un import direct",
+      });
+      if (row) {
+        setCustomCombos((prev) => [rowToCombo(row), ...prev]);
+        setDirectName("");
+        setDirectHex("");
+        setDirectStyle("custom");
+        setCreateOpen(false);
+        toast.success(`Combo « ${row.name} » créé`);
+      }
+    } catch {
+      toast.error("Impossible de créer le combo");
     }
   }
 
   async function handleDelete(id: string) {
     const prev = customCombos;
+    const combo = prev.find((c) => c.id === id);
     setCustomCombos(prev.filter((c) => c.id !== id));
     try {
       await deleteCustomComboById(id);
+      if (combo) toast.success(`Combo « ${combo.name} » supprimé`);
     } catch {
       setCustomCombos(prev);
+      toast.error("Suppression du combo impossible");
     }
   }
 
+  const totalCount = COLOR_COMBOS.length + customCombos.length;
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <CollapsibleSection
+      title="3. Combos inspirationnels"
+      showCountInTitle={`(${totalCount})`}
+      expandButtonLabel={`Afficher les ${totalCount} combos`}
+      topRight={
         <button
-          onClick={() => setCollapsed((v) => !v)}
-          className="text-xl font-bold flex items-center gap-2 hover:text-accent transition cursor-pointer text-left"
-          aria-label={collapsed ? "Déplier" : "Replier"}
+          onClick={() => setCreateOpen((v) => !v)}
+          className="text-sm px-3 py-1.5 rounded bg-accent text-white hover:bg-accent-hover transition whitespace-nowrap"
         >
-          {collapsed ? "▶" : "▼"}
-          3. Combos inspirationnels
-          <span className="text-muted font-normal text-sm">
-            ({COLOR_COMBOS.length + customCombos.length})
-          </span>
+          {createOpen ? "Annuler" : "➕ Créer un combo"}
         </button>
-        {!collapsed && (
-          <button
-            onClick={() => setCreateOpen((v) => !v)}
-            className="text-sm px-3 py-1.5 rounded bg-accent text-white hover:bg-accent-hover transition whitespace-nowrap"
-          >
-            {createOpen ? "Annuler" : "➕ Créer un combo"}
-          </button>
-        )}
-      </div>
-
-      {collapsed && !createOpen && (
-        <button
-          onClick={() => setCollapsed(false)}
-          className="w-full text-sm font-medium px-4 py-3 rounded-lg bg-card border border-border hover:border-accent hover:bg-accent/5 transition flex items-center justify-center gap-2"
-        >
-          ▼ Afficher les {COLOR_COMBOS.length + customCombos.length} combos
-        </button>
-      )}
-
-      {!collapsed && (
-        <>
+      }
+    >
+      <>
           {createOpen && (
             <div className="bg-card/80 border border-accent/30 rounded-xl p-4 space-y-3">
               <h3 className="font-semibold text-sm">Créer un combo perso (import direct)</h3>
@@ -251,8 +243,7 @@ export default function CombosBlock({
               </div>
             ))}
           </div>
-        </>
-      )}
-    </div>
+      </>
+    </CollapsibleSection>
   );
 }

@@ -292,6 +292,166 @@ export default function MarriagePreview({
                 Une card avec fond dérivé de l&apos;accent + bordure + ombre.
               </div>
             )}
+
+            {/* Input + label (shadcn-like) */}
+            {accent && (
+              <div style={{ display: "flex", flexDirection: "column", gap: `${Math.round(4 * densityMult)}px` }}>
+                <label
+                  style={{
+                    color: text,
+                    fontSize: `${Math.max(11, buttonSize - 2)}px`,
+                    fontFamily: bodyFont,
+                    fontWeight: 500,
+                    opacity: 0.9,
+                  }}
+                >
+                  Email
+                </label>
+                <input
+                  readOnly
+                  defaultValue="anthony@mindeck.app"
+                  style={{
+                    background: bg,
+                    color: text,
+                    border: `1px solid ${secondary ?? accent}`,
+                    borderRadius: btnSecondaryRadiusCss,
+                    padding: `${Math.round(8 * densityMult)}px ${Math.round(12 * densityMult)}px`,
+                    fontSize: `${bodySize}px`,
+                    fontFamily: bodyFont,
+                    outline: "none",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <span
+                  style={{
+                    color: text,
+                    opacity: 0.6,
+                    fontSize: `${Math.max(10, buttonSize - 4)}px`,
+                    fontFamily: bodyFont,
+                  }}
+                >
+                  Helper text — guide discret pour l&apos;utilisateur
+                </span>
+              </div>
+            )}
+
+            {/* Badges (shadcn-like) */}
+            {accent && (
+              <div
+                style={{
+                  display: "flex",
+                  gap: `${Math.round(8 * densityMult)}px`,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <span
+                  style={{
+                    background: accent,
+                    color: bg,
+                    fontSize: `${Math.max(10, buttonSize - 4)}px`,
+                    fontFamily: bodyFont,
+                    fontWeight: 600,
+                    padding: `${Math.round(2 * densityMult)}px ${Math.round(8 * densityMult)}px`,
+                    borderRadius: "9999px",
+                  }}
+                >
+                  Default
+                </span>
+                <span
+                  style={{
+                    background: "transparent",
+                    color: text,
+                    border: `1px solid ${secondary ?? accent}`,
+                    fontSize: `${Math.max(10, buttonSize - 4)}px`,
+                    fontFamily: bodyFont,
+                    fontWeight: 500,
+                    padding: `${Math.round(2 * densityMult)}px ${Math.round(8 * densityMult)}px`,
+                    borderRadius: "9999px",
+                  }}
+                >
+                  Outline
+                </span>
+                <span
+                  style={{
+                    background: `color-mix(in oklch, ${accent} 20%, ${bg})`,
+                    color: accent,
+                    fontSize: `${Math.max(10, buttonSize - 4)}px`,
+                    fontFamily: bodyFont,
+                    fontWeight: 600,
+                    padding: `${Math.round(2 * densityMult)}px ${Math.round(8 * densityMult)}px`,
+                    borderRadius: "9999px",
+                  }}
+                >
+                  Secondary
+                </span>
+              </div>
+            )}
+
+            {/* Alert (shadcn-like) */}
+            {accent && (
+              <div
+                role="alert"
+                style={{
+                  background: `color-mix(in oklch, ${accent} 10%, ${bg})`,
+                  color: text,
+                  border: `1px solid ${accent}`,
+                  borderLeft: `3px solid ${accent}`,
+                  borderRadius: innerRadiusCss,
+                  padding: `${Math.round(12 * densityMult)}px ${Math.round(16 * densityMult)}px`,
+                  fontSize: `${bodySize}px`,
+                  fontFamily: bodyFont,
+                  lineHeight: bodyLh,
+                  display: "flex",
+                  gap: `${Math.round(10 * densityMult)}px`,
+                  alignItems: "flex-start",
+                }}
+              >
+                <span style={{ color: accent, fontWeight: 700 }}>ℹ</span>
+                <div>
+                  <div style={{ fontWeight: 600, marginBottom: `${Math.round(2 * densityMult)}px` }}>
+                    Info
+                  </div>
+                  <div style={{ opacity: 0.85 }}>
+                    Les composants de cette preview utilisent tes couleurs + tokens actifs.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tabs (shadcn-like) */}
+            {secondary && (
+              <div
+                style={{
+                  display: "flex",
+                  gap: `${Math.round(4 * densityMult)}px`,
+                  padding: `${Math.round(4 * densityMult)}px`,
+                  background: `color-mix(in oklch, ${text} 8%, ${bg})`,
+                  borderRadius: innerRadiusCss,
+                  width: "fit-content",
+                }}
+              >
+                {["Tab 1", "Tab 2", "Tab 3"].map((label, i) => (
+                  <div
+                    key={label}
+                    style={{
+                      background: i === 0 ? bg : "transparent",
+                      color: text,
+                      fontSize: `${Math.max(11, buttonSize - 1)}px`,
+                      fontFamily: bodyFont,
+                      fontWeight: i === 0 ? 600 : 500,
+                      padding: `${Math.round(4 * densityMult)}px ${Math.round(12 * densityMult)}px`,
+                      borderRadius: btnSecondaryRadiusCss,
+                      opacity: i === 0 ? 1 : 0.7,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {label}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -297,7 +297,7 @@ export default function VisualChapter({
     updateState({ tuning: { ...state.tuning, ...patch } });
   }
 
-  // ─── Snapshot pour l'export ───────────────────────────────────────────────
+  // ─── Snapshot pour l'export (avec contexte projet) ───────────────────────
   const exportSnapshot: DesignSystemSnapshot = {
     primaryHex: state.customColor,
     palette,
@@ -308,7 +308,24 @@ export default function VisualChapter({
     spacingDensity: state.tokens.spacingDensity,
     radius: state.tokens.radius,
     shadow: state.tokens.shadow,
+    project: {
+      name: project.name,
+      officialName: project.official_name,
+      type: project.type,
+      description: project.description,
+      northStar: project.north_star,
+    },
   };
+
+  // ─── Suggestion vibe depuis type de projet ───────────────────────────────
+  const typeVibeHint: Record<string, string> = {
+    saas: "SaaS B2B — palette sobre, typo pro, density compact",
+    appli: "Appli B2C — palette vibrante, typo friendly, radius rond",
+    outil: "Outil interne — palette neutre, contraste fort, density compact",
+    logiciel: "Logiciel — palette corporate, typo technique, shadow discrète",
+    business: "Business — palette corporate, typo classique, radius modéré",
+  };
+  const typeHint = project.type ? typeVibeHint[project.type] : null;
 
   const visibility = MODE_VISIBILITY[viewMode];
 
@@ -322,6 +339,14 @@ export default function VisualChapter({
             Palette OKLCH · Matrice WCAG · Dark auto · Combos · Mariage · Tokens · Export.
             Sauvegarde automatique.
           </p>
+          {typeHint && (
+            <p className="text-[11px] text-muted/80 mt-1.5 flex items-center gap-1.5">
+              <span className="inline-block px-1.5 py-0.5 rounded bg-accent/10 text-accent font-semibold text-[10px] uppercase tracking-wider">
+                {project.type}
+              </span>
+              <span>{typeHint}</span>
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           {saving && <span className="text-xs text-muted">💾 Sauvegarde...</span>}

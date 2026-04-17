@@ -6,10 +6,13 @@ import {
   exportTailwind,
   exportDtcgJson,
   exportMarkdown,
+  exportShadcn,
+  exportDesignMd,
   type DesignSystemSnapshot,
 } from "@/lib/design/export";
+import { useToast } from "@/app/components/toast";
 
-type Format = "css" | "tailwind" | "json" | "markdown";
+type Format = "css" | "tailwind" | "json" | "markdown" | "shadcn" | "designmd";
 
 const FORMATS: {
   key: Format;
@@ -36,6 +39,14 @@ const FORMATS: {
     hint: "Syntaxe Tailwind v4 — remplace ton @theme",
   },
   {
+    key: "shadcn",
+    label: "shadcn/ui globals.css",
+    emoji: "🧩",
+    ext: "css",
+    filename: "globals.css",
+    hint: "Format shadcn/ui + Tailwind v4 OKLCH (light + dark)",
+  },
+  {
     key: "json",
     label: "W3C DTCG JSON",
     emoji: "📦",
@@ -51,9 +62,18 @@ const FORMATS: {
     filename: "design-system.md",
     hint: "Document lisible à coller dans Claude / Notion / brief designer",
   },
+  {
+    key: "designmd",
+    label: "DESIGN.md agent",
+    emoji: "🤖",
+    ext: "md",
+    filename: "DESIGN.md",
+    hint: "Source de vérité agent-friendly (Claude, Cursor, ChatGPT)",
+  },
 ];
 
 export default function ExportBlock({ snapshot }: { snapshot: DesignSystemSnapshot }) {
+  const toast = useToast();
   const [collapsed, setCollapsed] = useState(true);
   const [format, setFormat] = useState<Format>("tailwind");
   const [copied, setCopied] = useState(false);
@@ -61,7 +81,9 @@ export default function ExportBlock({ snapshot }: { snapshot: DesignSystemSnapsh
   const content = useMemo(() => {
     if (format === "css") return exportCss(snapshot);
     if (format === "tailwind") return exportTailwind(snapshot);
+    if (format === "shadcn") return exportShadcn(snapshot);
     if (format === "json") return exportDtcgJson(snapshot);
+    if (format === "designmd") return exportDesignMd(snapshot);
     return exportMarkdown(snapshot);
   }, [format, snapshot]);
 
@@ -71,9 +93,10 @@ export default function ExportBlock({ snapshot }: { snapshot: DesignSystemSnapsh
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);
+      toast.success(`${currentFormat.label} copié dans le presse-papier`);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Pas grave en dev
+      toast.error("Copie impossible");
     }
   }
 
@@ -87,6 +110,7 @@ export default function ExportBlock({ snapshot }: { snapshot: DesignSystemSnapsh
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    toast.success(`${currentFormat.filename} téléchargé`);
   }
 
   return (
@@ -98,7 +122,7 @@ export default function ExportBlock({ snapshot }: { snapshot: DesignSystemSnapsh
       >
         {collapsed ? "▶" : "▼"}
         8. Export du design system
-        <span className="text-muted font-normal text-sm">(4 formats)</span>
+        <span className="text-muted font-normal text-sm">(6 formats)</span>
       </button>
 
       {collapsed && (
@@ -106,7 +130,7 @@ export default function ExportBlock({ snapshot }: { snapshot: DesignSystemSnapsh
           onClick={() => setCollapsed(false)}
           className="w-full text-sm font-medium px-4 py-3 rounded-lg bg-card border border-border hover:border-accent hover:bg-accent/5 transition flex items-center justify-center gap-2"
         >
-          ▼ Afficher l&apos;export (CSS · Tailwind v4 · JSON · Markdown)
+          ▼ Afficher l&apos;export (CSS · Tailwind v4 · shadcn/ui · JSON · Markdown · DESIGN.md)
         </button>
       )}
 
@@ -120,7 +144,7 @@ export default function ExportBlock({ snapshot }: { snapshot: DesignSystemSnapsh
           </div>
 
           {/* Sélecteur de format */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {FORMATS.map((f) => (
               <button
                 key={f.key}

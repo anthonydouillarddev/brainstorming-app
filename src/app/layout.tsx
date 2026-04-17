@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ToastProvider } from "./components/toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,7 +28,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className="min-h-full flex flex-col">
-        {children}
+        <ToastProvider>{children}</ToastProvider>
         <div id="modal-root" />
       </body>
     </html>

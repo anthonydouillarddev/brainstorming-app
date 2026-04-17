@@ -1097,17 +1097,11 @@ export default function DesignSpikePage() {
     // Restaure l'état local (couleur custom, tuning, tokens) — pas de perte entre sessions
     const local = loadSpikeState();
     if (local) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (local.customColor) setCustomColor(local.customColor);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (local.contrast !== undefined) setContrast(local.contrast);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (local.chromaPeakIndex !== undefined) setChromaPeakIndex(local.chromaPeakIndex);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (local.chromaAmount !== undefined) setChromaAmount(local.chromaAmount);
       // Merge safe : complète les champs manquants (customFonts, gradient, components...)
-      // pour supporter les vieilles versions de localStorage
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTokens(mergeTokens(local.tokens));
     }
 

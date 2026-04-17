@@ -8,16 +8,13 @@ import {
   RADIUS_PRESETS,
   SHADOW_PRESETS,
   DEFAULT_GRADIENT,
-  GRADIENT_PRESETS,
   generateTypoScale,
   generateSpacingScale,
-  gradientToCss,
   type SpacingPresetKey,
   type DensityKey,
   type RadiusKey,
   type ShadowKey,
   type GradientState,
-  type GradientType,
 } from "@/lib/design/tokens";
 import {
   FONT_PAIRINGS,
@@ -28,7 +25,6 @@ import {
   loadSingleFont,
   loadFontByName,
   type FontPairing,
-  type LibraryFont,
   type FontCategory,
 } from "@/lib/design/fonts";
 import { Help, type HelpKey } from "./help";
@@ -692,195 +688,6 @@ function ComponentsPicker({
           onChange={onChange}
         />
       ))}
-    </div>
-  );
-}
-
-// ─── GRADIENTS ──────────────────────────────────────────────────────────────
-
-function GradientsPicker({
-  gradient,
-  onChange,
-}: {
-  gradient: GradientState;
-  onChange: (patch: Partial<TokensState>) => void;
-}) {
-  const [copied, setCopied] = useState(false);
-  const css = gradientToCss(gradient);
-
-  function updateGradient(patch: Partial<GradientState>) {
-    onChange({ gradient: { ...gradient, ...patch } });
-  }
-
-  function updateStop(index: number, patch: Partial<typeof gradient.stops[0]>) {
-    const stops = gradient.stops.map((s, i) => (i === index ? { ...s, ...patch } : s));
-    updateGradient({ stops });
-  }
-
-  function addStop() {
-    if (gradient.stops.length >= 6) return;
-    const last = gradient.stops[gradient.stops.length - 1];
-    const newPos = Math.min(100, last.position + 25);
-    updateGradient({
-      stops: [...gradient.stops, { color: "#888888", position: newPos }],
-    });
-  }
-
-  function removeStop(index: number) {
-    if (gradient.stops.length <= 2) return;
-    updateGradient({ stops: gradient.stops.filter((_, i) => i !== index) });
-  }
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(`background: ${css};`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Ignore
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Presets */}
-      <div className="space-y-2">
-        <label className="text-xs font-medium uppercase tracking-wider text-muted">Presets</label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {GRADIENT_PRESETS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => updateGradient(p.value)}
-              className="p-0.5 rounded-lg border border-border hover:border-accent transition overflow-hidden"
-              title={p.name}
-            >
-              <div
-                className="h-16 w-full rounded"
-                style={{ background: gradientToCss(p.value) }}
-              />
-              <div className="text-[10px] font-medium py-1 text-center">{p.name}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Type de gradient */}
-      <div className="space-y-2">
-        <label className="text-xs font-medium uppercase tracking-wider text-muted">Type</label>
-        <div className="flex gap-1">
-          {(["linear", "radial", "conic"] as GradientType[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => updateGradient({ type: t })}
-              className={`flex-1 h-9 text-sm rounded border transition capitalize ${
-                gradient.type === t
-                  ? "bg-accent text-white border-accent"
-                  : "border-border hover:bg-accent/10"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Angle (linear/conic only) */}
-      {gradient.type !== "radial" && (
-        <div className="space-y-1">
-          <label className="text-xs font-medium uppercase tracking-wider text-muted flex items-center justify-between">
-            <span>{gradient.type === "linear" ? "Angle" : "Start angle"}</span>
-            <span className="font-mono normal-case">{gradient.angle}°</span>
-          </label>
-          <input
-            type="range"
-            min={0}
-            max={360}
-            step={15}
-            value={gradient.angle}
-            onChange={(e) => updateGradient({ angle: parseInt(e.target.value) })}
-            className="w-full accent-accent"
-          />
-        </div>
-      )}
-
-      {/* Stops */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium uppercase tracking-wider text-muted">
-            Color stops ({gradient.stops.length})
-          </label>
-          <button
-            onClick={addStop}
-            disabled={gradient.stops.length >= 6}
-            className="text-xs px-2 py-1 rounded border border-border hover:bg-accent/10 disabled:opacity-50"
-          >
-            + Stop
-          </button>
-        </div>
-        <div className="space-y-2">
-          {gradient.stops.map((stop, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input
-                type="color"
-                value={stop.color}
-                onChange={(e) => updateStop(i, { color: e.target.value })}
-                className="h-9 w-14 rounded border border-border cursor-pointer shrink-0"
-              />
-              <input
-                type="text"
-                value={stop.color}
-                onChange={(e) => updateStop(i, { color: e.target.value })}
-                className="w-24 h-9 px-2 text-xs font-mono rounded border border-border bg-card"
-              />
-              <div className="flex-1">
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={stop.position}
-                  onChange={(e) => updateStop(i, { position: parseInt(e.target.value) })}
-                  className="w-full accent-accent"
-                />
-              </div>
-              <span className="w-12 text-xs font-mono text-muted text-right">{stop.position}%</span>
-              <button
-                onClick={() => removeStop(i)}
-                disabled={gradient.stops.length <= 2}
-                className="w-8 h-8 rounded border border-border hover:bg-red-500 hover:text-white hover:border-red-500 disabled:opacity-30 disabled:cursor-not-allowed text-sm transition"
-                title="Retirer ce stop"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Preview */}
-      <div className="space-y-2">
-        <label className="text-xs font-medium uppercase tracking-wider text-muted">Preview</label>
-        <div
-          className="h-32 rounded-xl border border-border"
-          style={{ background: css }}
-        />
-      </div>
-
-      {/* Export CSS */}
-      <div className="space-y-2">
-        <label className="text-xs font-medium uppercase tracking-wider text-muted">CSS</label>
-        <div className="flex gap-2">
-          <code className="flex-1 px-3 py-2 text-xs font-mono rounded border border-border bg-card overflow-x-auto whitespace-nowrap">
-            background: {css};
-          </code>
-          <button
-            onClick={handleCopy}
-            className="text-xs px-3 rounded bg-accent text-white hover:bg-accent-hover transition whitespace-nowrap"
-          >
-            {copied ? "✓ Copié" : "📋 Copier"}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
