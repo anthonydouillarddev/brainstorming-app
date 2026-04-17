@@ -4,7 +4,49 @@ import { useMemo, useState } from "react";
 import type { Project } from "@/lib/types";
 import { useToast } from "@/app/components/toast";
 import { exportInfoNavMd } from "../exports/markdown";
+import { exportInfoNavJson } from "../exports/json";
+import { exportUrlMapCsv } from "../exports/csv";
+import { exportClaudeBrief } from "../exports/claude-brief";
 import type { InfoNavState } from "../state";
+
+type Format = "markdown" | "claude" | "json" | "csv";
+
+const FORMATS: {
+  key: Format;
+  label: string;
+  emoji: string;
+  filename: string;
+  hint: string;
+}[] = [
+  {
+    key: "markdown",
+    label: "Sitemap Markdown",
+    emoji: "📄",
+    filename: "sitemap.md",
+    hint: "Doc lisible · coller dans Notion / brief freelance",
+  },
+  {
+    key: "claude",
+    label: "Brief Claude / ChatGPT",
+    emoji: "🤖",
+    filename: "brief-nav.md",
+    hint: "Prompt pour générer routes Next.js / nav / SQL",
+  },
+  {
+    key: "json",
+    label: "Info model JSON",
+    emoji: "📦",
+    filename: "info-nav.json",
+    hint: "Sitemap + entités + labels + URL map structurés",
+  },
+  {
+    key: "csv",
+    label: "URL map CSV",
+    emoji: "📊",
+    filename: "url-map.csv",
+    hint: "Toutes les routes avec breadcrumb (Excel/Sheets)",
+  },
+];
 
 export default function InfoNavExportBlock({
   state,
@@ -15,15 +57,29 @@ export default function InfoNavExportBlock({
 }) {
   const toast = useToast();
   const [collapsed, setCollapsed] = useState(true);
+  const [format, setFormat] = useState<Format>("markdown");
   const [copied, setCopied] = useState(false);
 
-  const content = useMemo(() => exportInfoNavMd(state, project), [state, project]);
+  const content = useMemo(() => {
+    switch (format) {
+      case "markdown":
+        return exportInfoNavMd(state, project);
+      case "claude":
+        return exportClaudeBrief(state, project);
+      case "json":
+        return exportInfoNavJson(state, project);
+      case "csv":
+        return exportUrlMapCsv(state);
+    }
+  }, [format, state, project]);
+
+  const currentFormat = FORMATS.find((f) => f.key === format)!;
 
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);
-      toast.success("Sitemap copié dans le presse-papier");
+      toast.success(`${currentFormat.label} copié dans le presse-papier`);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Copie impossible");
@@ -35,12 +91,12 @@ export default function InfoNavExportBlock({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "sitemap.md";
+    a.download = currentFormat.filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success("sitemap.md téléchargé");
+    toast.success(`${currentFormat.filename} téléchargé`);
   }
 
   return (
@@ -51,8 +107,8 @@ export default function InfoNavExportBlock({
         aria-expanded={!collapsed}
       >
         {collapsed ? "▶" : "▼"}
-        📤 Export sitemap
-        <span className="text-muted font-normal text-sm">(markdown)</span>
+        📤 Export architecture
+        <span className="text-muted font-normal text-sm">(4 formats)</span>
       </button>
 
       {collapsed && (
@@ -60,16 +116,35 @@ export default function InfoNavExportBlock({
           onClick={() => setCollapsed(false)}
           className="w-full text-sm font-medium px-4 py-3 rounded-lg bg-card border border-border hover:border-accent hover:bg-accent/5 transition flex items-center justify-center gap-2"
         >
-          ▼ Voir l&apos;export markdown (prêt à coller dans Claude / brief)
+          ▼ Voir les exports (MD · Claude brief · JSON · CSV)
         </button>
       )}
 
       {!collapsed && (
         <>
           <div className="bg-card/40 border border-border rounded-lg p-3 text-xs text-muted leading-relaxed">
-            <strong className="text-foreground">Usage</strong> : colle dans Claude pour qu&apos;il
-            génère les routes Next.js, le composant de nav, ou les migrations SQL correspondant à
-            ce sitemap.
+            <strong className="text-foreground">4 formats</strong> — Markdown pour brief, Claude
+            brief pour générer du code, JSON structuré pour tooling, CSV pour l&apos;intégrer dans
+            un spreadsheet.
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {FORMATS.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setFormat(f.key)}
+                className={`p-3 rounded-lg border transition text-left ${
+                  format === f.key
+                    ? "bg-accent/10 border-accent"
+                    : "border-border hover:bg-accent/5"
+                }`}
+              >
+                <div className="text-sm font-semibold">
+                  {f.emoji} {f.label}
+                </div>
+                <div className="text-[10px] text-muted mt-0.5">{f.hint}</div>
+              </button>
+            ))}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -83,7 +158,7 @@ export default function InfoNavExportBlock({
               onClick={handleDownload}
               className="text-sm px-4 py-2 rounded border border-border hover:bg-accent/10 transition flex items-center gap-2"
             >
-              ⬇ Télécharger sitemap.md
+              ⬇ Télécharger {currentFormat.filename}
             </button>
             <span className="text-xs text-muted ml-auto">
               {content.length.toLocaleString("fr-FR")} caractères

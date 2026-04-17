@@ -6,6 +6,9 @@ import type { Project } from "@/lib/types";
 import ScreenPickerBlock from "./blocks/ScreenPickerBlock";
 import SitemapBuilderBlock from "./blocks/SitemapBuilderBlock";
 import NavPatternBlock from "./blocks/NavPatternBlock";
+import LabelDictionaryBlock from "./blocks/LabelDictionaryBlock";
+import EntityRelationBlock from "./blocks/EntityRelationBlock";
+import URLMapBlock from "./blocks/URLMapBlock";
 import InfoNavExportBlock from "./blocks/ExportBlock";
 import {
   INFO_NAV_SECTION_KEY,
@@ -168,11 +171,16 @@ export default function InfoNavChapter({
         onChange={updateState}
       />
 
+      {/* V2 SHOULD */}
+      <URLMapBlock state={state} />
+      <LabelDictionaryBlock state={state} onChange={updateState} />
+      <EntityRelationBlock state={state} onChange={updateState} />
+
       <InfoNavExportBlock state={state} project={project} />
 
       <div className="border-t border-border pt-4 text-xs text-muted text-center">
-        <strong>V1 MUST</strong> active. V2 ajoutera : dictionnaire labels, entités/relations,
-        URL map validator, breadcrumbs auto. V3 : command palette, tree test, mode Débutant.
+        <strong>V2 SHOULD</strong> active. V3 ajoutera : command palette planner, tree test, mode
+        Débutant conversationnel, carte PDF imprimable.
       </div>
     </div>
   );
