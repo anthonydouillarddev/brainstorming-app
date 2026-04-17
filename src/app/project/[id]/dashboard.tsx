@@ -15,6 +15,7 @@ import Cockpit from "./cockpit";
 import BrainstormEditor from "./editor";
 import DecisionsPanel from "./decisions";
 import SingleSectionPanel from "./resources";
+import DesignPanel from "./design";
 import TodoList from "@/app/components/todolist";
 
 type Tab = "cockpit" | "brainstorm" | "tasks" | "decisions" | "tech" | "design" | "resources";
@@ -436,9 +437,8 @@ export default function ProjectDashboard({
       )}
 
       {tab === "design" && (
-        <SingleSectionPanel
+        <DesignPanel
           project={project}
-          sectionKey="design"
           initialSections={sections}
           onProjectUpdate={updateProject}
           onSectionsChange={setSections}
