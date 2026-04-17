@@ -177,6 +177,22 @@ create table custom_color_combos (
 create index idx_custom_color_combos_user_id on custom_color_combos(user_id, created_at desc);
 
 -- ═══════════════════════════════════════════════
+-- DESIGN_SYSTEM_PRESETS (snapshots complets de DS réutilisables par user)
+-- ═══════════════════════════════════════════════
+create table design_system_presets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  project_id uuid references projects(id) on delete cascade,
+  name text not null,
+  snapshot jsonb not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index idx_design_presets_user_id on design_system_presets(user_id, created_at desc);
+create index idx_design_presets_project_id on design_system_presets(project_id);
+
+-- ═══════════════════════════════════════════════
 -- ROW LEVEL SECURITY
 -- ═══════════════════════════════════════════════
 alter table projects enable row level security;
@@ -188,6 +204,7 @@ alter table risks enable row level security;
 alter table dev_items enable row level security;
 alter table user_preferences enable row level security;
 alter table custom_color_combos enable row level security;
+alter table design_system_presets enable row level security;
 
 -- Projects : chaque user ne voit que SES projets
 create policy "Users can view own projects"
@@ -299,6 +316,10 @@ create policy "Users see own preferences" on user_preferences
 create policy "Users see own color combos" on custom_color_combos
   for all using (auth.uid() = user_id);
 
+-- Design system presets : par user_id
+create policy "Users see own design presets" on design_system_presets
+  for all using (auth.uid() = user_id);
+
 -- ═══════════════════════════════════════════════
 -- TRIGGERS
 -- ═══════════════════════════════════════════════
@@ -320,4 +341,8 @@ create trigger sections_updated_at
 
 create trigger dev_items_updated_at
   before update on dev_items
+  for each row execute function update_updated_at();
+
+create trigger design_system_presets_updated_at
+  before update on design_system_presets
   for each row execute function update_updated_at();

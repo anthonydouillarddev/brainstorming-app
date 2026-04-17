@@ -22,6 +22,7 @@ import PaletteBlock from "./blocks/PaletteBlock";
 import PalettesRefBlock from "./blocks/PalettesRefBlock";
 import CombosBlock from "./blocks/CombosBlock";
 import MarriageBlock from "./blocks/MarriageBlock";
+import PresetsBlock from "./blocks/PresetsBlock";
 import type { SelectedShade } from "./components/shared";
 import {
   DEFAULT_VISUAL_STATE,
@@ -45,6 +46,7 @@ const MODE_VISIBILITY: Record<
     extraColors: boolean;
     gradient: boolean;
     tokens: boolean;
+    presets: boolean;
     export: boolean;
     validation: boolean;
   }
@@ -56,6 +58,7 @@ const MODE_VISIBILITY: Record<
     extraColors: false,
     gradient: false,
     tokens: true,
+    presets: true,
     export: true,
     validation: true,
   },
@@ -66,6 +69,7 @@ const MODE_VISIBILITY: Record<
     extraColors: true,
     gradient: true,
     tokens: true,
+    presets: true,
     export: true,
     validation: true,
   },
@@ -76,6 +80,7 @@ const MODE_VISIBILITY: Record<
     extraColors: true,
     gradient: true,
     tokens: true,
+    presets: true,
     export: true,
     validation: true,
   },
@@ -179,6 +184,15 @@ export default function VisualChapter({
       scheduleSave(next);
       return next;
     });
+  }
+
+  function loadPreset(next: VisualState) {
+    const merged = mergeVisualState({
+      ...next,
+      updatedAt: new Date().toISOString(),
+    });
+    setState(merged);
+    scheduleSave(merged);
   }
 
   function scheduleSave(next: VisualState) {
@@ -456,7 +470,16 @@ export default function VisualChapter({
         />
       )}
 
-      {/* 8. Export */}
+      {/* 8. Presets — Mes design systems */}
+      {visibility.presets && (
+        <PresetsBlock
+          projectId={project.id}
+          currentState={state}
+          onLoadPreset={loadPreset}
+        />
+      )}
+
+      {/* 9. Export */}
       {visibility.export && <ExportBlock snapshot={exportSnapshot} />}
     </div>
   );
