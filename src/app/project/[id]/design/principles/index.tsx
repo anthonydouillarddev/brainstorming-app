@@ -12,15 +12,23 @@ import CognitiveLoadBlock from "./blocks/CognitiveLoadBlock";
 import HickMenuAnalyzerBlock from "./blocks/HickMenuAnalyzerBlock";
 import PeakEndMapperBlock from "./blocks/PeakEndMapperBlock";
 import MentalModelCanvasBlock from "./blocks/MentalModelCanvasBlock";
+import ScreenAuditBlock from "./blocks/ScreenAuditBlock";
+import LatencyLogBlock from "./blocks/LatencyLogBlock";
 import PrinciplesExportBlock from "./blocks/ExportBlock";
+import ModeToggle from "./components/ModeToggle";
+import BeginnerChat from "./components/BeginnerChat";
+import PrintablePrinciplesCard from "./components/PrintablePrinciplesCard";
 import {
   PRINCIPLES_SECTION_KEY,
   computePrinciplesCompleteness,
   mergePrinciplesState,
   parsePrinciplesState,
+  type PrinciplesMode,
   type PrinciplesState,
 } from "./state";
 import { validatePrinciples } from "./validators";
+
+const LS_MODE = "mindeck:design:principles:mode";
 
 export default function PrinciplesChapter({
   project,
@@ -40,6 +48,20 @@ export default function PrinciplesChapter({
   const [state, setState] = useState<PrinciplesState>(() =>
     parsePrinciplesState(initialSections[PRINCIPLES_SECTION_KEY])
   );
+  const [mode, setMode] = useState<PrinciplesMode>("intermediate");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(LS_MODE);
+    if (saved === "beginner" || saved === "intermediate") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMode(saved);
+    }
+  }, []);
+
+  function changeMode(m: PrinciplesMode) {
+    setMode(m);
+    window.localStorage.setItem(LS_MODE, m);
+  }
 
   const completeness = computePrinciplesCompleteness(state);
   const issues = validatePrinciples(state);
@@ -105,6 +127,7 @@ export default function PrinciplesChapter({
             {!saving && lastSaved && (
               <span className="text-xs text-green-600">✓ Sauvé à {lastSaved}</span>
             )}
+            <ModeToggle mode={mode} onChange={changeMode} />
           </div>
         </div>
 
@@ -145,24 +168,40 @@ export default function PrinciplesChapter({
         Everyday Things), Yablonski (Laws of UX), Gestalt (Wertheimer), Sweller (Cognitive Load).
       </div>
 
-      <NielsenChecklistBlock state={state} onChange={updateState} />
-      <LawsLibraryBlock state={state} onChange={updateState} />
-      <AffordanceCheckerBlock state={state} onChange={updateState} />
-      <FeedbackInventoryBlock state={state} onChange={updateState} />
-      <DesignPrinciplesBlock state={state} onChange={updateState} />
+      {mode === "beginner" ? (
+        <BeginnerChat
+          state={state}
+          project={project}
+          onChange={updateState}
+          onSwitchMode={() => changeMode("intermediate")}
+        />
+      ) : (
+        <>
+          <NielsenChecklistBlock state={state} onChange={updateState} />
+          <LawsLibraryBlock state={state} onChange={updateState} />
+          <AffordanceCheckerBlock state={state} onChange={updateState} />
+          <FeedbackInventoryBlock state={state} onChange={updateState} />
+          <DesignPrinciplesBlock state={state} onChange={updateState} />
 
-      {/* V2 SHOULD */}
-      <CognitiveLoadBlock state={state} onChange={updateState} />
-      <HickMenuAnalyzerBlock state={state} onChange={updateState} />
-      <PeakEndMapperBlock state={state} onChange={updateState} />
-      <MentalModelCanvasBlock state={state} onChange={updateState} />
+          {/* V2 SHOULD */}
+          <CognitiveLoadBlock state={state} onChange={updateState} />
+          <HickMenuAnalyzerBlock state={state} onChange={updateState} />
+          <PeakEndMapperBlock state={state} onChange={updateState} />
+          <MentalModelCanvasBlock state={state} onChange={updateState} />
 
-      <PrinciplesExportBlock state={state} project={project} />
+          {/* V3 NICE */}
+          <ScreenAuditBlock state={state} onChange={updateState} />
+          <LatencyLogBlock state={state} onChange={updateState} />
+        </>
+      )}
 
-      <div className="border-t border-border pt-4 text-xs text-muted text-center">
-        <strong>V2 SHOULD</strong> active. V3 ajoutera : audit par type d&apos;écran, Doherty
-        latency log, mode Débutant conversationnel, carte PDF.
-      </div>
+      {mode !== "beginner" && <PrinciplesExportBlock state={state} project={project} />}
+
+      {mode !== "beginner" && completeness >= 50 && (
+        <div className="border-t border-border pt-6">
+          <PrintablePrinciplesCard state={state} project={project} />
+        </div>
+      )}
     </div>
   );
 }
