@@ -8,6 +8,7 @@ import ChapterShell from "../_shared/ChapterShell";
 
 import ExportPanel, { type ExportFormat } from "../_shared/ExportPanel";
 import { useChapterPersistence } from "../_shared/useChapterPersistence";
+import CostEstimateCard from "../_shared/CostEstimateCard";
 import CatalogBlock from "./blocks/CatalogBlock";
 import { SERVICES_SECTION_KEY, computeServicesCompleteness, mergeServicesState, parseServicesState, type ServicesState } from "./state";
 import { validateServices } from "./validators";
@@ -60,6 +61,11 @@ export default function ServicesChapter({
       mode={mode}
       onModeChange={changeMode}
     >
+      <CostEstimateCard
+        selectedServiceNames={state.selections
+          .filter((s) => s.status === "used" && s.selectedService.trim())
+          .map((s) => s.selectedService)}
+      />
       <CatalogBlock
         state={state}
         onChange={updateState}
