@@ -14,6 +14,7 @@ import PeakEndMapperBlock from "./blocks/PeakEndMapperBlock";
 import MentalModelCanvasBlock from "./blocks/MentalModelCanvasBlock";
 import ScreenAuditBlock from "./blocks/ScreenAuditBlock";
 import LatencyLogBlock from "./blocks/LatencyLogBlock";
+import ProjectRulesBlock from "./blocks/ProjectRulesBlock";
 import PrinciplesExportBlock from "./blocks/ExportBlock";
 import ModeToggle from "./components/ModeToggle";
 import BeginnerChat from "./components/BeginnerChat";
@@ -192,6 +193,9 @@ export default function PrinciplesChapter({
           {/* V3 NICE */}
           <ScreenAuditBlock state={state} onChange={updateState} />
           <LatencyLogBlock state={state} onChange={updateState} />
+
+          {/* V4 — Règles UI/UX projet-specific */}
+          <ProjectRulesBlock state={state} onChange={updateState} />
         </>
       )}
 
