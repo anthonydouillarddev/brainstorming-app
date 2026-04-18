@@ -394,6 +394,7 @@ export default function ProjectDashboard({
           onRoadmapChange={setRoadmap}
           onRisksChange={setRisks}
           onGoToTasks={() => setTab("tasks")}
+          onGoToDesign={() => setTab("design")}
         />
       )}
 

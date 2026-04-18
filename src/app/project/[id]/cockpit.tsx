@@ -2,6 +2,9 @@
 
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { getActiveSections, parseSections, isFieldFilled, type SectionData } from "@/lib/sections";
+import { computeOverallDesignCompleteness } from "@/lib/design-completeness";
+import { getActiveChapters } from "@/lib/design/gating";
+import { useExperienceLevel } from "@/lib/design/use-experience-level";
 import type { Project, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
 import { PROJECT_STATUSES, PHASES, statusIndex, statusPhase } from "@/lib/types";
 import RisksPanel from "./risks";
@@ -35,6 +38,7 @@ export default function Cockpit({
   onRoadmapChange,
   onRisksChange,
   onGoToTasks,
+  onGoToDesign,
 }: {
   project: Project;
   sections: Record<string, string>;
@@ -46,6 +50,7 @@ export default function Cockpit({
   onRoadmapChange: (items: RoadmapItem[]) => void;
   onRisksChange: (items: Risk[]) => void;
   onGoToTasks: () => void;
+  onGoToDesign: () => void;
 }) {
   const parsed = useMemo(() => parseSections(sections), [sections]);
 
@@ -98,10 +103,16 @@ export default function Cockpit({
     (statusIndex(project.status) / (PROJECT_STATUSES.length - 1)) * 100
   );
 
+  const experience = useExperienceLevel();
+  const designProgress = useMemo(
+    () => computeOverallDesignCompleteness(sections, getActiveChapters(experience)),
+    [sections, experience]
+  );
+
   const globalProgress =
     activeSections.length === 0
       ? statusProgress
-      : Math.round((sectionProgress + statusProgress) / 2);
+      : Math.round((sectionProgress + statusProgress + designProgress) / 3);
 
   const currentPhase = statusPhase(project.status);
   const phaseIndex = PHASES.findIndex((p) => p.value === currentPhase);
@@ -258,7 +269,7 @@ export default function Cockpit({
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="grid grid-cols-3 gap-3 text-xs">
             <div>
               <div className="text-muted mb-1">Brainstorm</div>
               <div className="font-semibold">{sectionProgress}%</div>
@@ -279,6 +290,22 @@ export default function Cockpit({
                 />
               </div>
             </div>
+            <button
+              type="button"
+              onClick={onGoToDesign}
+              className="text-left rounded-lg -m-1 p-1 transition hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              aria-label="Ouvrir l'onglet Design"
+              title="Ouvrir l'onglet Design"
+            >
+              <div className="text-muted mb-1">🎨 Design</div>
+              <div className="font-semibold">{designProgress}%</div>
+              <div className="h-1 bg-background/60 rounded-full mt-1 overflow-hidden">
+                <div
+                  className="h-full bg-accent rounded-full transition-all"
+                  style={{ width: `${designProgress}%` }}
+                />
+              </div>
+            </button>
           </div>
         </div>
 

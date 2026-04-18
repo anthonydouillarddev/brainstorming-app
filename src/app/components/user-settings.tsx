@@ -9,12 +9,19 @@ import type {
   Theme,
   DisplayDensity,
   DefaultTaskView,
+  ExperienceLevel,
 } from "@/lib/types";
 import {
   THEMES,
   DISPLAY_DENSITIES,
   DEFAULT_PREFERENCES,
 } from "@/lib/types";
+import {
+  EXPERIENCE_EVENT,
+  EXPERIENCE_LEVEL_META,
+  EXPERIENCE_LEVELS,
+  EXPERIENCE_STORAGE_KEY,
+} from "@/lib/design/gating";
 
 type SettingsSection = "profile" | "appearance" | "notifications" | "plan" | "security" | "data";
 
@@ -63,6 +70,8 @@ export default function UserSettings({
     display_density: initialPreferences?.display_density ?? DEFAULT_PREFERENCES.display_density,
     default_task_view: initialPreferences?.default_task_view ?? DEFAULT_PREFERENCES.default_task_view,
     role: initialPreferences?.role ?? DEFAULT_PREFERENCES.role,
+    experience_level:
+      initialPreferences?.experience_level ?? DEFAULT_PREFERENCES.experience_level,
   });
 
   // Profile editing
@@ -176,6 +185,17 @@ export default function UserSettings({
   function updateTaskView(view: DefaultTaskView) {
     setPrefs((p) => ({ ...p, default_task_view: view }));
     savePreference("default_task_view", view);
+  }
+
+  function updateExperience(level: ExperienceLevel) {
+    setPrefs((p) => ({ ...p, experience_level: level }));
+    if (typeof window !== "undefined") {
+      localStorage.setItem(EXPERIENCE_STORAGE_KEY, level);
+      window.dispatchEvent(
+        new CustomEvent(EXPERIENCE_EVENT, { detail: { level } })
+      );
+    }
+    savePreference("experience_level", level);
   }
 
   // ---- Save display name ----
@@ -363,6 +383,35 @@ export default function UserSettings({
                     {v === "list" ? "📋 Liste" : "📊 Kanban"}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">Niveau d&apos;expertise</label>
+              <p className="text-xs text-muted mb-3">
+                Filtre les chapitres Design affichés. Débutant = 6 essentiels, Intermédiaire/Expert = 12.
+              </p>
+              <div className="space-y-2">
+                {EXPERIENCE_LEVELS.map((level) => {
+                  const meta = EXPERIENCE_LEVEL_META[level];
+                  const isActive = prefs.experience_level === level;
+                  return (
+                    <button
+                      key={level}
+                      onClick={() => updateExperience(level)}
+                      className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
+                        isActive
+                          ? "border-accent bg-accent/10"
+                          : "border-border hover:border-accent/50"
+                      }`}
+                    >
+                      <span className="text-sm font-medium">
+                        {meta.emoji} {meta.label}
+                      </span>
+                      <span className="block text-xs text-muted mt-0.5">{meta.hint}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
