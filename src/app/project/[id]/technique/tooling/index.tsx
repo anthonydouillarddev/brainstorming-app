@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useHydratedLocalStorage, isChapterMode } from "../_shared/useHydratedLocalStorage";
 import type { Project } from "@/lib/types";
+import type { ChapterMode } from "../_shared/ModeToggle";
 import type { ProjectType as SvcProjectType } from "@/lib/technique/services-catalog";
 import { COMMON_TOOLS, TOOLS_BY_PROJECT_TYPE } from "@/lib/technique/tooling-presets";
 import ChapterShell from "../_shared/ChapterShell";
-import type { ChapterMode } from "../_shared/ModeToggle";
+
 import ExportPanel, { type ExportFormat } from "../_shared/ExportPanel";
 import { useChapterPersistence } from "../_shared/useChapterPersistence";
 import OsBudgetBlock from "./blocks/OsBudgetBlock";
@@ -25,17 +26,12 @@ export default function ToolingChapter({
   onProjectUpdate: (patch: Partial<Project>) => Promise<void>;
   onSectionsChange?: (sections: Record<string, string>) => void;
 }) {
-  const [mode, setMode] = useState<ChapterMode>("intermediate");
-  useEffect(() => {
-    const saved = window.localStorage.getItem(LS_MODE);
-    if (saved === "beginner" || saved === "intermediate") setMode(saved);
-  }, []);
-  function changeMode(m: ChapterMode) { setMode(m); window.localStorage.setItem(LS_MODE, m); }
+  const [mode, changeMode] = useHydratedLocalStorage<ChapterMode>(LS_MODE, "intermediate", isChapterMode);
 
   const projectType = project.type as SvcProjectType;
   const totalCategories = COMMON_TOOLS.length + TOOLS_BY_PROJECT_TYPE[projectType].length;
 
-  const { state, updateState, saving, lastSaved } = useChapterPersistence<ToolingState>({
+  const { state, updateState, saving, lastSaved, saveError } = useChapterPersistence<ToolingState>({
     projectId: project.id,
     sectionKey: TOOLING_SECTION_KEY,
     initialContent: initialSections[TOOLING_SECTION_KEY],
@@ -63,6 +59,7 @@ export default function ToolingChapter({
       issues={[]}
       saving={saving}
       lastSaved={lastSaved}
+      saveError={saveError}
       mode={mode}
       onModeChange={changeMode}
     >

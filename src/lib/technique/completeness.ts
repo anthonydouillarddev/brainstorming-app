@@ -75,10 +75,6 @@ export const TECHNIQUE_SECTION_KEYS: Record<TechniqueChapterKey, string> = {
 
 type ChapterComputer = (content: string | undefined | null) => number;
 
-// Computer par défaut : un chapitre non implémenté retourne 0%.
-// À remplacer chapitre par chapitre quand un `compute{Chap}Completeness` sera livré.
-const DEFAULT_COMPUTER: ChapterComputer = () => 0;
-
 const CHAPTER_COMPUTERS: Record<TechniqueChapterKey, ChapterComputer> = {
   strategy: (c) => computeStrategyCompleteness(parseStrategyState(c)),
   architecture: (c) => computeArchitectureCompleteness(parseArchitectureState(c)),

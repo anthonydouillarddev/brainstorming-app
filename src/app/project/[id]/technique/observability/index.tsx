@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useHydratedLocalStorage, isChapterMode } from "../_shared/useHydratedLocalStorage";
 import type { Project } from "@/lib/types";
-import ChapterShell from "../_shared/ChapterShell";
 import type { ChapterMode } from "../_shared/ModeToggle";
+import ChapterShell from "../_shared/ChapterShell";
+
 import ExportPanel, { type ExportFormat } from "../_shared/ExportPanel";
 import { useChapterPersistence } from "../_shared/useChapterPersistence";
 import ErrorTrackingBlock from "./blocks/ErrorTrackingBlock";
@@ -26,14 +27,9 @@ export default function ObservabilityChapter({
   onProjectUpdate: (patch: Partial<Project>) => Promise<void>;
   onSectionsChange?: (sections: Record<string, string>) => void;
 }) {
-  const [mode, setMode] = useState<ChapterMode>("intermediate");
-  useEffect(() => {
-    const saved = window.localStorage.getItem(LS_MODE);
-    if (saved === "beginner" || saved === "intermediate") setMode(saved);
-  }, []);
-  function changeMode(m: ChapterMode) { setMode(m); window.localStorage.setItem(LS_MODE, m); }
+  const [mode, changeMode] = useHydratedLocalStorage<ChapterMode>(LS_MODE, "intermediate", isChapterMode);
 
-  const { state, updateState, saving, lastSaved } = useChapterPersistence<ObservabilityState>({
+  const { state, updateState, saving, lastSaved, saveError } = useChapterPersistence<ObservabilityState>({
     projectId: project.id,
     sectionKey: OBSERVABILITY_SECTION_KEY,
     initialContent: initialSections[OBSERVABILITY_SECTION_KEY],
@@ -61,6 +57,7 @@ export default function ObservabilityChapter({
       issues={issues}
       saving={saving}
       lastSaved={lastSaved}
+      saveError={saveError}
       mode={mode}
       onModeChange={changeMode}
     >

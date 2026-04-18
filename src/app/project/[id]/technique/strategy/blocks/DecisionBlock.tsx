@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Decision } from "@/lib/types";
 import type { StrategyState } from "../state";
@@ -42,7 +42,7 @@ export default function DecisionBlock({
   state: StrategyState;
   onChange: (patch: Partial<StrategyState>) => void;
 }) {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [adrs, setAdrs] = useState<Decision[]>([]);
   const [pushing, setPushing] = useState(false);
   const [pushMsg, setPushMsg] = useState<string | null>(null);
@@ -85,6 +85,7 @@ export default function DecisionBlock({
   }
 
   async function archiveAsAdr() {
+    if (pushing) return; // Guard re-entrance (double-click rapide)
     const title = `Stratégie technique — ${new Date().toLocaleDateString("fr-FR")}`;
     const stackSummary = STACK_FIELDS.filter((f) => state[f.key].trim().length > 0)
       .map((f) => `${f.label}: ${state[f.key]}`)

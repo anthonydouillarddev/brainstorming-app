@@ -19,6 +19,7 @@ export default function ChapterShell({
   issues,
   saving,
   lastSaved,
+  saveError,
   mode,
   onModeChange,
   children,
@@ -31,6 +32,7 @@ export default function ChapterShell({
   issues: ShellIssue[];
   saving: boolean;
   lastSaved: string | null;
+  saveError?: string | null;
   mode: ChapterMode;
   onModeChange: (m: ChapterMode) => void;
   children: ReactNode;
@@ -76,7 +78,11 @@ export default function ChapterShell({
                 ⚠️ {warnCount} avertissement{warnCount > 1 ? "s" : ""}
               </span>
             )}
-            {saving ? (
+            {saveError ? (
+              <span className="text-red-600 dark:text-red-400 font-medium" title={saveError}>
+                ⚠ Échec sauvegarde
+              </span>
+            ) : saving ? (
               <span className="text-muted">💾 Sauvegarde…</span>
             ) : lastSaved ? (
               <span className="text-muted">✓ {lastSaved}</span>

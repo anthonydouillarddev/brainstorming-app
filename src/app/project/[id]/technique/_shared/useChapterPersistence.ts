@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 
 // Hook générique pour persistence d'un chapitre Technique.
 // Gère : parse initial + merge-safe + debounced save 800ms + lastSaved + onSectionsChange.
+// Robuste : guards unmount + remontée erreur réseau via saveError.
 
 export function useChapterPersistence<T extends object>({
   projectId,
@@ -25,8 +26,10 @@ export function useChapterPersistence<T extends object>({
 }) {
   const supabase = createClient();
   const saveTimer = useRef<NodeJS.Timeout | null>(null);
+  const mountedRef = useRef(true);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [state, setState] = useState<T>(() => parse(initialContent));
 
   function updateState(patch: Partial<T>) {
@@ -40,7 +43,9 @@ export function useChapterPersistence<T extends object>({
   function scheduleSave(next: T) {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
+      if (!mountedRef.current) return;
       setSaving(true);
+      setSaveError(null);
       const content = JSON.stringify(next);
       const { error } = await supabase
         .from("sections")
@@ -48,22 +53,28 @@ export function useChapterPersistence<T extends object>({
           { project_id: projectId, section_key: sectionKey, content },
           { onConflict: "project_id,section_key" }
         );
+      if (!mountedRef.current) return;
       setSaving(false);
-      if (!error) {
-        setLastSaved(
-          new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
-        );
-        onSectionsChange?.({ ...initialSections, [sectionKey]: content });
+      if (error) {
+        console.error(`[useChapterPersistence] save failed for ${sectionKey}:`, error);
+        setSaveError(error.message || "Erreur de sauvegarde");
+        return;
       }
+      setLastSaved(
+        new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+      );
+      onSectionsChange?.({ ...initialSections, [sectionKey]: content });
     }, 800);
   }
 
   useEffect(() => {
-    const timer = saveTimer.current;
+    mountedRef.current = true;
     return () => {
-      if (timer) clearTimeout(timer);
+      mountedRef.current = false;
+      // Lire la ref au moment du cleanup, pas au mount
+      if (saveTimer.current) clearTimeout(saveTimer.current);
     };
   }, []);
 
-  return { state, updateState, saving, lastSaved };
+  return { state, updateState, saving, lastSaved, saveError };
 }

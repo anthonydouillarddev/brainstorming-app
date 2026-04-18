@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useHydratedLocalStorage, isChapterMode } from "../_shared/useHydratedLocalStorage";
 import type { Project } from "@/lib/types";
-import ChapterShell from "../_shared/ChapterShell";
 import type { ChapterMode } from "../_shared/ModeToggle";
+import ChapterShell from "../_shared/ChapterShell";
+
 import ExportPanel, { type ExportFormat } from "../_shared/ExportPanel";
 import { useChapterPersistence } from "../_shared/useChapterPersistence";
 import FrameworkBlock from "./blocks/FrameworkBlock";
@@ -35,22 +36,9 @@ export default function FrontendChapter({
   onProjectUpdate: (patch: Partial<Project>) => Promise<void>;
   onSectionsChange?: (sections: Record<string, string>) => void;
 }) {
-  const [mode, setMode] = useState<ChapterMode>("intermediate");
+  const [mode, changeMode] = useHydratedLocalStorage<ChapterMode>(LS_MODE, "intermediate", isChapterMode);
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem(LS_MODE);
-    if (saved === "beginner" || saved === "intermediate") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setMode(saved);
-    }
-  }, []);
-
-  function changeMode(m: ChapterMode) {
-    setMode(m);
-    window.localStorage.setItem(LS_MODE, m);
-  }
-
-  const { state, updateState, saving, lastSaved } = useChapterPersistence<FrontendState>({
+  const { state, updateState, saving, lastSaved, saveError } = useChapterPersistence<FrontendState>({
     projectId: project.id,
     sectionKey: FRONTEND_SECTION_KEY,
     initialContent: initialSections[FRONTEND_SECTION_KEY],
@@ -100,6 +88,7 @@ export default function FrontendChapter({
       issues={issues}
       saving={saving}
       lastSaved={lastSaved}
+      saveError={saveError}
       mode={mode}
       onModeChange={changeMode}
     >
