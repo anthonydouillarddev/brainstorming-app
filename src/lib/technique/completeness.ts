@@ -43,6 +43,10 @@ import {
   computeObservabilityCompleteness,
   parseObservabilityState,
 } from "@/app/project/[id]/technique/observability/state";
+import {
+  computeAiCompleteness,
+  parseAiState,
+} from "@/app/project/[id]/technique/ai-automation/state";
 
 // Clés canoniques dans la table `sections` (JSON dans `content`).
 export const TECHNIQUE_SECTION_KEYS: Record<TechniqueChapterKey, string> = {
@@ -76,7 +80,7 @@ const CHAPTER_COMPUTERS: Record<TechniqueChapterKey, ChapterComputer> = {
   services: (c) => computeServicesCompleteness(parseServicesState(c)),
   "hosting-devops": (c) => computeHostingCompleteness(parseHostingState(c)),
   observability: (c) => computeObservabilityCompleteness(parseObservabilityState(c)),
-  "ai-automation": DEFAULT_COMPUTER,
+  "ai-automation": (c) => computeAiCompleteness(parseAiState(c)),
   "costs-compliance": DEFAULT_COMPUTER,
   tooling: DEFAULT_COMPUTER,
 };
