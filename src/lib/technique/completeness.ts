@@ -11,6 +11,10 @@ import {
   computeStrategyCompleteness,
   parseStrategyState,
 } from "@/app/project/[id]/technique/strategy/state";
+import {
+  computeArchitectureCompleteness,
+  parseArchitectureState,
+} from "@/app/project/[id]/technique/architecture/state";
 
 // Clés canoniques dans la table `sections` (JSON dans `content`).
 export const TECHNIQUE_SECTION_KEYS: Record<TechniqueChapterKey, string> = {
@@ -36,7 +40,7 @@ const DEFAULT_COMPUTER: ChapterComputer = () => 0;
 
 const CHAPTER_COMPUTERS: Record<TechniqueChapterKey, ChapterComputer> = {
   strategy: (c) => computeStrategyCompleteness(parseStrategyState(c)),
-  architecture: DEFAULT_COMPUTER,
+  architecture: (c) => computeArchitectureCompleteness(parseArchitectureState(c)),
   frontend: DEFAULT_COMPUTER,
   backend: DEFAULT_COMPUTER,
   data: DEFAULT_COMPUTER,

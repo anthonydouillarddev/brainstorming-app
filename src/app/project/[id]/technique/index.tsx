@@ -8,6 +8,7 @@ import { useExperienceLevel } from "@/lib/design/use-experience-level";
 import { TECHNIQUE_CHAPTERS, type TechniqueChapterKey } from "./chapters";
 import ChapterPlaceholder from "./chapter-placeholder";
 import StrategyChapter from "./strategy";
+import ArchitectureChapter from "./architecture";
 
 const LS_ACTIVE_CHAPTER_PREFIX = "mindeck_technique_active_chapter_";
 
@@ -139,6 +140,13 @@ export default function TechniquePanel({
 
         {activeKey === "strategy" ? (
           <StrategyChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : activeKey === "architecture" ? (
+          <ArchitectureChapter
             project={project}
             initialSections={initialSections}
             onProjectUpdate={onProjectUpdate}
