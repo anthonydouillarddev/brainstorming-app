@@ -30,7 +30,7 @@ export const TECHNIQUE_CHAPTERS: TechniqueChapter[] = [
   { key: "frontend", num: 3, emoji: "🎨", label: "Frontend", hint: "Framework, rendering, styling, TypeScript", status: "ready" },
   { key: "backend", num: 4, emoji: "⚙️", label: "Backend", hint: "Pattern BaaS/BFF, runtime, API style, jobs", status: "ready" },
   { key: "data", num: 5, emoji: "🗄️", label: "Data & Database", hint: "DB, hosting, schéma, migrations, RLS, backups", status: "ready" },
-  { key: "auth-security", num: 6, emoji: "🔐", label: "Auth & Sécurité", hint: "Auth method, OWASP Top 10, secrets, RBAC", status: "bientot" },
+  { key: "auth-security", num: 6, emoji: "🔐", label: "Auth & Sécurité", hint: "Auth method, OWASP Top 10, secrets, RBAC", status: "ready" },
   { key: "services", num: 7, emoji: "🔌", label: "Services tiers & Intégrations", hint: "Catalogue 26 catégories (paiement, email, storage, CDN, CMS…)", status: "bientot" },
   { key: "hosting-devops", num: 8, emoji: "🚀", label: "Hosting & DevOps", hint: "Hosting, CI/CD, preview envs, rollback, feature flags", status: "bientot" },
   { key: "observability", num: 9, emoji: "📊", label: "Observability & Qualité", hint: "Error tracking, uptime, logs, tests, DORA metrics", status: "bientot" },

@@ -12,6 +12,7 @@ import ArchitectureChapter from "./architecture";
 import FrontendChapter from "./frontend";
 import BackendChapter from "./backend";
 import DataChapter from "./data";
+import AuthSecurityChapter from "./auth-security";
 
 const LS_ACTIVE_CHAPTER_PREFIX = "mindeck_technique_active_chapter_";
 
@@ -171,6 +172,13 @@ export default function TechniquePanel({
           />
         ) : activeKey === "data" ? (
           <DataChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : activeKey === "auth-security" ? (
+          <AuthSecurityChapter
             project={project}
             initialSections={initialSections}
             onProjectUpdate={onProjectUpdate}
