@@ -1,7 +1,7 @@
 "use client";
 
 import type { Framework, FrontendState } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const FRAMEWORKS: { value: Framework; label: string; score: string; hint: string }[] = [
   { value: "nextjs-app", label: "Next.js 16 (App Router)", score: "🔥 populaire", hint: "Défaut Mindeck. RSC + Server Actions." },
@@ -24,17 +24,14 @@ export default function FrameworkBlock({
   const filled = (state.framework ? 1 : 0) + (state.frameworkVersion.trim() ? 1 : 0);
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🧭 Framework</h3>
-          <p className="text-xs text-muted mt-0.5">
-            Le choix fondateur. Next.js 16 = combo dominant 2026 pour SaaS.
-          </p>
-        </div>
-        <BlockStatus filled={filled} total={2} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🧭"
+      title="Framework"
+      description="Le choix fondateur. Next.js 16 = combo dominant 2026 pour SaaS."
+      filled={filled}
+      total={2}
+      storageKey="mindeck:technique:frontend:framework:open"
+    >
       <div className="grid sm:grid-cols-2 gap-2">
         {FRAMEWORKS.map((f) => (
           <button
@@ -78,6 +75,6 @@ export default function FrameworkBlock({
           />
         </label>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

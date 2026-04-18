@@ -1,7 +1,7 @@
 "use client";
 
 import type { AuthSecState, PasswordPolicy, SecretsStorage } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const STORAGES: { value: SecretsStorage; label: string; hint: string }[] = [
   { value: "env-vars", label: ".env.local", hint: "Dev local gitignored." },
@@ -28,15 +28,14 @@ export default function SecretsBlock({ state, onChange }: { state: AuthSecState;
   const filled = (state.secretsStorage ? 1 : 0) + (state.secretsRotation ? 1 : 0) + (state.passwordPolicy ? 1 : 0) + (state.hibpCheckEnabled ? 1 : 0) + (state.auditLogEnabled ? 1 : 0);
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🔐 Secrets & Password policy</h3>
-          <p className="text-xs text-muted mt-0.5">Où vivent les secrets + rotation + NIST password policy.</p>
-        </div>
-        <BlockStatus filled={filled} total={5} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🔐"
+      title="Secrets & Password policy"
+      description="Où vivent les secrets + rotation + NIST password policy."
+      filled={filled}
+      total={5}
+      storageKey="mindeck:technique:auth-security:secrets:open"
+    >
       <div>
         <div className="text-xs font-semibold mb-2">Storage secrets</div>
         <div className="grid sm:grid-cols-2 gap-2">
@@ -93,6 +92,6 @@ export default function SecretsBlock({ state, onChange }: { state: AuthSecState;
           placeholder="Ex: Vercel secrets + rotation trimestrielle + audit_logs table Supabase"
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import type { CostsState, PaymentProcessor, PricingStrategy } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const PROCESSORS: { value: PaymentProcessor; label: string; hint: string }[] = [
   { value: "stripe", label: "Stripe", hint: "🔥 Standard. 2.9% + 30¢. Tu gères TVA." },
@@ -30,14 +30,14 @@ export default function UnitEconomicsBlock({ state, onChange }: { state: CostsSt
   const payback = arpu > 0 && cac > 0 ? (cac / arpu).toFixed(1) : "—";
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">📈 Unit economics</h3>
-          <p className="text-xs text-muted mt-0.5">ARPU × Lifetime = LTV. Cible LTV:CAC &gt; 3x.</p>
-        </div>
-        <BlockStatus filled={filled} total={5} />
-      </div>
+    <CollapsibleSection
+      emoji="📈"
+      title="Unit economics"
+      description="ARPU × Lifetime = LTV. Cible LTV:CAC > 3x."
+      filled={filled}
+      total={5}
+      storageKey="mindeck:technique:costs-compliance:unit:open"
+    >
 
       <div className="grid sm:grid-cols-4 gap-3">
         <label className="block space-y-1.5">
@@ -93,6 +93,6 @@ export default function UnitEconomicsBlock({ state, onChange }: { state: CostsSt
           ))}
         </div>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

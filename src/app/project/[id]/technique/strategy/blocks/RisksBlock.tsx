@@ -1,7 +1,7 @@
 "use client";
 
 import { makeRiskId, type RiskRow, type StrategyState } from "../state";
-import BlockStatus from "../components/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const LEVELS: { value: RiskRow["probability"]; label: string; color: string }[] = [
   { value: "low", label: "Faible", color: "text-green-600 dark:text-green-400" },
@@ -52,18 +52,14 @@ export default function RisksBlock({
   }
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">⚠️ Hypothèses risquées</h3>
-          <p className="text-xs text-muted mt-0.5">
-            Chaque techno porte des risques cachés. Les lister les rend visibles avec un test de
-            validation + deadline.
-          </p>
-        </div>
-        <BlockStatus filled={valid} total={Math.max(valid, 2)} label={`${valid} risque(s) validé(s)`} />
-      </div>
-
+    <CollapsibleSection
+      emoji="⚠️"
+      title="Hypothèses risquées"
+      description="Chaque techno porte des risques cachés. Les lister les rend visibles avec un test de validation + deadline."
+      filled={valid}
+      total={Math.max(valid, 2)}
+      storageKey="mindeck:technique:strategy:risks:open"
+    >
       {state.risks.length === 0 && (
         <div className="bg-background/60 border border-dashed border-border rounded-xl p-4 space-y-3">
           <p className="text-xs text-muted">Aucune hypothèse documentée. Suggestions :</p>
@@ -175,6 +171,6 @@ export default function RisksBlock({
           </button>
         </div>
       )}
-    </section>
+    </CollapsibleSection>
   );
 }

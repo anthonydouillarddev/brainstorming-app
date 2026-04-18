@@ -1,7 +1,7 @@
 "use client";
 
 import type { DriverRow, StrategyState } from "../state";
-import BlockStatus from "../components/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 export default function DriversBlock({
   state,
@@ -19,17 +19,14 @@ export default function DriversBlock({
   }
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">⚖️ Drivers de décision</h3>
-          <p className="text-xs text-muted mt-0.5">
-            Pondère les critères selon ton projet. Remplis au moins 3 raisons — ça structure ton ADR.
-          </p>
-        </div>
-        <BlockStatus filled={filled} total={state.drivers.length} />
-      </div>
-
+    <CollapsibleSection
+      emoji="⚖️"
+      title="Drivers de décision"
+      description="Pondère les critères selon ton projet. Remplis au moins 3 raisons — ça structure ton ADR."
+      filled={filled}
+      total={state.drivers.length}
+      storageKey="mindeck:technique:strategy:drivers:open"
+    >
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -81,6 +78,6 @@ export default function DriversBlock({
           </tbody>
         </table>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

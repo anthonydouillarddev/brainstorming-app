@@ -1,7 +1,7 @@
 "use client";
 
 import type { MetricsTool, ObservabilityState } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const METRICS: { value: MetricsTool; label: string; freeTier: string; hint: string }[] = [
   { value: "posthog", label: "PostHog", freeTier: "1M events/mo", hint: "🔥 All-in-one (analytics + replay + flags)." },
@@ -14,14 +14,14 @@ const METRICS: { value: MetricsTool; label: string; freeTier: string; hint: stri
 export default function MetricsBlock({ state, onChange }: { state: ObservabilityState; onChange: (p: Partial<ObservabilityState>) => void; }) {
   const filled = (state.metricsTool && state.metricsTool !== "none" ? 1 : 0) + (state.sessionReplay ? 1 : 0) + (state.sloAvailability.trim() ? 1 : 0) + (state.doraTracking ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">📊 Metrics produit & SLO</h3>
-          <p className="text-xs text-muted mt-0.5">DAU/MAU + retention + fiabilité mesurable (Google SRE).</p>
-        </div>
-        <BlockStatus filled={filled} total={4} />
-      </div>
+    <CollapsibleSection
+      emoji="📊"
+      title="Metrics produit & SLO"
+      description="DAU/MAU + retention + fiabilité mesurable (Google SRE)."
+      filled={filled}
+      total={4}
+      storageKey="mindeck:technique:observability:metrics:open"
+    >
       <div className="grid sm:grid-cols-2 gap-2">
         {METRICS.map((m) => (
           <button key={m.value} type="button" onClick={() => onChange({ metricsTool: m.value })}
@@ -57,6 +57,6 @@ export default function MetricsBlock({ state, onChange }: { state: Observability
           placeholder="Ex: PostHog events 'project_created', 'design_completed'. SLO recalculé mensuel."
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

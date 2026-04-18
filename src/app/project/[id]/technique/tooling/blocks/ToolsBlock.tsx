@@ -3,7 +3,7 @@
 import { COMMON_TOOLS, TOOLS_BY_PROJECT_TYPE, type ToolCategory } from "@/lib/technique/tooling-presets";
 import type { ProjectType as SvcProjectType } from "@/lib/technique/services-catalog";
 import type { ToolingState, ToolSelection } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 export default function ToolsBlock({
   state,
@@ -33,17 +33,15 @@ export default function ToolsBlock({
   }
 
   return (
-    <div className="space-y-5">
-      <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-4">
-        <BlockStatus filled={enabled} total={categories.length} label={`${enabled} outils sélectionnés`} />
-        <p className="text-xs text-muted mt-2">
-          {categories.length} catégories : {COMMON_TOOLS.length} communes + {TOOLS_BY_PROJECT_TYPE[projectType].length} spécifiques au type{" "}
-          <strong>{projectType}</strong>.
-        </p>
-      </section>
-
-      <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-3">
-        <h3 className="text-base font-bold">🛠️ Outils</h3>
+    <CollapsibleSection
+      emoji="🛠️"
+      title="Outils"
+      description={`${categories.length} catégories (${COMMON_TOOLS.length} communes + ${TOOLS_BY_PROJECT_TYPE[projectType].length} spécifiques au type ${projectType}).`}
+      filled={enabled}
+      total={categories.length}
+      storageKey="mindeck:technique:tooling:tools:open"
+    >
+      <div>
         <div className="space-y-2">
           {categories.map((c) => {
             const sel = findSelection(c.id);
@@ -98,7 +96,7 @@ export default function ToolsBlock({
             );
           })}
         </div>
-      </section>
-    </div>
+      </div>
+    </CollapsibleSection>
   );
 }

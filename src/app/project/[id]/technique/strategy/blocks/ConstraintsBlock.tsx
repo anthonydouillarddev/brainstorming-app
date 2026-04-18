@@ -1,7 +1,7 @@
 "use client";
 
 import type { StrategyState } from "../state";
-import BlockStatus from "../components/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const BUDGETS: { value: StrategyState["budget"]; label: string }[] = [
   { value: "free", label: "Gratuit uniquement" },
@@ -54,17 +54,14 @@ export default function ConstraintsBlock({
   ].filter((v) => v !== "").length;
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">📌 Contraintes du projet</h3>
-          <p className="text-xs text-muted mt-0.5">
-            Nomme les vraies limites avant de choisir une techno. Ça évite les choix tech-driven.
-          </p>
-        </div>
-        <BlockStatus filled={filled} total={5} />
-      </div>
-
+    <CollapsibleSection
+      emoji="📌"
+      title="Contraintes du projet"
+      description="Nomme les vraies limites avant de choisir une techno. Ça évite les choix tech-driven."
+      filled={filled}
+      total={5}
+      storageKey="mindeck:technique:strategy:constraints:open"
+    >
       <div className="grid md:grid-cols-2 gap-4">
         <FieldChoice
           label="Budget mensuel outils"
@@ -102,7 +99,7 @@ export default function ConstraintsBlock({
           onChange={(v) => onChange({ lockInTolerance: v })}
         />
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }
 

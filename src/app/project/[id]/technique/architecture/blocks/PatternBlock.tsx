@@ -1,7 +1,7 @@
 "use client";
 
 import type { ArchPattern, ArchitectureState } from "../state";
-import BlockStatus from "../components/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const PATTERNS: { value: ArchPattern; label: string; emoji: string; hint: string }[] = [
   {
@@ -49,17 +49,14 @@ export default function PatternBlock({
     (state.whenRevisit.trim().length > 0 ? 1 : 0);
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🏗️ Pattern architectural</h3>
-          <p className="text-xs text-muted mt-0.5">
-            La décision fondatrice — détermine coût, vélocité, opérabilité.
-          </p>
-        </div>
-        <BlockStatus filled={filled} total={3} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🏗️"
+      title="Pattern architectural"
+      description="La décision fondatrice — détermine coût, vélocité, opérabilité."
+      filled={filled}
+      total={3}
+      storageKey="mindeck:technique:architecture:pattern:open"
+    >
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {PATTERNS.map((p) => (
           <button
@@ -108,6 +105,6 @@ export default function PatternBlock({
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
         />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

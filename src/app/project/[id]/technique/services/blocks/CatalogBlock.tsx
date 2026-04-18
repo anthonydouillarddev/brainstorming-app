@@ -8,6 +8,7 @@ import {
   type ProjectType as ServiceProjectType,
 } from "@/lib/technique/services-catalog";
 import type { CategorySelection, CategoryStatus, ServicesState } from "../state";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const STATUSES: { value: CategoryStatus; label: string; emoji: string }[] = [
   { value: "todo", label: "À décider", emoji: "⏳" },
@@ -61,15 +62,24 @@ export default function CatalogBlock({
       {groupedEntries.map(([group, cats]) => {
         if (cats.length === 0) return null;
         const meta = SERVICE_GROUP_META[group];
+        const used = cats.filter((c) => {
+          const sel = state.selections.find((s) => s.categoryId === c.id);
+          return sel?.status === "used";
+        }).length;
+        const decided = cats.filter((c) => {
+          const sel = state.selections.find((s) => s.categoryId === c.id);
+          return sel?.status === "used" || sel?.status === "skip";
+        }).length;
         return (
-          <section
+          <CollapsibleSection
             key={group}
-            className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-3"
+            emoji={meta.emoji}
+            title={meta.label}
+            description={`${used} utilisé(s) · ${decided}/${cats.length} décidés`}
+            filled={decided}
+            total={cats.length}
+            storageKey={`mindeck:technique:services:${group}:open`}
           >
-            <h3 className="text-base font-bold">
-              {meta.emoji} {meta.label}
-            </h3>
-
             <div className="space-y-2">
               {cats.map((c) => {
                 const sel = state.selections.find((s) => s.categoryId === c.id);
@@ -138,7 +148,7 @@ export default function CatalogBlock({
                 );
               })}
             </div>
-          </section>
+          </CollapsibleSection>
         );
       })}
     </div>

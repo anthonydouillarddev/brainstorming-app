@@ -2,7 +2,7 @@
 
 import type { OS } from "@/lib/technique/tooling-presets";
 import type { ToolingState } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const OS_OPTIONS: { value: OS; label: string; hint: string }[] = [
   { value: "macos", label: "macOS", hint: "Raycast, Warp, Xcode natif" },
@@ -15,15 +15,14 @@ const OS_OPTIONS: { value: OS; label: string; hint: string }[] = [
 export default function OsBudgetBlock({ state, onChange }: { state: ToolingState; onChange: (p: Partial<ToolingState>) => void; }) {
   const filled = (state.os ? 1 : 0) + (state.annualBudgetUsd.trim() ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">💻 OS & Budget</h3>
-          <p className="text-xs text-muted mt-0.5">Ton setup perso détermine quels outils sont compatibles.</p>
-        </div>
-        <BlockStatus filled={filled} total={2} />
-      </div>
-
+    <CollapsibleSection
+      emoji="💻"
+      title="OS & Budget"
+      description="Ton setup perso détermine quels outils sont compatibles."
+      filled={filled}
+      total={2}
+      storageKey="mindeck:technique:tooling:os-budget:open"
+    >
       <div>
         <div className="text-xs font-semibold mb-2">OS principal</div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-2">
@@ -49,6 +48,6 @@ export default function OsBudgetBlock({ state, onChange }: { state: ToolingState
           placeholder="Ex: Macbook M3 + écran externe 27'. Cursor + Claude Code + Obsidian + Warp."
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

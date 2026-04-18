@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import CollapsibleSection from "./CollapsibleSection";
 
 export interface ExportFormat {
   value: string;
@@ -48,14 +49,13 @@ export default function ExportPanel({
   }
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div>
-        <h3 className="text-base font-bold">📤 Exports</h3>
-        <p className="text-xs text-muted mt-0.5">
-          Copie ou télécharge dans le format qui te sert.
-        </p>
-      </div>
-
+    <CollapsibleSection
+      emoji="📤"
+      title="Exports"
+      description="Copie ou télécharge dans le format qui te sert."
+      storageKey={`mindeck:technique:exports:${filenamePrefix}:open`}
+      defaultOpen={false}
+    >
       <div className="flex flex-wrap gap-2">
         {formats.map((f) => (
           <button
@@ -100,6 +100,6 @@ export default function ExportPanel({
           {preview}
         </pre>
       </details>
-    </section>
+    </CollapsibleSection>
   );
 }

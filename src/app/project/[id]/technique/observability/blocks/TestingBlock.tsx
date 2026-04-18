@@ -1,7 +1,7 @@
 "use client";
 
 import type { ObservabilityState, TestFramework } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const UNIT: { value: TestFramework; label: string; hint: string }[] = [
   { value: "vitest", label: "Vitest", hint: "🔥 5x plus rapide que Jest, ESM natif." },
@@ -18,14 +18,14 @@ const E2E: { value: TestFramework; label: string; hint: string }[] = [
 export default function TestingBlock({ state, onChange }: { state: ObservabilityState; onChange: (p: Partial<ObservabilityState>) => void; }) {
   const filled = (state.unitFramework && state.unitFramework !== "none" ? 1 : 0) + (state.e2eFramework && state.e2eFramework !== "none" ? 1 : 0) + (state.coverageTarget.trim() ? 1 : 0) + (state.mutationTesting ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🧪 Testing strategy</h3>
-          <p className="text-xs text-muted mt-0.5">Unit (critical path) + e2e (auth/create/export). Coverage 60-70%.</p>
-        </div>
-        <BlockStatus filled={filled} total={4} />
-      </div>
+    <CollapsibleSection
+      emoji="🧪"
+      title="Testing strategy"
+      description="Unit (critical path) + e2e (auth/create/export). Coverage 60-70%."
+      filled={filled}
+      total={4}
+      storageKey="mindeck:technique:observability:testing:open"
+    >
       <div>
         <div className="text-xs font-semibold mb-2">Unit testing</div>
         <div className="grid sm:grid-cols-3 gap-2">
@@ -61,6 +61,6 @@ export default function TestingBlock({ state, onChange }: { state: Observability
           <div><div className="text-xs font-semibold">Mutation testing</div><div className="text-[11px] text-muted">Stryker = qualité tests &gt; coverage obsession.</div></div>
         </label>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

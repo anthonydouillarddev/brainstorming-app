@@ -1,7 +1,7 @@
 "use client";
 
 import type { HostingPlatform, HostingState } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const PLATFORMS: { value: HostingPlatform; label: string; score: string; hint: string }[] = [
   { value: "vercel", label: "Vercel", score: "🔥", hint: "Défaut Mindeck. Next.js native, Fluid Compute 2025." },
@@ -18,15 +18,14 @@ const PLATFORMS: { value: HostingPlatform; label: string; score: string; hint: s
 export default function HostingPlatformBlock({ state, onChange }: { state: HostingState; onChange: (p: Partial<HostingState>) => void; }) {
   const filled = (state.platform ? 1 : 0) + (state.httpsAuto ? 1 : 0) + (state.hstsEnabled ? 1 : 0) + (state.domainProvider.trim() ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🚀 Plateforme d&apos;hébergement</h3>
-          <p className="text-xs text-muted mt-0.5">Où vit ton app sur internet.</p>
-        </div>
-        <BlockStatus filled={filled} total={4} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🚀"
+      title="Plateforme d'hébergement"
+      description="Où vit ton app sur internet."
+      filled={filled}
+      total={4}
+      storageKey="mindeck:technique:hosting-devops:platform:open"
+    >
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {PLATFORMS.map((p) => (
           <button key={p.value} type="button" onClick={() => onChange({ platform: p.value })}
@@ -62,6 +61,6 @@ export default function HostingPlatformBlock({ state, onChange }: { state: Hosti
           <div><div className="text-xs font-semibold">HSTS activé</div><div className="text-[11px] text-muted">max-age 1 an + includeSubDomains.</div></div>
         </label>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

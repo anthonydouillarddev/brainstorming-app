@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Decision } from "@/lib/types";
 import type { StrategyState } from "../state";
-import BlockStatus from "../components/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const STACK_FIELDS: {
   key: keyof Pick<
@@ -117,17 +117,14 @@ export default function DecisionBlock({
   }
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🧭 Décision (ADR léger)</h3>
-          <p className="text-xs text-muted mt-0.5">
-            Documente le pourquoi maintenant. Tu peux lier à une ADR existante ou en créer une.
-          </p>
-        </div>
-        <BlockStatus filled={filled} total={3} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🧭"
+      title="Décision (ADR léger)"
+      description="Documente le pourquoi maintenant. Tu peux lier à une ADR existante ou en créer une."
+      filled={filled}
+      total={3}
+      storageKey="mindeck:technique:strategy:decision:open"
+    >
       {/* ADR picker */}
       {adrs.length > 0 && (
         <div className="bg-background/60 border border-border rounded-xl p-3 flex items-center gap-3 flex-wrap">
@@ -248,6 +245,6 @@ export default function DecisionBlock({
           </button>
         </div>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

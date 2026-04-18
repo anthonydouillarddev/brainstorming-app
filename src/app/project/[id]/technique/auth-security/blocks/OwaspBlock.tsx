@@ -2,7 +2,7 @@
 
 import type { AuthSecState, OwaspStatus } from "../state";
 import { OWASP_ITEMS } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 export default function OwaspBlock({ state, onChange }: { state: AuthSecState; onChange: (p: Partial<AuthSecState>) => void; }) {
   const compliant = state.owaspStatuses.filter((s) => s.status === "compliant" || s.status === "not-applicable").length;
@@ -14,15 +14,14 @@ export default function OwaspBlock({ state, onChange }: { state: AuthSecState; o
   }
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🛡️ OWASP Top 10:2025</h3>
-          <p className="text-xs text-muted mt-0.5">Référence absolue sécurité applicative. Coche ce qui est traité.</p>
-        </div>
-        <BlockStatus filled={compliant} total={OWASP_ITEMS.length} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🛡️"
+      title="OWASP Top 10:2025"
+      description="Référence absolue sécurité applicative. Coche ce qui est traité."
+      filled={compliant}
+      total={OWASP_ITEMS.length}
+      storageKey="mindeck:technique:auth-security:owasp:open"
+    >
       <div className="space-y-2">
         {OWASP_ITEMS.map((item) => {
           const st = state.owaspStatuses.find((s) => s.id === item.id);
@@ -53,6 +52,6 @@ export default function OwaspBlock({ state, onChange }: { state: AuthSecState; o
           );
         })}
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

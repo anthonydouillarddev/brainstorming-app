@@ -1,7 +1,7 @@
 "use client";
 
 import type { DataState, DbHosting } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const HOSTINGS: { value: DbHosting; label: string; pricing: string; hint: string }[] = [
   { value: "supabase", label: "Supabase", pricing: "Free → $25/mo", hint: "🔥 Postgres + Auth + Storage + RLS. Défaut Mindeck." },
@@ -18,14 +18,14 @@ const HOSTINGS: { value: DbHosting; label: string; pricing: string; hint: string
 export default function HostingBlock({ state, onChange }: { state: DataState; onChange: (p: Partial<DataState>) => void; }) {
   const filled = state.dbHosting ? 1 : 0;
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">☁️ Hosting DB</h3>
-          <p className="text-xs text-muted mt-0.5">Où vit ta base. Managed recommandé solo.</p>
-        </div>
-        <BlockStatus filled={filled} total={1} />
-      </div>
+    <CollapsibleSection
+      emoji="☁️"
+      title="Hosting DB"
+      description="Où vit ta base. Managed recommandé solo."
+      filled={filled}
+      total={1}
+      storageKey="mindeck:technique:data:hosting:open"
+    >
       <div className="grid sm:grid-cols-2 gap-2">
         {HOSTINGS.map((h) => (
           <button key={h.value} type="button" onClick={() => onChange({ dbHosting: h.value })}
@@ -41,6 +41,6 @@ export default function HostingBlock({ state, onChange }: { state: DataState; on
           placeholder="Ex: Supabase Pro $25/mo — region EU Ireland"
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

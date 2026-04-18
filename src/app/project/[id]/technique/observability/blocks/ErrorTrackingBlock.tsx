@@ -1,7 +1,7 @@
 "use client";
 
 import type { ErrorTracker, ObservabilityState } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const TRACKERS: { value: ErrorTracker; label: string; freeTier: string; hint: string }[] = [
   { value: "sentry", label: "Sentry", freeTier: "5k events/mo", hint: "🔥 Leader. Stack traces, replay, breadcrumbs." },
@@ -14,14 +14,14 @@ const TRACKERS: { value: ErrorTracker; label: string; freeTier: string; hint: st
 export default function ErrorTrackingBlock({ state, onChange }: { state: ObservabilityState; onChange: (p: Partial<ObservabilityState>) => void; }) {
   const filled = (state.errorTracker && state.errorTracker !== "none" ? 1 : 0) + (state.piiRedaction ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🐞 Error tracking</h3>
-          <p className="text-xs text-muted mt-0.5">Savoir quand ton app crash. PII redaction obligatoire.</p>
-        </div>
-        <BlockStatus filled={filled} total={2} />
-      </div>
+    <CollapsibleSection
+      emoji="🐞"
+      title="Error tracking"
+      description="Savoir quand ton app crash. PII redaction obligatoire."
+      filled={filled}
+      total={2}
+      storageKey="mindeck:technique:observability:errors:open"
+    >
       <div className="grid sm:grid-cols-2 gap-2">
         {TRACKERS.map((t) => (
           <button key={t.value} type="button" onClick={() => onChange({ errorTracker: t.value })}
@@ -35,6 +35,6 @@ export default function ErrorTrackingBlock({ state, onChange }: { state: Observa
         <input type="checkbox" checked={state.piiRedaction} onChange={(e) => onChange({ piiRedaction: e.target.checked })} className="h-4 w-4 rounded border-border mt-0.5" />
         <div><div className="text-xs font-semibold">PII / secrets redaction</div><div className="text-[11px] text-muted">Mask emails, tokens, passwords avant envoi au tracker.</div></div>
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import type { FrontendState, RenderingStrategy } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const STRATEGIES: { value: RenderingStrategy; label: string; hint: string }[] = [
   { value: "ssr", label: "SSR", hint: "Server-Side Rendering — HTML au runtime" },
@@ -26,17 +26,14 @@ export default function RenderingBlock({
     (state.perfTargetBundleKb.trim() ? 1 : 0);
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">⚡ Rendering strategy</h3>
-          <p className="text-xs text-muted mt-0.5">
-            Quelle perf cible ? Core Web Vitals Mindeck : LCP &lt; 1.8s · CLS &lt; 0.1.
-          </p>
-        </div>
-        <BlockStatus filled={filled} total={3} />
-      </div>
-
+    <CollapsibleSection
+      emoji="⚡"
+      title="Rendering strategy"
+      description="Quelle perf cible ? Core Web Vitals Mindeck : LCP < 1.8s · CLS < 0.1."
+      filled={filled}
+      total={3}
+      storageKey="mindeck:technique:frontend:rendering:open"
+    >
       <div className="grid sm:grid-cols-3 lg:grid-cols-4 gap-2">
         {STRATEGIES.map((s) => (
           <button
@@ -92,6 +89,6 @@ export default function RenderingBlock({
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
         />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

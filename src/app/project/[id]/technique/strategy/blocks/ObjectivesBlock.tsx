@@ -1,7 +1,7 @@
 "use client";
 
 import type { StrategyState } from "../state";
-import BlockStatus from "../components/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const SCALES: { value: StrategyState["scaleHorizonUsers"]; label: string }[] = [
   { value: "100", label: "100 users" },
@@ -26,17 +26,14 @@ export default function ObjectivesBlock({
     (state.acceptableTradeoffs.trim() ? 1 : 0);
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🎯 Objectifs métier</h3>
-          <p className="text-xs text-muted mt-0.5">
-            Relie la tech aux vraies métriques. &quot;Scalable&quot; n&apos;existe pas en abstrait.
-          </p>
-        </div>
-        <BlockStatus filled={filled} total={4} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🎯"
+      title="Objectifs métier"
+      description="Relie la tech aux vraies métriques. 'Scalable' n'existe pas en abstrait."
+      filled={filled}
+      total={4}
+      storageKey="mindeck:technique:strategy:objectives:open"
+    >
       <label className="block space-y-1.5">
         <span className="text-xs font-semibold">Métrique de succès *</span>
         <span className="block text-[11px] text-muted">
@@ -115,6 +112,6 @@ export default function ObjectivesBlock({
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
         />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

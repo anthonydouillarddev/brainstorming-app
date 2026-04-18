@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { AuthSecState, RbacApproach } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const APPROACHES: { value: RbacApproach; label: string; hint: string }[] = [
   { value: "app-metadata", label: "app_metadata (JWT)", hint: "🔥 Sûr — non modifiable par user." },
@@ -27,15 +27,14 @@ export default function RbacBlock({ state, onChange }: { state: AuthSecState; on
   }
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">👥 RBAC & Authorization</h3>
-          <p className="text-xs text-muted mt-0.5">Qui fait quoi. RLS DB vérifie ensuite (voir chap 5).</p>
-        </div>
-        <BlockStatus filled={filled} total={2} />
-      </div>
-
+    <CollapsibleSection
+      emoji="👥"
+      title="RBAC & Authorization"
+      description="Qui fait quoi. RLS DB vérifie ensuite (voir chap 5)."
+      filled={filled}
+      total={2}
+      storageKey="mindeck:technique:auth-security:rbac:open"
+    >
       <div className="grid sm:grid-cols-2 gap-2">
         {APPROACHES.map((a) => (
           <button key={a.value} type="button" onClick={() => onChange({ rbacApproach: a.value })}
@@ -69,6 +68,6 @@ export default function RbacBlock({ state, onChange }: { state: AuthSecState; on
           </div>
         )}
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

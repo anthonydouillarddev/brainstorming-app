@@ -1,7 +1,7 @@
 "use client";
 
 import type { LoggerLib, ObservabilityState, UptimeTool } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const UPTIMES: { value: UptimeTool; label: string; freeTier: string; hint: string }[] = [
   { value: "better-stack", label: "Better Stack", freeTier: "10 monitors", hint: "🔥 Recommandé solo. Alertes ∞." },
@@ -20,14 +20,14 @@ const LOGGERS: { value: LoggerLib; label: string; hint: string }[] = [
 export default function UptimeLogsBlock({ state, onChange }: { state: ObservabilityState; onChange: (p: Partial<ObservabilityState>) => void; }) {
   const filled = (state.uptimeTool && state.uptimeTool !== "none" ? 1 : 0) + (state.uptimeCheckIntervalMin.trim() ? 1 : 0) + (state.loggerLib ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">⏱️ Uptime & logs</h3>
-          <p className="text-xs text-muted mt-0.5">Monitor endpoint /health + structured logging JSON.</p>
-        </div>
-        <BlockStatus filled={filled} total={3} />
-      </div>
+    <CollapsibleSection
+      emoji="⏱️"
+      title="Uptime & logs"
+      description="Monitor endpoint /health + structured logging JSON."
+      filled={filled}
+      total={3}
+      storageKey="mindeck:technique:observability:uptime:open"
+    >
       <div>
         <div className="text-xs font-semibold mb-2">Uptime monitoring</div>
         <div className="grid sm:grid-cols-2 gap-2">
@@ -57,6 +57,6 @@ export default function UptimeLogsBlock({ state, onChange }: { state: Observabil
           ))}
         </div>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

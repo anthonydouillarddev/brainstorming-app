@@ -1,7 +1,7 @@
 "use client";
 
 import type { CiCdTool, HostingState } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const TOOLS: { value: CiCdTool; label: string; hint: string }[] = [
   { value: "github-actions", label: "GitHub Actions", hint: "🔥 Gratuit pour repos publics + 2000 min/mois privés." },
@@ -14,15 +14,14 @@ const TOOLS: { value: CiCdTool; label: string; hint: string }[] = [
 export default function CiCdBlock({ state, onChange }: { state: HostingState; onChange: (p: Partial<HostingState>) => void; }) {
   const filled = (state.ciCdTool ? 1 : 0) + (state.runsLint ? 1 : 0) + (state.runsTypeCheck ? 1 : 0) + (state.runsTests ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🔄 CI/CD pipeline</h3>
-          <p className="text-xs text-muted mt-0.5">Vérifier lint/types/tests avant merge/deploy. Non-négociable.</p>
-        </div>
-        <BlockStatus filled={filled} total={4} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🔄"
+      title="CI/CD pipeline"
+      description="Vérifier lint/types/tests avant merge/deploy. Non-négociable."
+      filled={filled}
+      total={4}
+      storageKey="mindeck:technique:hosting-devops:cicd:open"
+    >
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {TOOLS.map((t) => (
           <button key={t.value} type="button" onClick={() => onChange({ ciCdTool: t.value })}
@@ -47,6 +46,6 @@ export default function CiCdBlock({ state, onChange }: { state: HostingState; on
           <div><div className="text-xs font-semibold">Tests</div><div className="text-[11px] text-muted">Vitest / Playwright</div></div>
         </label>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

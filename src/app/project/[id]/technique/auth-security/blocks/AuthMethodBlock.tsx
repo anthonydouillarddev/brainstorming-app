@@ -1,7 +1,7 @@
 "use client";
 
 import type { AuthMethodValue, AuthSecState, SessionStorage as SessionStorageType } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const METHODS: { value: AuthMethodValue; label: string; hint: string }[] = [
   { value: "email-password", label: "Email + password", hint: "Classique. Ajoute MFA obligatoire." },
@@ -22,15 +22,14 @@ const STORAGES: { value: SessionStorageType; label: string; hint: string }[] = [
 export default function AuthMethodBlock({ state, onChange }: { state: AuthSecState; onChange: (p: Partial<AuthSecState>) => void; }) {
   const filled = (state.authMethod ? 1 : 0) + (state.authProvider.trim() ? 1 : 0) + (state.sessionStorage ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🔑 Auth method & session</h3>
-          <p className="text-xs text-muted mt-0.5">Qui se connecte + comment les sessions sont stockées.</p>
-        </div>
-        <BlockStatus filled={filled} total={3} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🔑"
+      title="Auth method & session"
+      description="Qui se connecte + comment les sessions sont stockées."
+      filled={filled}
+      total={3}
+      storageKey="mindeck:technique:auth-security:auth:open"
+    >
       <div>
         <div className="text-xs font-semibold mb-2">Méthode(s) d&apos;auth</div>
         <div className="grid sm:grid-cols-2 gap-2">
@@ -87,6 +86,6 @@ export default function AuthMethodBlock({ state, onChange }: { state: AuthSecSta
           <div><div className="text-xs font-semibold">Passkeys supportés</div><div className="text-[11px] text-muted">WebAuthn. Tendance 2026.</div></div>
         </label>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

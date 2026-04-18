@@ -1,7 +1,7 @@
 "use client";
 
 import type { ArchitectureState, Concurrency } from "../state";
-import BlockStatus from "../components/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const CONCURRENCY: { value: Concurrency; label: string; hint: string }[] = [
   { value: "optimistic", label: "Optimistic update", hint: "UI update immédiat, rollback si erreur. UX rapide." },
@@ -24,17 +24,14 @@ export default function DataFlowBlock({
     (state.stateManagement.trim().length > 0 ? 1 : 0);
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🔄 Flux de données</h3>
-          <p className="text-xs text-muted mt-0.5">
-            Happy path + error handling + concurrency. Prévient race conditions et failles auth.
-          </p>
-        </div>
-        <BlockStatus filled={filled} total={4} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🔄"
+      title="Flux de données"
+      description="Happy path + error handling + concurrency. Prévient race conditions et failles auth."
+      filled={filled}
+      total={4}
+      storageKey="mindeck:technique:architecture:dataflow:open"
+    >
       <label className="block space-y-1.5">
         <span className="text-xs font-semibold">Happy path d&apos;une action clé</span>
         <span className="block text-[11px] text-muted">
@@ -97,6 +94,6 @@ export default function DataFlowBlock({
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
         />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

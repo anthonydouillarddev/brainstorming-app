@@ -1,7 +1,7 @@
 "use client";
 
 import type { HostingState } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const ENVS: { key: keyof HostingState; label: string; hint: string }[] = [
   { key: "hasDevEnv", label: "Dev", hint: "Local — localhost:3000" },
@@ -13,15 +13,14 @@ const ENVS: { key: keyof HostingState; label: string; hint: string }[] = [
 export default function EnvironmentsBlock({ state, onChange }: { state: HostingState; onChange: (p: Partial<HostingState>) => void; }) {
   const filled = ENVS.filter((e) => state[e.key]).length + (state.dbBranching ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🌳 Environnements</h3>
-          <p className="text-xs text-muted mt-0.5">Dev / Preview / Staging / Prod — chaque env = ses env vars.</p>
-        </div>
-        <BlockStatus filled={filled} total={5} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🌳"
+      title="Environnements"
+      description="Dev / Preview / Staging / Prod — chaque env = ses env vars."
+      filled={filled}
+      total={5}
+      storageKey="mindeck:technique:hosting-devops:envs:open"
+    >
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
         {ENVS.map((e) => (
           <label key={String(e.key)} className="flex items-start gap-3 cursor-pointer p-3 bg-background/60 border border-border rounded-xl">
@@ -46,6 +45,6 @@ export default function EnvironmentsBlock({ state, onChange }: { state: HostingS
           <div className="text-[11px] text-muted">Chaque PR = branche DB isolée, migrations auto.</div>
         </div>
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

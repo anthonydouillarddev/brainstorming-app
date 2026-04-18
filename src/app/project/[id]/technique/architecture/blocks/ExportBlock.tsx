@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ArchitectureState } from "../state";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 import { exportArchitectureMarkdown } from "../exports/markdown";
 import { exportArchitectureJson } from "../exports/json";
 import { exportArchitectureMermaid } from "../exports/mermaid";
@@ -79,14 +80,13 @@ export default function ExportBlock({
   const preview = generate();
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div>
-        <h3 className="text-base font-bold">📤 Exports</h3>
-        <p className="text-xs text-muted mt-0.5">
-          Markdown pour doc, Mermaid pour blueprint visuel, Claude brief pour scaffold.
-        </p>
-      </div>
-
+    <CollapsibleSection
+      emoji="📤"
+      title="Exports"
+      description="Markdown pour doc, Mermaid pour blueprint visuel, Claude brief pour scaffold."
+      storageKey="mindeck:technique:architecture:exports:open"
+      defaultOpen={false}
+    >
       <div className="flex flex-wrap gap-2">
         {FORMATS.map((f) => (
           <button
@@ -131,6 +131,6 @@ export default function ExportBlock({
           {preview}
         </pre>
       </details>
-    </section>
+    </CollapsibleSection>
   );
 }

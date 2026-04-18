@@ -1,7 +1,7 @@
 "use client";
 
 import type { DataState, DbEngine } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const ENGINES: { value: DbEngine; label: string; score: string; hint: string }[] = [
   { value: "postgres", label: "PostgreSQL", score: "🔥", hint: "Défaut 2026. RLS natif, pgvector, JSON." },
@@ -15,14 +15,14 @@ const ENGINES: { value: DbEngine; label: string; score: string; hint: string }[]
 export default function DbEngineBlock({ state, onChange }: { state: DataState; onChange: (p: Partial<DataState>) => void; }) {
   const filled = (state.dbEngine ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🗄️ Moteur de DB</h3>
-          <p className="text-xs text-muted mt-0.5">Postgres = 80% des bonnes réponses 2026.</p>
-        </div>
-        <BlockStatus filled={filled} total={1} />
-      </div>
+    <CollapsibleSection
+      emoji="🗄️"
+      title="Moteur de DB"
+      description="Postgres = 80% des bonnes réponses 2026."
+      filled={filled}
+      total={1}
+      storageKey="mindeck:technique:data:engine:open"
+    >
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {ENGINES.map((e) => (
           <button key={e.value} type="button" onClick={() => onChange({ dbEngine: e.value })}
@@ -38,6 +38,6 @@ export default function DbEngineBlock({ state, onChange }: { state: DataState; o
           placeholder="Ex: Postgres 16, pgvector pour RAG futur"
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

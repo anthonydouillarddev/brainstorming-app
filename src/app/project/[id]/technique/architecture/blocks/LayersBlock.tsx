@@ -1,7 +1,7 @@
 "use client";
 
 import { makeIntegrationId, type ArchitectureState, type Integration } from "../state";
-import BlockStatus from "../components/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const LAYERS: {
   key: keyof Pick<ArchitectureState, "frontendLayer" | "apiLayer" | "dataLayer" | "jobsLayer" | "cacheLayer">;
@@ -72,17 +72,14 @@ export default function LayersBlock({
   }
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">📚 Couches techniques</h3>
-          <p className="text-xs text-muted mt-0.5">
-            Qui écrit quoi, où les données circulent. Prévient les fuites d&apos;abstraction.
-          </p>
-        </div>
-        <BlockStatus filled={filled} total={LAYERS.length} />
-      </div>
-
+    <CollapsibleSection
+      emoji="📚"
+      title="Couches techniques"
+      description="Qui écrit quoi, où les données circulent. Prévient les fuites d'abstraction."
+      filled={filled}
+      total={LAYERS.length}
+      storageKey="mindeck:technique:architecture:layers:open"
+    >
       <div className="space-y-3">
         {LAYERS.map((l) => (
           <label key={l.key} className="block space-y-1.5">
@@ -148,6 +145,6 @@ export default function LayersBlock({
           </div>
         )}
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

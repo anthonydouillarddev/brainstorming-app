@@ -1,7 +1,7 @@
 "use client";
 
 import type { BackendState, Runtime } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const RUNTIMES: { value: Runtime; label: string; score: string; hint: string }[] = [
   { value: "node", label: "Node.js 22+", score: "🔥", hint: "Default Vercel. Écosystème max." },
@@ -19,15 +19,14 @@ export default function RuntimeBlock({ state, onChange }: { state: BackendState;
   const filled = (state.runtime ? 1 : 0) + (state.runtimeFramework.trim() ? 1 : 0);
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">⚙️ Runtime & langage</h3>
-          <p className="text-xs text-muted mt-0.5">Le langage que ton backend parle. Node reste le choix safe 2026.</p>
-        </div>
-        <BlockStatus filled={filled} total={2} />
-      </div>
-
+    <CollapsibleSection
+      emoji="⚙️"
+      title="Runtime & langage"
+      description="Le langage que ton backend parle. Node reste le choix safe 2026."
+      filled={filled}
+      total={2}
+      storageKey="mindeck:technique:backend:runtime:open"
+    >
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {RUNTIMES.map((r) => (
           <button
@@ -52,6 +51,6 @@ export default function RuntimeBlock({ state, onChange }: { state: BackendState;
           <input type="text" value={state.runtimeFramework} onChange={(e) => onChange({ runtimeFramework: e.target.value })} placeholder="Hono / Fastify / Next Server Actions / FastAPI" className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" />
         </label>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

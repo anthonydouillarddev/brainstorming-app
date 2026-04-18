@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { StrategyState } from "../state";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 import { exportStrategyMarkdown } from "../exports/markdown";
 import { exportStrategyJson } from "../exports/json";
 import { exportStrategyClaudeBrief } from "../exports/claude-brief";
@@ -70,15 +71,13 @@ export default function ExportBlock({
   const preview = generate();
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div>
-        <h3 className="text-base font-bold">📤 Exports</h3>
-        <p className="text-xs text-muted mt-0.5">
-          Télécharge ta stratégie dans le format qui te sert — Markdown pour Obsidian, JSON pour tes
-          outils, Claude brief pour scaffolder avec une IA.
-        </p>
-      </div>
-
+    <CollapsibleSection
+      emoji="📤"
+      title="Exports"
+      description="Markdown pour Obsidian, JSON pour tes outils, Claude brief pour scaffolder avec une IA."
+      storageKey="mindeck:technique:strategy:exports:open"
+      defaultOpen={false}
+    >
       <div className="flex flex-wrap gap-2">
         {FORMATS.map((f) => (
           <button
@@ -123,6 +122,6 @@ export default function ExportBlock({
           {preview}
         </pre>
       </details>
-    </section>
+    </CollapsibleSection>
   );
 }

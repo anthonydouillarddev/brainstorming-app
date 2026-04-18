@@ -1,7 +1,7 @@
 "use client";
 
 import type { BackendState, JobsSolution } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const JOBS: { value: JobsSolution; label: string; freeTier: string; hint: string }[] = [
   { value: "none", label: "Aucun", freeTier: "—", hint: "Pas de tâches async." },
@@ -17,15 +17,14 @@ export default function JobsBlock({ state, onChange }: { state: BackendState; on
   const filled = state.jobs ? 1 : 0;
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">⏱️ Background jobs</h3>
-          <p className="text-xs text-muted mt-0.5">Tâches async : emails, PDF, webhooks, cron. Inngest = défaut solo 2026.</p>
-        </div>
-        <BlockStatus filled={filled} total={1} />
-      </div>
-
+    <CollapsibleSection
+      emoji="⏱️"
+      title="Background jobs"
+      description="Tâches async : emails, PDF, webhooks, cron. Inngest = défaut solo 2026."
+      filled={filled}
+      total={1}
+      storageKey="mindeck:technique:backend:jobs:open"
+    >
       <div className="grid sm:grid-cols-2 gap-2">
         {JOBS.map((j) => (
           <button
@@ -44,6 +43,6 @@ export default function JobsBlock({ state, onChange }: { state: BackendState; on
         <span className="text-xs font-semibold">Notes</span>
         <textarea value={state.jobsNotes} onChange={(e) => onChange({ jobsNotes: e.target.value })} rows={2} placeholder="Ex: Inngest pour onboarding + cron daily digest. Vercel Cron pour purge corbeille." className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

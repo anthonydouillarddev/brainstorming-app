@@ -1,7 +1,7 @@
 "use client";
 
 import type { CostsState } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const GDPR_ITEMS: { key: keyof CostsState; label: string; hint: string }[] = [
   { key: "privacyPolicyReady", label: "Privacy Policy rédigée", hint: "Template CNIL disponible gratuit." },
@@ -16,15 +16,14 @@ const GDPR_ITEMS: { key: keyof CostsState; label: string; hint: string }[] = [
 export default function GdprLegalBlock({ state, onChange }: { state: CostsState; onChange: (p: Partial<CostsState>) => void; }) {
   const filled = GDPR_ITEMS.filter((g) => Boolean(state[g.key])).length;
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">⚖️ RGPD & Legal</h3>
-          <p className="text-xs text-muted mt-0.5">Non-compliance = amende CNIL 4% CA. Minimum viable pour EU.</p>
-        </div>
-        <BlockStatus filled={filled} total={GDPR_ITEMS.length} />
-      </div>
-
+    <CollapsibleSection
+      emoji="⚖️"
+      title="RGPD & Legal"
+      description="Non-compliance = amende CNIL 4% CA. Minimum viable pour EU."
+      filled={filled}
+      total={GDPR_ITEMS.length}
+      storageKey="mindeck:technique:costs-compliance:gdpr:open"
+    >
       <label className="flex items-start gap-3 cursor-pointer p-3 bg-background/60 border border-border rounded-xl">
         <input type="checkbox" checked={state.marketIsEu} onChange={(e) => onChange({ marketIsEu: e.target.checked })} className="h-4 w-4 rounded border-border mt-0.5" />
         <div>
@@ -56,6 +55,6 @@ export default function GdprLegalBlock({ state, onChange }: { state: CostsState;
           placeholder="Ex: Privacy Policy FR CNIL template + DPA Supabase EU Ireland. Cookies banner via Termly."
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

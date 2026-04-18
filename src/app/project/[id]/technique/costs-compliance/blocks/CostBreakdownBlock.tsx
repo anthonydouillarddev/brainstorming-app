@@ -1,7 +1,7 @@
 "use client";
 
 import type { CostsState, CostScaleRow } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 export default function CostBreakdownBlock({ state, onChange }: { state: CostsState; onChange: (p: Partial<CostsState>) => void; }) {
   const filled = state.costs.filter((c) => c.service.trim() && c.at1k.trim()).length;
@@ -27,15 +27,14 @@ export default function CostBreakdownBlock({ state, onChange }: { state: CostsSt
   };
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">💸 Coûts mensuels @ N users</h3>
-          <p className="text-xs text-muted mt-0.5">Matrice USD/mois par service à chaque palier. Pré-rempli 2026.</p>
-        </div>
-        <BlockStatus filled={filled} total={Math.max(filled, 3)} />
-      </div>
-
+    <CollapsibleSection
+      emoji="💸"
+      title="Coûts mensuels @ N users"
+      description="Matrice USD/mois par service à chaque palier. Pré-rempli 2026."
+      filled={filled}
+      total={Math.max(filled, 3)}
+      storageKey="mindeck:technique:costs-compliance:breakdown:open"
+    >
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
@@ -84,6 +83,6 @@ export default function CostBreakdownBlock({ state, onChange }: { state: CostsSt
         className="w-full text-xs py-2 rounded-xl border border-dashed border-border hover:border-accent hover:text-accent transition">
         + Ajouter service
       </button>
-    </section>
+    </CollapsibleSection>
   );
 }

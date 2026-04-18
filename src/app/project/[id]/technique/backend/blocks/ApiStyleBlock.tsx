@@ -1,7 +1,7 @@
 "use client";
 
 import type { ApiStyle, BackendState } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const STYLES: { value: ApiStyle; label: string; hint: string }[] = [
   { value: "server-actions", label: "Server Actions (Next)", hint: "Défaut Next 16. Zéro boilerplate." },
@@ -16,15 +16,14 @@ export default function ApiStyleBlock({ state, onChange }: { state: BackendState
   const filled = (state.apiStyle ? 1 : 0) + (state.useServerValidation ? 1 : 0);
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🔌 API style</h3>
-          <p className="text-xs text-muted mt-0.5">Comment ton frontend parle au backend. Pick ONE, pas de mix.</p>
-        </div>
-        <BlockStatus filled={filled} total={2} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🔌"
+      title="API style"
+      description="Comment ton frontend parle au backend. Pick ONE, pas de mix."
+      filled={filled}
+      total={2}
+      storageKey="mindeck:technique:backend:api:open"
+    >
       <div className="grid sm:grid-cols-2 gap-2">
         {STYLES.map((s) => (
           <button
@@ -51,6 +50,6 @@ export default function ApiStyleBlock({ state, onChange }: { state: BackendState
           <div className="text-[11px] text-muted">Parser toutes les entrées API côté serveur — inputs malicieux sinon.</div>
         </div>
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

@@ -7,7 +7,7 @@ import type {
   SecretsMgmt,
   HttpsEnforcement,
 } from "../state";
-import BlockStatus from "../components/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const AUTH_METHODS: { value: AuthMethod; label: string }[] = [
   { value: "jwt-session", label: "JWT en cookie (SSR)" },
@@ -48,17 +48,14 @@ export default function SecurityBoundariesBlock({
   ).length;
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🔒 Sécurité & Auth boundaries</h3>
-          <p className="text-xs text-muted mt-0.5">
-            Définit la surface d&apos;attaque. Détails OWASP complets dans chap 6 Auth & Sécurité.
-          </p>
-        </div>
-        <BlockStatus filled={filled} total={4} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🔒"
+      title="Sécurité & Auth boundaries"
+      description="Définit la surface d'attaque. Détails OWASP complets dans chap 6 Auth & Sécurité."
+      filled={filled}
+      total={4}
+      storageKey="mindeck:technique:architecture:security:open"
+    >
       <SelectGroup
         label="Méthode d'auth"
         value={state.authMethod}
@@ -128,7 +125,7 @@ export default function SecurityBoundariesBlock({
           ))}
         </div>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }
 

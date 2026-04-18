@@ -1,7 +1,7 @@
 "use client";
 
 import type { FrontendState, TypeValidation } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const VALIDATIONS: { value: TypeValidation; label: string; hint: string }[] = [
   { value: "zod", label: "Zod", hint: "16M weekly, default 2026. Bundle 26KB." },
@@ -21,17 +21,14 @@ export default function TypeScriptBlock({
     (state.tsStrict ? 1 : 0) + (state.validation ? 1 : 0);
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">📐 TypeScript & Validation</h3>
-          <p className="text-xs text-muted mt-0.5">
-            TS strict obligatoire Mindeck (0 any). Validation runtime aux frontières API.
-          </p>
-        </div>
-        <BlockStatus filled={filled} total={2} />
-      </div>
-
+    <CollapsibleSection
+      emoji="📐"
+      title="TypeScript & Validation"
+      description="TS strict obligatoire Mindeck (0 any). Validation runtime aux frontières API."
+      filled={filled}
+      total={2}
+      storageKey="mindeck:technique:frontend:typescript:open"
+    >
       <label className="flex items-start gap-3 cursor-pointer p-3 bg-background/60 border border-border rounded-xl">
         <input
           type="checkbox"
@@ -88,6 +85,6 @@ export default function TypeScriptBlock({
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
         />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

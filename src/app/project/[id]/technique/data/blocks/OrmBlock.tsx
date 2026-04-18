@@ -1,7 +1,7 @@
 "use client";
 
 import type { DataState, OrmChoice } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const ORMS: { value: OrmChoice; label: string; bundleKb: string; hint: string }[] = [
   { value: "none", label: "Pas d'ORM", bundleKb: "0", hint: "🔥 Queries directes Supabase/pg. Simple, léger." },
@@ -17,14 +17,14 @@ const ORMS: { value: OrmChoice; label: string; bundleKb: string; hint: string }[
 export default function OrmBlock({ state, onChange }: { state: DataState; onChange: (p: Partial<DataState>) => void; }) {
   const filled = (state.orm ? 1 : 0) + (state.useRls ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🔗 ORM / Query Builder</h3>
-          <p className="text-xs text-muted mt-0.5">Mindeck = pas d&apos;ORM (queries Supabase directes). Drizzle si besoin type-safety.</p>
-        </div>
-        <BlockStatus filled={filled} total={2} />
-      </div>
+    <CollapsibleSection
+      emoji="🔗"
+      title="ORM / Query Builder"
+      description="Mindeck = pas d'ORM (queries Supabase directes). Drizzle si besoin type-safety."
+      filled={filled}
+      total={2}
+      storageKey="mindeck:technique:data:orm:open"
+    >
       <div className="grid sm:grid-cols-2 gap-2">
         {ORMS.map((o) => (
           <button key={o.value} type="button" onClick={() => onChange({ orm: o.value })}
@@ -51,6 +51,6 @@ export default function OrmBlock({ state, onChange }: { state: DataState; onChan
           placeholder="Ex: ISR Next + TanStack Query client + Redis Upstash pour queries chaudes"
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import type { FrontendState, StylingApproach } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const APPROACHES: { value: StylingApproach; label: string; score: string; hint: string }[] = [
   { value: "tailwind-v4", label: "Tailwind v4", score: "🔥", hint: "Défaut Mindeck. CSS-first, bundle minimal." },
@@ -23,17 +23,14 @@ export default function StylingBlock({
   const filled = state.styling ? 1 : 0;
 
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🎨 Styling</h3>
-          <p className="text-xs text-muted mt-0.5">
-            Utility-first recommandé. Éviter runtime JS overhead (styled-components).
-          </p>
-        </div>
-        <BlockStatus filled={filled} total={1} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🎨"
+      title="Styling"
+      description="Utility-first recommandé. Éviter runtime JS overhead (styled-components)."
+      filled={filled}
+      total={1}
+      storageKey="mindeck:technique:frontend:styling:open"
+    >
       <div className="grid sm:grid-cols-2 gap-2">
         {APPROACHES.map((a) => (
           <button
@@ -75,6 +72,6 @@ export default function StylingBlock({
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
         />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

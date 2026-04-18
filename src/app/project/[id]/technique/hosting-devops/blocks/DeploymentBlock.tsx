@@ -1,7 +1,7 @@
 "use client";
 
 import type { HostingState, RollbackStrategy } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const STRATEGIES: { value: RollbackStrategy; label: string; hint: string }[] = [
   { value: "instant-vercel", label: "Vercel 1-click", hint: "🔥 Promote previous deployment, 30s." },
@@ -14,15 +14,14 @@ const STRATEGIES: { value: RollbackStrategy; label: string; hint: string }[] = [
 export default function DeploymentBlock({ state, onChange }: { state: HostingState; onChange: (p: Partial<HostingState>) => void; }) {
   const filled = (state.rollback ? 1 : 0) + (state.featureFlags ? 1 : 0) + (state.progressiveDelivery ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🚦 Stratégie de déploiement</h3>
-          <p className="text-xs text-muted mt-0.5">Rollback + feature flags + progressive delivery.</p>
-        </div>
-        <BlockStatus filled={filled} total={3} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🚦"
+      title="Stratégie de déploiement"
+      description="Rollback + feature flags + progressive delivery."
+      filled={filled}
+      total={3}
+      storageKey="mindeck:technique:hosting-devops:deployment:open"
+    >
       <div>
         <div className="text-xs font-semibold mb-2">Stratégie rollback</div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -63,6 +62,6 @@ export default function DeploymentBlock({ state, onChange }: { state: HostingSta
           placeholder="Ex: Vercel auto-deploy main + PR previews. Rollback 1-click dashboard."
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import type { BackupFreq, DataState, MigrationsTool } from "../state";
-import BlockStatus from "../../_shared/BlockStatus";
+import CollapsibleSection from "../../_shared/CollapsibleSection";
 
 const TOOLS: { value: MigrationsTool; label: string; hint: string }[] = [
   { value: "supabase-cli", label: "Supabase CLI", hint: "SQL migrations incrémentales. Défaut Mindeck." },
@@ -23,15 +23,14 @@ const FREQS: { value: BackupFreq; label: string; hint: string }[] = [
 export default function MigrationsBackupsBlock({ state, onChange }: { state: DataState; onChange: (p: Partial<DataState>) => void; }) {
   const filled = (state.migrationsTool ? 1 : 0) + (state.backupFreq && state.backupFreq !== "none" ? 1 : 0) + (state.pitrEnabled ? 1 : 0) + (state.restoreTested ? 1 : 0);
   return (
-    <section className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold">🔄 Migrations & Backups</h3>
-          <p className="text-xs text-muted mt-0.5">Évolution schéma + récup en cas de crash. Non-négociable.</p>
-        </div>
-        <BlockStatus filled={filled} total={4} />
-      </div>
-
+    <CollapsibleSection
+      emoji="🔄"
+      title="Migrations & Backups"
+      description="Évolution schéma + récup en cas de crash. Non-négociable."
+      filled={filled}
+      total={4}
+      storageKey="mindeck:technique:data:migrations:open"
+    >
       <div>
         <div className="text-xs font-semibold mb-2">Tool migrations</div>
         <div className="grid sm:grid-cols-2 gap-2">
@@ -75,6 +74,6 @@ export default function MigrationsBackupsBlock({ state, onChange }: { state: Dat
           placeholder="Ex: PITR 7j Supabase + pg_dump mensuel vers S3 encrypted"
           className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" />
       </label>
-    </section>
+    </CollapsibleSection>
   );
 }
