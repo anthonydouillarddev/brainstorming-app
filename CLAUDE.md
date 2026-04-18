@@ -21,7 +21,7 @@ Outil perso de **gestion de projet de bout en bout** : de l'idée brute au lance
   - ⚙️ **Technique** — section stack isolée (framework, UI, DB, auth, paiements, email, hosting, monitoring, repos).
   - 🎨 **Design** — menu vertical 12 chapitres (7 prêts, 5 en dev) — voir section Design ci-dessous
   - 🔗 **Ressources** — liens sauvegardés avec tags, statuts et drag & drop. Inspirations et docs en texte libre.
-- **Deep linking** : `?tab=tasks` dans l'URL ouvre directement le bon onglet du projet.
+- **Deep linking** : `?tab=tasks` (ou `design`, `cockpit`, etc.) dans l'URL ouvre directement le bon onglet du projet. Le bouton de navigation passe par `navigateTab()` qui met à jour `window.history` sans reload (shareable + back/forward browser OK).
 - **Soft delete** : corbeille discrète (lien en bas si > 0). Restauration ou suppression définitive (avec retape du nom).
 - **Thème** clair/sombre/système avec persistance localStorage + DB.
 - **Settings utilisateur** : modal plein écran (style Linear) accessible via avatar dans le header. 6 sections :
@@ -34,28 +34,42 @@ Outil perso de **gestion de projet de bout en bout** : de l'idée brute au lance
 
 ## Onglet Design — 12 chapitres
 
-Gros chantier en cours : transformer l'onglet Design en vrai outil de réflexion design (de la stratégie à l'exécution). Menu vertical à gauche, chaque chapitre = section indépendante avec son `state` JSON persisté dans `sections.content` (section_key dédiée).
+Outil de réflexion design complet (stratégie → exécution). Menu vertical à gauche, chaque chapitre = section indépendante avec son `state` JSON persisté dans `sections.content` (section_key dédiée).
 
-**7 chapitres prêts sur 12** (V1 MUST + V2 SHOULD + V3 NICE par chapitre) :
+**12/12 chapitres prêts** (V1 MUST + V2 SHOULD + V3 NICE par chapitre, + V4 sur chaps 5 et 7) :
 
-| # | Chap | Section key | V1 MUST | V2 SHOULD | V3 NICE |
-|---|---|---|---|---|---|
-| 1 | 📐 Fondations | `foundations` | JTBD Ulwick + persona + aha moment + principes opposables + export MD | Job stories + Positioning Dunford + anti-goals + templates par type projet + 3 exports | Modes Débutant/Expert + jobs émotionnels/sociaux + Concurrent Mapper 2×2 + carte A4 PDF |
-| 2 | 🎭 Identité | `identity` | 8 archétypes FR + sliders NN/G + glossaire DO/DON'T + brand promise + tone matrix | +3 sliders perso + refs/anti-refs + mood + live preview micro-copy + 2 exports (JSON, Claude brief) | Kapferer Prism 6 facettes + mode Débutant chat + carte A4 PDF |
-| 3 | 🧭 Info & Nav | `info-nav` | Screen picker + sitemap builder + nav pattern (6 patterns avec live preview) | Labels dict + entités/relations + URL map + 3 exports (JSON, CSV, Claude brief) | Command palette + tree test + mode Débutant + carte A4 PDF |
-| 4 | 🛣️ Parcours | `flows` | Flow steps + aha + onboarding pattern + NSA Reforge + friction score | Branches + Journey map AARRR + empty states + exports (Mermaid, JSON, Claude) | Critical path + AARRR dashboard + mode Débutant + carte A4 PDF |
-| 5 | 🧠 Principes UX | `principles` | Nielsen 10 + Laws lib 18 lois + affordances + feedback inventory + Design Principles Card | Cognitive Load + Hick menu + Peak-End + Mental Model Canvas + exports (JSON, Claude) | Screen audit par type + Doherty latency log + mode Débutant + carte A4 PDF |
-| 6 | 🎨 Visuel | `design_visual` | Palette OKLCH + tokens + mariage + live preview composants + export 6 formats (CSS, Tailwind, shadcn, DTCG, MD, DESIGN.md) | Presets DS Supabase + intégration données projet | — (déjà complet) |
-| 7 | 🧱 Design System | `design-system` | Semantic tokens + 31 composants catalogués + 8 patterns + contrast pairs WCAG | Variant matrix + A11y WCAG 2.2 + Density switcher + exports (DTCG 2025.10, Claude) | Token versioning + mode Débutant + carte A4 PDF |
-
-**5 chapitres en dev** (status=bientot) : 8 États · 9 Microcopy · 10 Accessibilité · 11 Adaptativité · 12 Validation.
+| # | Chap | Section key | Résumé |
+|---|---|---|---|
+| 1 | 📐 Fondations | `foundations` | JTBD Ulwick · persona · aha moment · principes opposables · Job stories · Positioning Dunford · mode Débutant · carte A4 |
+| 2 | 🎭 Identité | `identity` | 8 archétypes FR · sliders NN/G · glossaire tone DO/DON'T · brand promise · tone matrix · refs/anti-refs · Kapferer Prism · carte A4 |
+| 3 | 🧭 Info & Nav | `info-nav` | Screen picker · sitemap builder · nav pattern (6 patterns) · labels dict · entités/relations · command palette · tree test · carte A4 |
+| 4 | 🛣️ Parcours | `flows` | Flow steps · aha · onboarding · NSA Reforge · friction score · Journey map AARRR · empty states · critical path · carte A4 |
+| 5 | 🧠 Principes UX | `principles` | Nielsen 10 · Laws lib 18 lois · affordances · feedback · Cognitive Load · Peak-End · Mental Model · latency log · carte A4 · **V4 : règles UI/UX projet DO/DON'T (6 catégories, 8 presets Baymard/NN/G/WCAG/Refactoring UI)** |
+| 6 | 🎨 Visuel | `design_visual` | Palette OKLCH · tokens · mariage · live preview composants · export 6 formats (CSS, Tailwind, shadcn, DTCG, MD, DESIGN.md) · presets DS Supabase |
+| 7 | 🧱 Design System | `design-system` | Semantic tokens · 31 composants · 8 patterns · contrast pairs WCAG · variants · a11y · density · token versioning · carte A4 · **V4 : banque d'inspirations UI (8 catégories, table `design_ui_inspirations` + Storage)** |
+| 8 | ⚡ États | `states` | Loading · empty · error · micro-interactions · success · toasts · state machines · screen audit · latency SLO · carte A4 |
+| 9 | ✍️ Microcopy | `microcopy` | CTA · form · system messages · glossaire FR · voice & tone matrix · A/B variants · length budgets · inclusive language · carte A4 |
+| 10 | ♿ Accessibilité | `a11y` | WCAG 2.2 AA (32 critères) · keyboard · ARIA patterns/landmarks/live · issues · AT matrix · cognitive · motion · remediation roadmap · carte A4 |
+| 11 | 📐 Adaptativité | `adaptivity` | Breakpoints · dark mode · densité · input modality · container queries · i18n + RTL · viewport + safe-areas · carte A4 |
+| 12 | 🧪 Validation | `validation` | Tests users · SUS scale 1986 · Nielsen 10 heuristics eval · PMF metrics (Sean Ellis 40%, NPS, activation) · roadmap auto · carte A4 |
 
 **Pattern commun à chaque chapitre** :
 - Mode Débutant chat (5-10 étapes) + Mode Formulaire (défaut) — toggle persisté en localStorage `mindeck:design:{key}:mode`
 - State JSON dans `sections.content` + debounced save 800ms + merge-safe pour évolutions schéma
-- Progress bar complétude (computeCompleteness 0-100) + validation live (errors/warnings)
+- Progress bar complétude (`computeXxxCompleteness` 0-100) + validation live (errors/warnings)
 - Exports : toujours 1 Markdown + optionnel JSON structuré + Claude brief + DTCG/Mermaid/CSV selon chap
 - Carte A4 imprimable via `@media print` CSS (zéro lib) en V3
+
+**% global design** (agrégateur `src/lib/design-completeness.ts`) :
+- Moyenne des 12 `computeXxxCompleteness` exposée dans le cockpit (3e col de la grille Progression : Brainstorm · Phase · 🎨 Design)
+- Cliquable → deep link vers l'onglet Design (via `navigateTab` qui met à jour `?tab=`)
+- En mode Débutant, moyenne calculée uniquement sur les 6 chaps actifs
+
+**Niveau d'expertise user** (`user_preferences.experience_level` + hook `useExperienceLevel`) :
+- **Débutant** (🐣) : 6 chaps essentiels visibles (foundations, identity, flows, visual, design-system, a11y) + banner hint dans le menu
+- **Intermédiaire / Expert** : 12 chaps visibles
+- Défaut par plan (`DEFAULT_EXPERIENCE_BY_ROLE` dans `gating.ts`) avec override possible dans Settings → Apparence
+- Custom event `mindeck:experience-changed` pour sync cross-component + localStorage fallback SSR
 
 **Structure des fichiers** (exemple chap 1) :
 ```
@@ -69,15 +83,19 @@ src/app/project/[id]/design/foundations/
 └── exports/                 # markdown.ts + json.ts + claude-brief.ts + ...
 ```
 
-**Libs Design réutilisables** (`src/lib/design/`) :
-- `oklch.ts` — génération palette OKLCH, contrastRatio WCAG, generateDarkFromLight, findGlobalFix, suggestFiveColors
-- `tokens.ts` — TYPO_RATIOS, SPACING/RADIUS/SHADOW presets, generators
-- `fonts.ts` — 13 FONT_PAIRINGS + FONTS_LIBRARY Google Fonts
-- `export.ts` — 6 formats (CSS, Tailwind v4, shadcn/ui, DTCG, Markdown, DESIGN.md)
-- `validator.ts` — 15 règles validation design system
-- `colors-api.ts` — CRUD combos/saved colors Supabase (erreurs propagées)
-- `presets-api.ts` — CRUD design_system_presets Supabase
-- `combos.ts` — 20 combos curés par style
+**Libs Design réutilisables** :
+- `src/lib/design-completeness.ts` — agrégateur : `computeChapterCompleteness(key, sections)` + `computeOverallDesignCompleteness(sections, chapters?)` + `DESIGN_SECTION_KEYS` registry des 12 chaps
+- `src/lib/design/gating.ts` — `getActiveChapters(level)` + `BEGINNER_CHAPTERS` (6 essentiels) + `DEFAULT_EXPERIENCE_BY_ROLE` + metas expertise
+- `src/lib/design/use-experience-level.ts` — hook client lisant localStorage + écoutant `mindeck:experience-changed`
+- `src/lib/design/oklch.ts` — génération palette OKLCH, contrastRatio WCAG, generateDarkFromLight, findGlobalFix, suggestFiveColors
+- `src/lib/design/tokens.ts` — TYPO_RATIOS, SPACING/RADIUS/SHADOW presets, generators
+- `src/lib/design/fonts.ts` — 13 FONT_PAIRINGS + FONTS_LIBRARY Google Fonts
+- `src/lib/design/export.ts` — 6 formats (CSS, Tailwind v4, shadcn/ui, DTCG, Markdown, DESIGN.md)
+- `src/lib/design/validator.ts` — 15 règles validation design system
+- `src/lib/design/colors-api.ts` — CRUD combos/saved colors Supabase
+- `src/lib/design/presets-api.ts` — CRUD design_system_presets Supabase
+- `src/lib/design/inspirations-api.ts` — CRUD design_ui_inspirations Supabase + upload/delete screenshots (bucket `inspirations`)
+- `src/lib/design/combos.ts` — 20 combos curés par style
 
 ## Stack
 
@@ -157,17 +175,21 @@ src/
 **Arbo des 12 chapitres Design** (dans `src/app/project/[id]/design/`) :
 ```
 design/
-├── index.tsx                    # Menu vertical 12 chaps + routing
-├── chapters.ts                  # Liste des 12 chaps avec status
-├── chapter-placeholder.tsx      # "Bientôt" pour chaps en dev
-├── foundations/                 # Chap 1 ✅
+├── index.tsx                    # Menu vertical (filtré par expertise) + badges % par chap + routing
+├── chapters.ts                  # Liste des 12 chaps avec status (tous ready)
+├── chapter-placeholder.tsx      # Fallback "bientôt"
+├── foundations/                 # Chap 1 ✅ (V1+V2+V3)
 ├── identity/                    # Chap 2 ✅
 ├── info-nav/                    # Chap 3 ✅
 ├── flows/                       # Chap 4 ✅
-├── principles/                  # Chap 5 ✅
+├── principles/                  # Chap 5 ✅ (V1+V2+V3 + V4 ProjectRulesBlock)
 ├── visual/                      # Chap 6 ✅
-├── design-system/               # Chap 7 ✅
-└── (states/microcopy/a11y/adaptivity/validation — en dev)
+├── design-system/               # Chap 7 ✅ (V1+V2+V3 + V4 UiInspirationsBlock)
+├── states/                      # Chap 8 ✅
+├── microcopy/                   # Chap 9 ✅
+├── a11y/                        # Chap 10 ✅
+├── adaptivity/                  # Chap 11 ✅
+└── validation/                  # Chap 12 ✅
 ```
 
 ## Modèle de données (Supabase)
@@ -233,15 +255,17 @@ id, user_id, kind, title, content, url, tags text[], status, position, created_a
 
 ### `user_preferences`
 ```
-id, user_id (unique), theme, display_density, default_task_view, role, locale, saved_colors jsonb, created_at, updated_at
+id, user_id (unique), theme, display_density, default_task_view, role, experience_level,
+locale, saved_colors jsonb, created_at, updated_at
 ```
 - `theme` ∈ `light | dark | system`
 - `display_density` ∈ `compact | normal | comfortable`
 - `default_task_view` ∈ `list | kanban`
-- `role` ∈ `admin | free | demo | pro | vip`
+- `role` ∈ `admin | free | demo | pro | vip` (plan d'abonnement)
+- `experience_level` ∈ `beginner | intermediate | expert` (pédagogie ≠ plan · default `intermediate`) — dicte le filtrage des chaps Design + défauts mode Débutant
 - `saved_colors` : couleurs favorites de l'user (chap 6 Visuel)
 - Une seule ligne par user (upsert). Créée au premier changement de préférence.
-- Fallback localStorage pour thème et densité (SSR hydration).
+- Fallback localStorage pour thème, densité, expertise (SSR hydration).
 
 ### `custom_color_combos` (migration 014)
 ```
@@ -257,6 +281,17 @@ id, user_id, project_id (nullable), name, snapshot jsonb, created_at, updated_at
 - Snapshot complet d'un DS (primary + tokens + fonts + gradient + selected shades).
 - `project_id` null = preset global (réutilisable sur tous les projets), sinon preset projet-spécifique.
 - Créé/chargé depuis le bloc Presets du chap 6 Visuel.
+
+### `design_ui_inspirations` (migration 016)
+```
+id, user_id, project_id (nullable), title, category, source_url, screenshot_url,
+note, tags text[], tools text[], rating (1-5), status, position, created_at, updated_at
+```
+- `category` ∈ `landing-hero | pricing-table | onboarding-flow | dashboard-layout | form-login | micro-interaction | navigation-pattern | empty-state`
+- `status` ∈ `collected | analyzed | implemented | archived`
+- `project_id` null = inspiration réutilisable cross-projet, sinon inspiration projet-spécifique.
+- Screenshots dans **bucket Supabase Storage `inspirations`** (privé, 5MB max, PNG/JPEG/WEBP/GIF) — path `{user_id}/{timestamp-random}.{ext}` avec RLS par dossier.
+- Créé/géré depuis le bloc V4 du chap 7 Design System.
 
 **Schéma cible complet** dans `src/lib/supabase/schema.sql`. Migrations incrémentales dans `migrations/`. Ne jamais modifier le schéma sans validation d'Anthony.
 
@@ -317,6 +352,9 @@ Les migrations sont **incrémentales et idempotentes** (`create table if not exi
 **Migrations à exécuter manuellement dans Supabase Dashboard** si pas encore faites :
 - `014_design_colors_combos.sql` — prérequis pour chap 6 Visuel (saved_colors + custom_color_combos)
 - `015_design_system_presets.sql` — prérequis pour bloc Presets du chap 6 Visuel
+- `016_design_ui_inspirations.sql` — prérequis pour bloc V4 Inspirations du chap 7 Design System
+  - **+ bucket Storage `inspirations`** à créer manuellement (Storage > New bucket, privé, 5MB, MIME images) + 4 policies RLS sur `storage.objects` (SELECT/INSERT/UPDATE/DELETE où `bucket_id = 'inspirations' and (storage.foldername(name))[1] = auth.uid()::text`)
+- `017_user_experience_level.sql` — ajoute la colonne `experience_level` à `user_preferences`
 
 ## À savoir avant de coder
 
