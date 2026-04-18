@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import BlockStatus from "./BlockStatus";
 
 // Wrapper collapsible utilisé par tous les blocs des chapitres Technique.
 // Header cliquable (emoji + titre + description + status + chevron) + content.
 // Persiste l'état open/closed en localStorage via `storageKey`.
-// Auto-collapse quand 100% rempli si `autoCollapseWhenFull` activé.
+//
+// Comportement par défaut (option B choisie par Anthony) :
+// - Tous les blocs ouverts au premier chargement
+// - Auto-collapse quand on passe de <100% à 100% rempli pendant la session
+// - Respect du choix user : s'il rouvre manuellement un bloc 100%, il reste ouvert
+// - Les Exports (sans filled/total) restent fermés par défaut via defaultOpen={false}
 
 export default function CollapsibleSection({
   emoji,
@@ -16,7 +21,7 @@ export default function CollapsibleSection({
   total,
   storageKey,
   defaultOpen = true,
-  autoCollapseWhenFull = false,
+  autoCollapseWhenFull = true,
   children,
 }: {
   emoji: string;
@@ -31,7 +36,10 @@ export default function CollapsibleSection({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const [hydrated, setHydrated] = useState(false);
+  const prevFilledRef = useRef<number | undefined>(filled);
+  const prevTotalRef = useRef<number | undefined>(total);
 
+  // Hydration initiale : lit localStorage, ou auto-collapse si déjà 100% sans saved.
   useEffect(() => {
     const saved = window.localStorage.getItem(storageKey);
     if (saved === "open" || saved === "closed") {
@@ -48,6 +56,30 @@ export default function CollapsibleSection({
     setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
+
+  // Watch : auto-collapse quand on passe de <100% à 100% pendant la session.
+  // N'écrit PAS en localStorage (pour permettre à l'user de rouvrir sans que ça
+  // soit mémorisé comme "closed" définitif).
+  useEffect(() => {
+    if (!hydrated || !autoCollapseWhenFull) return;
+    if (typeof filled !== "number" || typeof total !== "number" || total <= 0) return;
+
+    const prevFilled = prevFilledRef.current;
+    const prevTotal = prevTotalRef.current;
+    const wasFull =
+      typeof prevFilled === "number" &&
+      typeof prevTotal === "number" &&
+      prevTotal > 0 &&
+      prevFilled >= prevTotal;
+    const isFull = filled >= total;
+
+    if (!wasFull && isFull) {
+      setOpen(false);
+    }
+
+    prevFilledRef.current = filled;
+    prevTotalRef.current = total;
+  }, [filled, total, autoCollapseWhenFull, hydrated]);
 
   function toggle() {
     const next = !open;
