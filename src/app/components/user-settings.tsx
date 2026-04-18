@@ -387,21 +387,33 @@ export default function UserSettings({
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">Niveau d&apos;expertise</label>
+              <label
+                id="experience-level-label"
+                className="text-sm font-medium mb-1 block"
+              >
+                Niveau d&apos;expertise
+              </label>
               <p className="text-xs text-muted mb-3">
                 Filtre les chapitres Design affichés. Débutant = 6 essentiels, Intermédiaire/Expert = 12.
               </p>
-              <div className="space-y-2">
+              <div
+                role="radiogroup"
+                aria-labelledby="experience-level-label"
+                className="space-y-2"
+              >
                 {EXPERIENCE_LEVELS.map((level) => {
                   const meta = EXPERIENCE_LEVEL_META[level];
                   const isActive = prefs.experience_level === level;
                   return (
                     <button
                       key={level}
+                      type="button"
+                      role="radio"
+                      aria-checked={isActive}
                       onClick={() => updateExperience(level)}
-                      className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
+                      className={`w-full text-left px-4 py-3 rounded-xl border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                         isActive
-                          ? "border-accent bg-accent/10"
+                          ? "border-accent bg-accent/10 text-accent"
                           : "border-border hover:border-accent/50"
                       }`}
                     >

@@ -150,7 +150,7 @@ export default function StateMachineBlock({
                     />
                     <button
                       onClick={() => remove(m.id)}
-                      className="w-7 h-7 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
+                      className="w-8 h-8 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
                       aria-label="Supprimer"
                     >
                       ×
@@ -261,7 +261,7 @@ export default function StateMachineBlock({
                           />
                           <button
                             onClick={() => removeTransition(m.id, idx)}
-                            className="w-6 h-6 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
+                            className="w-8 h-8 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
                             aria-label="Supprimer"
                           >
                             ×

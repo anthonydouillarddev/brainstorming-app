@@ -103,7 +103,7 @@ export default function ProjectRulesBlock({
         >
           <span aria-hidden>{expanded ? "▼" : "▶"}</span>
           📋 Règles UI/UX projet
-          <span className="text-[11px] px-2 py-0.5 bg-green-500/10 text-green-600 rounded font-normal">
+          <span className="text-[11px] px-2 py-0.5 bg-accent/10 text-accent rounded font-normal">
             V4
           </span>
           <span className="text-muted text-sm font-normal">
@@ -135,8 +135,10 @@ export default function ProjectRulesBlock({
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-muted">Filtre :</span>
               <button
+                type="button"
                 onClick={() => setFilter("all")}
-                className={`text-[11px] px-2 py-1 rounded border transition ${
+                aria-pressed={filter === "all"}
+                className={`text-[11px] px-3 py-1.5 rounded border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                   filter === "all"
                     ? "bg-accent text-white border-accent"
                     : "border-border hover:bg-accent/10"
@@ -153,8 +155,10 @@ export default function ProjectRulesBlock({
                 return (
                   <button
                     key={cat}
+                    type="button"
                     onClick={() => setFilter(cat)}
-                    className={`text-[11px] px-2 py-1 rounded border transition flex items-center gap-1 ${
+                    aria-pressed={filter === cat}
+                    className={`text-[11px] px-3 py-1.5 rounded border transition flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                       filter === cat
                         ? "bg-accent text-white border-accent"
                         : "border-border hover:bg-accent/10"
@@ -213,7 +217,7 @@ export default function ProjectRulesBlock({
                       </span>
                       <button
                         onClick={() => remove(r.id)}
-                        className="w-6 h-6 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
+                        className="w-8 h-8 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
                         aria-label="Supprimer"
                       >
                         ×

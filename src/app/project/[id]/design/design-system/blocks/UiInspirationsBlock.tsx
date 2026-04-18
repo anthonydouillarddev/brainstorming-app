@@ -93,7 +93,9 @@ export default function UiInspirationsBlock({ projectId }: { projectId: string }
       });
       if (row) setItems((prev) => [...prev, row]);
     } catch {
-      setError("Création impossible — migration 016 exécutée ?");
+      setError(
+        "Impossible d'ajouter une inspiration. Vérifie ta connexion ou réessaie dans un instant."
+      );
     }
   }
 
@@ -128,7 +130,9 @@ export default function UiInspirationsBlock({ projectId }: { projectId: string }
       const url = await uploadInspirationScreenshot(file);
       await patch(id, { screenshot_url: url });
     } catch {
-      setError("Upload échoué — bucket 'inspirations' créé dans Storage ?");
+      setError(
+        "Impossible d'uploader le screenshot. Colle une URL externe en attendant, ou réessaie."
+      );
     }
   }
 
@@ -174,8 +178,20 @@ export default function UiInspirationsBlock({ projectId }: { projectId: string }
           </div>
 
           {error && (
-            <div className="bg-red-500/5 border border-red-500/30 text-red-600 dark:text-red-400 text-xs px-3 py-2 rounded">
-              ❌ {error}
+            <div
+              role="alert"
+              className="bg-red-500/10 border border-red-500/40 text-red-700 dark:text-red-300 text-xs px-3 py-2 rounded flex items-start gap-2"
+            >
+              <span aria-hidden>❌</span>
+              <span className="flex-1">{error}</span>
+              <button
+                type="button"
+                onClick={() => setError(null)}
+                className="text-red-700 dark:text-red-300 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 rounded"
+                aria-label="Fermer le message d'erreur"
+              >
+                ×
+              </button>
             </div>
           )}
 
@@ -234,6 +250,7 @@ export default function UiInspirationsBlock({ projectId }: { projectId: string }
                         onChange={(e) =>
                           patch(r.id, { category: e.target.value as InspirationCategory })
                         }
+                        aria-label="Catégorie de l'inspiration"
                         className="h-7 px-2 text-xs rounded border border-border bg-card font-medium"
                       >
                         {(Object.keys(CATEGORY_META) as InspirationCategory[]).map((c) => (
@@ -247,6 +264,7 @@ export default function UiInspirationsBlock({ projectId }: { projectId: string }
                         onChange={(e) =>
                           patch(r.id, { status: e.target.value as InspirationStatus })
                         }
+                        aria-label="Statut de l'inspiration"
                         className="h-7 px-2 text-xs rounded border border-border bg-card"
                       >
                         {(Object.keys(STATUS_META) as InspirationStatus[]).map((s) => (
@@ -281,8 +299,9 @@ export default function UiInspirationsBlock({ projectId }: { projectId: string }
                           className="w-full h-40 object-cover rounded border border-border"
                         />
                         <button
+                          type="button"
                           onClick={() => patch(r.id, { screenshot_url: "" })}
-                          className="absolute top-1 right-1 w-6 h-6 rounded bg-black/60 text-white text-xs opacity-0 group-hover:opacity-100 transition"
+                          className="absolute top-1 right-1 w-8 h-8 rounded bg-black/60 text-white text-sm opacity-80 group-hover:opacity-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
                           aria-label="Retirer le screenshot"
                         >
                           ×
@@ -361,8 +380,14 @@ export default function UiInspirationsBlock({ projectId }: { projectId: string }
           )}
 
           {!loading && items.length === 0 && (
-            <div className="text-center text-xs text-muted py-4 italic">
-              Aucune inspiration. Ajoute-en une pour commencer ta banque UI.
+            <div className="text-center text-xs text-muted py-6 px-4 leading-relaxed">
+              <div className="text-3xl mb-2" aria-hidden>💡</div>
+              <div className="font-medium text-foreground mb-1">Ta banque UI est vide</div>
+              <div>
+                Colle une URL, upload un screenshot, tague un composant que tu aimes. Sites web,
+                pricing, onboarding, micro-interactions… tout ce qui t&apos;inspire pour construire
+                ton produit.
+              </div>
             </div>
           )}
 

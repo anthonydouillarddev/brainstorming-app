@@ -20,7 +20,7 @@ import A11yChapter from "./a11y";
 import AdaptivityChapter from "./adaptivity";
 import ValidationChapter from "./validation";
 
-const LS_ACTIVE_CHAPTER = "mindeck_design_active_chapter";
+const LS_ACTIVE_CHAPTER_PREFIX = "mindeck_design_active_chapter_";
 
 export default function DesignPanel({
   project,
@@ -34,21 +34,22 @@ export default function DesignPanel({
   onSectionsChange?: (sections: Record<string, string>) => void;
 }) {
   const [activeKey, setActiveKey] = useState<DesignChapterKey>("visual");
+  const lsKey = `${LS_ACTIVE_CHAPTER_PREFIX}${project.id}`;
 
-  // Restaure le dernier chapitre ouvert
+  // Restaure le dernier chapitre ouvert (scopé par projet).
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const saved = localStorage.getItem(LS_ACTIVE_CHAPTER);
+    const saved = localStorage.getItem(lsKey);
     if (saved && DESIGN_CHAPTERS.some((c) => c.key === saved)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveKey(saved as DesignChapterKey);
     }
-  }, []);
+  }, [lsKey]);
 
   function selectChapter(key: DesignChapterKey) {
     setActiveKey(key);
     if (typeof window !== "undefined") {
-      localStorage.setItem(LS_ACTIVE_CHAPTER, key);
+      localStorage.setItem(lsKey, key);
     }
   }
 
@@ -78,11 +79,16 @@ export default function DesignPanel({
     [initialSections]
   );
 
+  const isBeginner = experience === "beginner";
+
   return (
     <div className="flex flex-col lg:flex-row gap-5 items-start">
-      {/* ─── MENU VERTICAL (12 chapitres) ─── */}
-      <aside className="w-full lg:w-56 shrink-0 lg:sticky lg:top-4">
-        <nav className="bg-card/60 border border-border rounded-xl p-2 space-y-0.5">
+      {/* ─── MENU VERTICAL (chapitres filtrés par expertise) ─── */}
+      <aside className="w-full lg:w-56 shrink-0 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+        <nav
+          aria-label="Chapitres Design"
+          className="bg-card/60 border border-border rounded-xl p-2 space-y-0.5"
+        >
           {visibleChapters.map((chapter) => {
             const isActive = chapter.key === activeKey;
             const pct = completenessByChapter[chapter.key] ?? 0;
@@ -90,13 +96,17 @@ export default function DesignPanel({
               <button
                 key={chapter.key}
                 onClick={() => selectChapter(chapter.key)}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition flex items-center gap-2 ${
+                aria-label={`${chapter.label} · complétude ${pct}%`}
+                aria-current={isActive ? "page" : undefined}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                   isActive
                     ? "bg-accent text-white"
                     : "hover:bg-accent/10 text-foreground"
                 }`}
               >
-                <span className="text-base">{chapter.emoji}</span>
+                <span className="text-base" aria-hidden>
+                  {chapter.emoji}
+                </span>
                 <span className="flex-1 truncate">
                   <span className="opacity-60 mr-1">{chapter.num}.</span>
                   {chapter.label}
@@ -106,6 +116,17 @@ export default function DesignPanel({
             );
           })}
         </nav>
+
+        {isBeginner && (
+          <div className="mt-3 text-[11px] text-muted px-2 leading-relaxed">
+            🎓 {visibleChapters.length} chapitres essentiels (mode Débutant).{" "}
+            <span className="text-foreground">
+              Passe en Intermédiaire ou Expert via l&apos;avatar → Settings → Apparence
+            </span>{" "}
+            pour débloquer les {DESIGN_CHAPTERS.length - visibleChapters.length} chapitres
+            avancés.
+          </div>
+        )}
       </aside>
 
       {/* ─── CONTENU DU CHAPITRE ACTIF ─── */}
@@ -208,7 +229,7 @@ function progressTone(percent: number): {
 } {
   if (percent >= 70) return { text: "text-green-600 dark:text-green-400", bar: "bg-green-500" };
   if (percent >= 30) return { text: "text-amber-600 dark:text-amber-400", bar: "bg-amber-500" };
-  return { text: "text-muted", bar: "bg-muted/60" };
+  return { text: "text-foreground/70", bar: "bg-foreground/40" };
 }
 
 function ChapterProgress({ percent, isActive }: { percent: number; isActive: boolean }) {
@@ -217,21 +238,14 @@ function ChapterProgress({ percent, isActive }: { percent: number; isActive: boo
   const barClass = isActive ? "bg-white" : tone.bar;
   const trackClass = isActive ? "bg-white/20" : "bg-card/80 border border-border";
   return (
-    <span
-      className="flex items-center gap-1.5 shrink-0"
-      title={`${percent}% complété`}
-      aria-label={`Complétude ${percent}%`}
-    >
-      <span
-        className={`h-1 w-8 rounded-full overflow-hidden ${trackClass}`}
-        aria-hidden
-      >
+    <span className="flex items-center gap-1.5 shrink-0" aria-hidden>
+      <span className={`h-1 w-8 rounded-full overflow-hidden ${trackClass}`}>
         <span
           className={`block h-full transition-all duration-500 ${barClass}`}
           style={{ width: `${percent}%` }}
         />
       </span>
-      <span className={`text-[10px] font-mono tabular-nums ${labelClass}`}>
+      <span className={`text-[11px] font-mono font-semibold tabular-nums ${labelClass}`}>
         {percent}%
       </span>
     </span>

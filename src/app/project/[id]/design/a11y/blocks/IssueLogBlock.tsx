@@ -202,7 +202,7 @@ export default function IssueLogBlock({
                       />
                       <button
                         onClick={() => remove(i.id)}
-                        className="w-6 h-6 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
+                        className="w-8 h-8 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
                         aria-label="Supprimer"
                       >
                         ×

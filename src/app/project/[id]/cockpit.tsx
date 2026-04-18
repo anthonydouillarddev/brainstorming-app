@@ -269,7 +269,7 @@ export default function Cockpit({
               />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div>
               <div className="text-muted mb-1">Brainstorm</div>
               <div className="font-semibold">{sectionProgress}%</div>

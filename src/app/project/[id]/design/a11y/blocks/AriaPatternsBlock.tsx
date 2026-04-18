@@ -211,7 +211,7 @@ export default function AriaPatternsBlock({
                     />
                     <button
                       onClick={() => removeLandmark(l.id)}
-                      className="w-6 h-6 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
+                      className="w-8 h-8 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
                       aria-label="Supprimer"
                     >
                       ×
@@ -277,7 +277,7 @@ export default function AriaPatternsBlock({
                     </label>
                     <button
                       onClick={() => removeLive(r.id)}
-                      className="w-6 h-6 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
+                      className="w-8 h-8 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
                       aria-label="Supprimer"
                     >
                       ×
@@ -341,7 +341,7 @@ export default function AriaPatternsBlock({
                     />
                     <button
                       onClick={() => removePattern(p.id)}
-                      className="w-6 h-6 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
+                      className="w-8 h-8 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
                       aria-label="Supprimer"
                     >
                       ×

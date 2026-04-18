@@ -161,7 +161,7 @@ export default function UserTestSessionsBlock({
                       </select>
                       <button
                         onClick={() => remove(t.id)}
-                        className="w-7 h-7 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
+                        className="w-8 h-8 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
                         aria-label="Supprimer"
                       >
                         ×
@@ -288,7 +288,7 @@ export default function UserTestSessionsBlock({
                               </label>
                               <button
                                 onClick={() => removeFinding(t.id, f.id)}
-                                className="w-5 h-5 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
+                                className="w-8 h-8 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
                                 aria-label="Supprimer finding"
                               >
                                 ×

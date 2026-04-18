@@ -3,5 +3,5 @@
 -- + défauts mode Débutant/Formulaire. Indépendant du rôle (free/pro/vip).
 
 alter table user_preferences
-  add column if not exists experience_level text default 'beginner'
+  add column if not exists experience_level text default 'intermediate'
   check (experience_level in ('beginner', 'intermediate', 'expert'));

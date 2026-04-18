@@ -156,7 +156,7 @@ export default function InclusiveLanguageBlock({
                       <span className="text-[10px] text-muted italic flex-1">{ameta.hint}</span>
                       <button
                         onClick={() => remove(c.id)}
-                        className="w-6 h-6 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
+                        className="w-8 h-8 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
                         aria-label="Supprimer"
                       >
                         ×

@@ -161,7 +161,7 @@ export default function ConcurrentMapperBlock({
                   </div>
                   <button
                     onClick={() => removeCompetitor(c.id)}
-                    className="w-7 h-7 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
+                    className="w-8 h-8 rounded text-muted hover:text-red-500 hover:bg-red-500/10 text-xs"
                     aria-label="Supprimer"
                   >
                     ×
