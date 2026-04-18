@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Project } from "@/lib/types";
 import { computeAllChaptersCompleteness } from "@/lib/technique/completeness";
 import { getActiveChapters } from "@/lib/technique/gating";
 import { useExperienceLevel } from "@/lib/design/use-experience-level";
 import { TECHNIQUE_CHAPTERS, type TechniqueChapterKey } from "./chapters";
 import ChapterPlaceholder from "./chapter-placeholder";
+import CommandPalette, { buildChapterNavActions, useCmdK, type CommandAction } from "./_shared/CommandPalette";
 import StrategyChapter from "./strategy";
 import ArchitectureChapter from "./architecture";
 import FrontendChapter from "./frontend";
@@ -80,14 +81,50 @@ export default function TechniquePanel({
 
   const isBeginner = experience === "beginner";
 
+  // ─── Command palette (Cmd+K / Ctrl+K) ───
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  useCmdK(useCallback(() => setPaletteOpen(true), []));
+
+  const paletteActions = useMemo<CommandAction[]>(
+    () => [
+      ...buildChapterNavActions(selectChapter).filter((a) =>
+        visibleChapters.some((c) => `nav-${c.key}` === a.id)
+      ),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visibleChapters]
+  );
+
   // Transition douce Q2 : si la section `tech` (legacy brainstorm) existe, on affiche un bandeau.
   const hasLegacyStack =
     !!initialSections["tech"] || !!initialSections["legacy-stack"];
 
   return (
     <div className="flex flex-col lg:flex-row gap-5 items-start">
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        actions={paletteActions}
+      />
+
       {/* ─── MENU VERTICAL (chapitres filtrés par expertise) ─── */}
-      <aside className="w-full lg:w-56 shrink-0 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+      <aside className="w-full lg:w-56 shrink-0 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto space-y-2">
+        <button
+          type="button"
+          onClick={() => setPaletteOpen(true)}
+          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-card/60 border border-border hover:border-accent text-xs text-muted hover:text-foreground transition"
+          aria-label="Ouvrir la command palette (Cmd+K)"
+          title="Rechercher / naviguer (Cmd+K)"
+        >
+          <span className="flex items-center gap-1.5">
+            <span aria-hidden>🔍</span>
+            <span>Rechercher…</span>
+          </span>
+          <kbd className="text-[10px] font-mono bg-background/60 border border-border rounded px-1.5 py-0.5">
+            ⌘K
+          </kbd>
+        </button>
+
         <nav
           aria-label="Chapitres Technique"
           className="bg-card/60 border border-border rounded-xl p-2 space-y-0.5"
