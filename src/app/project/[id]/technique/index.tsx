@@ -17,6 +17,7 @@ import ServicesChapter from "./services";
 import HostingDevopsChapter from "./hosting-devops";
 import ObservabilityChapter from "./observability";
 import AiAutomationChapter from "./ai-automation";
+import CostsComplianceChapter from "./costs-compliance";
 
 const LS_ACTIVE_CHAPTER_PREFIX = "mindeck_technique_active_chapter_";
 
@@ -211,6 +212,13 @@ export default function TechniquePanel({
           />
         ) : activeKey === "ai-automation" ? (
           <AiAutomationChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : activeKey === "costs-compliance" ? (
+          <CostsComplianceChapter
             project={project}
             initialSections={initialSections}
             onProjectUpdate={onProjectUpdate}
