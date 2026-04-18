@@ -10,6 +10,7 @@ import ChapterPlaceholder from "./chapter-placeholder";
 import StrategyChapter from "./strategy";
 import ArchitectureChapter from "./architecture";
 import FrontendChapter from "./frontend";
+import BackendChapter from "./backend";
 
 const LS_ACTIVE_CHAPTER_PREFIX = "mindeck_technique_active_chapter_";
 
@@ -155,6 +156,13 @@ export default function TechniquePanel({
           />
         ) : activeKey === "frontend" ? (
           <FrontendChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : activeKey === "backend" ? (
+          <BackendChapter
             project={project}
             initialSections={initialSections}
             onProjectUpdate={onProjectUpdate}

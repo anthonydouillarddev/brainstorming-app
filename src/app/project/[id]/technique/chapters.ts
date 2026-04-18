@@ -28,7 +28,7 @@ export const TECHNIQUE_CHAPTERS: TechniqueChapter[] = [
   { key: "strategy", num: 1, emoji: "🎯", label: "Stratégie technique", hint: "Contraintes, objectifs, drivers, risques, ADR léger", status: "ready" },
   { key: "architecture", num: 2, emoji: "🏛️", label: "Architecture & Blueprint", hint: "Pattern, couches, flux, C4 léger, Mermaid", status: "ready" },
   { key: "frontend", num: 3, emoji: "🎨", label: "Frontend", hint: "Framework, rendering, styling, TypeScript", status: "ready" },
-  { key: "backend", num: 4, emoji: "⚙️", label: "Backend", hint: "Pattern BaaS/BFF, runtime, API style, jobs", status: "bientot" },
+  { key: "backend", num: 4, emoji: "⚙️", label: "Backend", hint: "Pattern BaaS/BFF, runtime, API style, jobs", status: "ready" },
   { key: "data", num: 5, emoji: "🗄️", label: "Data & Database", hint: "DB, hosting, schéma, migrations, RLS, backups", status: "bientot" },
   { key: "auth-security", num: 6, emoji: "🔐", label: "Auth & Sécurité", hint: "Auth method, OWASP Top 10, secrets, RBAC", status: "bientot" },
   { key: "services", num: 7, emoji: "🔌", label: "Services tiers & Intégrations", hint: "Catalogue 26 catégories (paiement, email, storage, CDN, CMS…)", status: "bientot" },

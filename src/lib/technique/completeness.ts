@@ -19,6 +19,10 @@ import {
   computeFrontendCompleteness,
   parseFrontendState,
 } from "@/app/project/[id]/technique/frontend/state";
+import {
+  computeBackendCompleteness,
+  parseBackendState,
+} from "@/app/project/[id]/technique/backend/state";
 
 // Clés canoniques dans la table `sections` (JSON dans `content`).
 export const TECHNIQUE_SECTION_KEYS: Record<TechniqueChapterKey, string> = {
@@ -46,7 +50,7 @@ const CHAPTER_COMPUTERS: Record<TechniqueChapterKey, ChapterComputer> = {
   strategy: (c) => computeStrategyCompleteness(parseStrategyState(c)),
   architecture: (c) => computeArchitectureCompleteness(parseArchitectureState(c)),
   frontend: (c) => computeFrontendCompleteness(parseFrontendState(c)),
-  backend: DEFAULT_COMPUTER,
+  backend: (c) => computeBackendCompleteness(parseBackendState(c)),
   data: DEFAULT_COMPUTER,
   "auth-security": DEFAULT_COMPUTER,
   services: DEFAULT_COMPUTER,
