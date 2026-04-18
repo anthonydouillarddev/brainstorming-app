@@ -16,16 +16,17 @@ import BrainstormEditor from "./editor";
 import DecisionsPanel from "./decisions";
 import SingleSectionPanel from "./resources";
 import DesignPanel from "./design";
+import TechniquePanel from "./technique";
 import TodoList from "@/app/components/todolist";
 
-type Tab = "cockpit" | "brainstorm" | "tasks" | "decisions" | "tech" | "design" | "resources";
+type Tab = "cockpit" | "brainstorm" | "tasks" | "decisions" | "technique" | "design" | "resources";
 
 const TABS: { value: Tab; label: string; emoji: string }[] = [
   { value: "cockpit", label: "Cockpit", emoji: "📊" },
   { value: "brainstorm", label: "Brainstorm", emoji: "💡" },
   { value: "tasks", label: "Tâches", emoji: "✅" },
   { value: "decisions", label: "Décisions", emoji: "🧭" },
-  { value: "tech", label: "Technique", emoji: "⚙️" },
+  { value: "technique", label: "Technique", emoji: "⚙️" },
   { value: "design", label: "Design", emoji: "🎨" },
   { value: "resources", label: "Ressources", emoji: "🔗" },
 ];
@@ -71,9 +72,11 @@ export default function ProjectDashboard({
   const [decisions, setDecisions] = useState<Decision[]>(initialDecisions);
   const [roadmap, setRoadmap] = useState<RoadmapItem[]>(initialRoadmap);
   const [risks, setRisks] = useState<Risk[]>(initialRisks);
-  const [tab, setTab] = useState<Tab>(
-    initialTab && VALID_TABS.has(initialTab) ? (initialTab as Tab) : "cockpit"
-  );
+  const [tab, setTab] = useState<Tab>(() => {
+    // Rétrocompat : ancien ?tab=tech → nouvel onglet technique
+    const normalized = initialTab === "tech" ? "technique" : initialTab;
+    return normalized && VALID_TABS.has(normalized) ? (normalized as Tab) : "cockpit";
+  });
   const navigateTab = useCallback(
     (next: Tab) => {
       setTab(next);
@@ -406,6 +409,7 @@ export default function ProjectDashboard({
           onRisksChange={setRisks}
           onGoToTasks={() => navigateTab("tasks")}
           onGoToDesign={() => navigateTab("design")}
+          onGoToTechnique={() => navigateTab("technique")}
         />
       )}
 
@@ -438,10 +442,9 @@ export default function ProjectDashboard({
         />
       )}
 
-      {tab === "tech" && (
-        <SingleSectionPanel
+      {tab === "technique" && (
+        <TechniquePanel
           project={project}
-          sectionKey="tech"
           initialSections={sections}
           onProjectUpdate={updateProject}
           onSectionsChange={setSections}

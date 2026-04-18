@@ -5,6 +5,8 @@ import { getActiveSections, parseSections, isFieldFilled, type SectionData } fro
 import { computeOverallDesignCompleteness } from "@/lib/design-completeness";
 import { getActiveChapters } from "@/lib/design/gating";
 import { useExperienceLevel } from "@/lib/design/use-experience-level";
+import { computeOverallTechniqueCompleteness } from "@/lib/technique/completeness";
+import { getActiveChapters as getActiveTechniqueChapters } from "@/lib/technique/gating";
 import type { Project, Todo, Decision, RoadmapItem, Risk } from "@/lib/types";
 import { PROJECT_STATUSES, PHASES, statusIndex, statusPhase } from "@/lib/types";
 import RisksPanel from "./risks";
@@ -39,6 +41,7 @@ export default function Cockpit({
   onRisksChange,
   onGoToTasks,
   onGoToDesign,
+  onGoToTechnique,
 }: {
   project: Project;
   sections: Record<string, string>;
@@ -51,6 +54,7 @@ export default function Cockpit({
   onRisksChange: (items: Risk[]) => void;
   onGoToTasks: () => void;
   onGoToDesign: () => void;
+  onGoToTechnique: () => void;
 }) {
   const parsed = useMemo(() => parseSections(sections), [sections]);
 
@@ -108,11 +112,21 @@ export default function Cockpit({
     () => computeOverallDesignCompleteness(sections, getActiveChapters(experience)),
     [sections, experience]
   );
+  const techniqueProgress = useMemo(
+    () =>
+      computeOverallTechniqueCompleteness(
+        sections,
+        getActiveTechniqueChapters(experience)
+      ),
+    [sections, experience]
+  );
 
   const globalProgress =
     activeSections.length === 0
       ? statusProgress
-      : Math.round((sectionProgress + statusProgress + designProgress) / 3);
+      : Math.round(
+          (sectionProgress + statusProgress + designProgress + techniqueProgress) / 4
+        );
 
   const currentPhase = statusPhase(project.status);
   const phaseIndex = PHASES.findIndex((p) => p.value === currentPhase);
@@ -269,7 +283,7 @@ export default function Cockpit({
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div>
               <div className="text-muted mb-1">Brainstorm</div>
               <div className="font-semibold">{sectionProgress}%</div>
@@ -303,6 +317,22 @@ export default function Cockpit({
                 <div
                   className="h-full bg-accent rounded-full transition-all"
                   style={{ width: `${designProgress}%` }}
+                />
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={onGoToTechnique}
+              className="text-left rounded-lg -m-1 p-1 transition hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              aria-label="Ouvrir l'onglet Technique"
+              title="Ouvrir l'onglet Technique"
+            >
+              <div className="text-muted mb-1">⚙️ Technique</div>
+              <div className="font-semibold">{techniqueProgress}%</div>
+              <div className="h-1 bg-background/60 rounded-full mt-1 overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 rounded-full transition-all"
+                  style={{ width: `${techniqueProgress}%` }}
                 />
               </div>
             </button>
