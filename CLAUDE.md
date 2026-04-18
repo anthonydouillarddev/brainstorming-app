@@ -18,8 +18,8 @@ Outil perso de **gestion de projet de bout en bout** : de l'idée brute au lance
   - 💡 **Brainstorm** — form de 13 sections adaptatives par type de projet. Auto-collapse des sections 100% remplies. Export markdown pour Claude. Bouton "Synchroniser avec le cockpit".
   - ✅ **Tâches** — todolist avec priorités P1-P4, statuts (todo/in_progress/blocked/done), deadline, phase projet liée, scoring ICE optionnel. Toggle **Liste ⇄ Kanban** (persistant localStorage). Row entière cliquable pour éditer (tactile-friendly).
   - 🧭 **Décisions (ADR)** — titre + contexte + options + décision + raison + date. Les 3 dernières apparaissent dans le cockpit.
-  - ⚙️ **Technique** — section stack isolée (framework, UI, DB, auth, paiements, email, hosting, monitoring, repos).
-  - 🎨 **Design** — menu vertical 12 chapitres (7 prêts, 5 en dev) — voir section Design ci-dessous
+  - ⚙️ **Technique** — menu vertical 12 chapitres (stratégie → architecture → frontend → backend → data → auth → services → hosting → observability → ia → coûts → outillage). Cmd+K command palette + cost calculator live. Voir section Onglet Technique ci-dessous.
+  - 🎨 **Design** — menu vertical 12 chapitres (tous prêts) — voir section Onglet Design ci-dessous
   - 🔗 **Ressources** — liens sauvegardés avec tags, statuts et drag & drop. Inspirations et docs en texte libre.
 - **Deep linking** : `?tab=tasks` (ou `design`, `cockpit`, etc.) dans l'URL ouvre directement le bon onglet du projet. Le bouton de navigation passe par `navigateTab()` qui met à jour `window.history` sans reload (shareable + back/forward browser OK).
 - **Soft delete** : corbeille discrète (lien en bas si > 0). Restauration ou suppression définitive (avec retape du nom).
@@ -97,6 +97,103 @@ src/app/project/[id]/design/foundations/
 - `src/lib/design/inspirations-api.ts` — CRUD design_ui_inspirations Supabase + upload/delete screenshots (bucket `inspirations`)
 - `src/lib/design/combos.ts` — 20 combos curés par style
 
+## Onglet Technique — 12 chapitres
+
+Outil de cadrage de stack technique complet (stratégie → exécution) pour solopreneur / indie hacker. Menu vertical à gauche, chaque chapitre = section indépendante avec son `state` JSON persisté dans `sections.content` (section_key dédiée).
+
+**Pivot** : l'ancien onglet `tech` (simple formulaire de stack) est remplacé par un outil de cadrage en 12 chapitres. L'ancienne section `tech` a été renommée en `legacy-stack` (migration 021) et reste en lecture seule avec un bandeau de transition.
+
+**12/12 chapitres prêts** (V1 MUST + V5 Quick wins) :
+
+| # | Chap | Section key | Résumé |
+|---|---|---|---|
+| 1 | 🎯 Stratégie technique | `tech-strategy` | Contraintes (budget/TTM/team) · objectifs · drivers pondérés · risques hypothèses · ADR léger (avec dropdown ADR existante + bouton "📌 Archiver comme ADR" → table `decisions`) · chat Débutant 10 questions |
+| 2 | 🏛️ Architecture & Blueprint | `tech-architecture` | Pattern (monolith/serverless/edge/microservices) · couches (frontend/API/data/jobs/cache) · flux de données · modèle de données · sécu boundaries · **export Mermaid C4 Containers** |
+| 3 | 🎨 Frontend | `tech-frontend` | Framework (Next.js 16, SvelteKit, Astro…) · rendering strategy (SSR/RSC/Streaming) · styling (Tailwind v4, shadcn…) · TypeScript + Zod |
+| 4 | ⚙️ Backend | `tech-backend` | Pattern (BaaS pur / BFF / API-only) · runtime (Node 22, Bun, Python, Go…) · API style (Server Actions, tRPC, REST) · jobs (Inngest, Trigger.dev, Vercel Cron) |
+| 5 | 🗄️ Data & Database | `tech-data` | Engine (Postgres, SQLite, Mongo…) · hosting (Supabase, Neon, Turso…) · ORM (pas d'ORM / Drizzle / Prisma) + RLS toggle · migrations + backups + PITR |
+| 6 | 🔐 Auth & Sécurité | `tech-auth-security` | Méthode auth + session + RBAC (app_metadata !) · **OWASP Top 10:2025 checklist** · secrets management · NIST 800-63B password policy · MFA/passkeys |
+| 7 | 🔌 Services tiers & Intégrations | `tech-services` | **Catalogue 30 catégories** groupées en 5 groupes (💰 Monétisation · 📬 Communications · 🗃️ Contenu & Médias · 🤝 Growth & Support · 🤖 AI & Dev Tools) avec scoring 🔥 populaire / 🌱 émergent / 🪦 legacy · filtre par type projet · **Cost Estimator Live** au-dessus (calcule $/mois à 100/1k/10k/100k users) |
+| 8 | 🚀 Hosting & DevOps | `tech-hosting-devops` | Plateforme (Vercel, Netlify, Railway, Fly…) · CI/CD (GitHub Actions YAML starter auto-généré) · environnements · rollback strategy · feature flags |
+| 9 | 📊 Observability & Qualité | `tech-observability` | Error tracking (Sentry, PostHog) · uptime (Better Stack) · structured logs (Pino) · tests (Vitest, Playwright) · metrics + SLO + DORA |
+| 10 | 🤖 IA & Automation | `tech-ai-automation` | LLM provider (Claude Sonnet 4.6 défaut) · SDK (Vercel AI SDK v6) · use cases (brainstorm coach, microcopy, RAG…) · prompt caching 90% · **workflow automation n8n/Zapier/Make** |
+| 11 | 💰 Coûts & Compliance | `tech-costs-compliance` | Matrice coûts @ N users (export CSV) · unit economics (ARPU/CAC/LTV calcul live) · pricing strategy · RGPD checklist · export Claude brief Privacy Policy |
+| 12 | 🛠️ Outillage & Knowledge | `tech-tooling` | IDE+AI (Cursor, Claude Code, Windsurf) · knowledge mgmt (Obsidian, Notion) · launcher (Raycast, PowerToys) · terminal · outils **variant par type projet** (saas/appli/logiciel/outil/business) |
+
+**Pattern commun à chaque chapitre** :
+- Mode Débutant chat (questions FR zéro-jargon) + Mode Formulaire (défaut) — toggle persisté en localStorage `mindeck:technique:{key}:mode`
+- State JSON dans `sections.content` + debounced save 800ms + merge-safe pour évolutions schéma
+- Progress bar complétude (`computeXxxCompleteness` 0-100) + validation live (errors/warnings/infos)
+- Exports : toujours Markdown + JSON + Claude brief (prompt prêt à coller) — optionnel Mermaid/CSV/YAML selon chap
+- Blocs **collapsible** avec auto-collapse quand 100% rempli (`CollapsibleSection`)
+- Persistance d'erreur réseau : badge "⚠ Échec sauvegarde" dans le header via `useChapterPersistence`
+
+**% global technique** (agrégateur `src/lib/technique/completeness.ts`) :
+- Moyenne des 12 `computeXxxCompleteness` exposée dans le cockpit (4e col de la grille Progression : Brainstorm · Phase · 🎨 Design · ⚙️ Technique)
+- Cliquable → deep link vers l'onglet Technique (via `navigateTab` qui met à jour `?tab=`)
+- En mode Débutant, moyenne calculée uniquement sur les 6 chaps actifs (strategy, frontend, backend, data, auth-security, hosting-devops)
+
+**Niveau d'expertise user** (partagé avec Design via `useExperienceLevel`) :
+- **Débutant** (🐣) : 6 chaps essentiels visibles + banner hint dans le menu
+- **Intermédiaire / Expert** : 12 chaps visibles
+- Gating dans `src/lib/technique/gating.ts` (`BEGINNER_CHAPTERS`)
+
+**Cmd+K Command Palette** (`_shared/CommandPalette.tsx`) :
+- Bouton trigger dans le menu vertical avec badge `⌘K`
+- Dialog modal avec input search + liste actions groupées (navigation / actions / export)
+- Keyboard nav complète : ↑↓ naviguer, Enter exécuter, Esc fermer
+- a11y : `role="dialog"`, `aria-modal="true"`, focus auto sur input
+
+**Cost Calculator Live** (`_shared/CostEstimateCard.tsx` + `lib/technique/cost-estimator.ts`) :
+- Matrice de pricing 2026 pour 40+ services (Vercel, Supabase, Stripe, Anthropic, etc.) aux paliers 100/1k/10k/100k users
+- Hypothèses : ARPU $10, conversion 5%, LLM avec prompt caching 90%
+- Affiché au-dessus du catalogue du chap 7 Services
+- Recalcule live à chaque ajout/retrait de service marqué "Utilisé"
+- Breakdown dépliable par service + badges 🆓 free tier / ⚠ pricing manquant
+
+**Structure des fichiers** (exemple chap 1) :
+```
+src/app/project/[id]/technique/strategy/
+├── index.tsx                # Orchestrator utilisant ChapterShell + useChapterPersistence + useHydratedLocalStorage
+├── state.ts                 # Types + DEFAULT_STATE + merge-safe + parse + compute
+├── validators.ts            # Règles de validation live
+├── templates.ts             # Templates par type projet
+├── blocks/                  # 1 fichier par bloc (V1 MUST) utilisant CollapsibleSection partagé
+├── components/              # BeginnerChat (spécifique au chap)
+└── exports/                 # markdown.ts + json.ts + claude-brief.ts
+```
+
+**Shared components** (`src/app/project/[id]/technique/_shared/`) :
+- `ChapterShell.tsx` — wrapper : header (emoji + titre + description + progress + issues + save state + mode toggle) + content + issues list
+- `CollapsibleSection.tsx` — wrapper pliable (emoji + titre + description + status badge + chevron) avec persistance localStorage + auto-collapse à 100%
+- `BlockStatus.tsx` — badge "X/Y remplis" avec couleur conditionnelle
+- `ModeToggle.tsx` — toggle Débutant ⇄ Formulaire (type `ChapterMode`)
+- `ExportPanel.tsx` — panneau d'exports générique (select format + copier + télécharger + preview)
+- `CommandPalette.tsx` — Cmd+K palette + hook `useCmdK` + helper `buildChapterNavActions`
+- `CostEstimateCard.tsx` — widget coût mensuel estimé avec toggle scale
+- `useChapterPersistence.ts` — hook persistence debounced 800ms avec guards unmount + error handling
+- `useHydratedLocalStorage.ts` — hook localStorage SSR-safe pour mode/préférences
+
+**Libs Technique réutilisables** (`src/lib/technique/`) :
+- `completeness.ts` — agrégateur : `computeChapterCompleteness(key, sections)` + `computeOverallTechniqueCompleteness(sections, chapters?)` + `TECHNIQUE_SECTION_KEYS` registry des 12 chaps
+- `gating.ts` — `getActiveChapters(level)` + `BEGINNER_CHAPTERS` (6 essentiels) + `ALL_CHAPTERS`
+- `stack-presets.ts` — 8 combos stack curés (T3, Next+Supabase, Rails+Postgres, FastAPI+React, Astro, etc.)
+- `services-catalog.ts` — catalogue 30 catégories × services avec scoring `ServiceScore` (populaire/emergent/legacy) et `ServiceGroup` (monetisation/communications/contenu-medias/growth-support/ai-dev)
+- `tooling-presets.ts` — `COMMON_TOOLS` + `TOOLS_BY_PROJECT_TYPE` pour chap 12 Outillage
+- `workflow-automation.ts` — presets n8n/Zapier/Make/Pipedream pour chap 10
+- `cost-estimator.ts` — matrice pricing 2026 pour 40+ services + `estimateMonthlyCost()` avec matching fuzzy
+
+**Tables Supabase dédiées** (migrations 018, 019, 020, 021) :
+- `technique_stack_presets` — sauvegarde d'un snapshot stack complet (user-scoped ou project-scoped)
+- `technique_cost_projections` — snapshots historiques coûts par projection
+- `technique_llm_usage` — tracking usage LLM (tokens in/out/cached, coût, latency)
+- Migration 021 renomme `sections.section_key = 'tech'` en `'legacy-stack'`
+
+**Double-check concurrentiel 2026** :
+- Voir `TECHNIQUE-DOUBLE-CHECK.md` : synthèse de 4 recherches web (concurrents, feedback forums, nouveautés SaaS, patterns UX)
+- Mindeck best-in-class sur : pédagogie débutant→expert + exports Claude brief + Cost Calculator Live (différenciateur unique marché)
+- Voir `TECHNIQUE-AUDIT-REPORT.md` pour l'audit code + roadmap V5.1/V6
+
 ## Stack
 
 - **Next.js 16** (App Router, Turbopack) + React 19 + TypeScript strict
@@ -149,6 +246,14 @@ src/
 │   │   ├── colors-api.ts         # CRUD combos/saved colors Supabase
 │   │   ├── presets-api.ts        # CRUD design_system_presets Supabase
 │   │   └── combos.ts             # 20 combos curés
+│   ├── technique/                # Libs Technique réutilisables (12 chaps)
+│   │   ├── completeness.ts       # Agrégateur % par chap + global
+│   │   ├── gating.ts             # BEGINNER_CHAPTERS (6) + ALL_CHAPTERS (12)
+│   │   ├── services-catalog.ts   # 30 catégories × services (scoring 🔥🌱🪦)
+│   │   ├── stack-presets.ts      # 8 combos stack curés
+│   │   ├── tooling-presets.ts    # Outils par type projet (chap 12)
+│   │   ├── workflow-automation.ts# Presets n8n/Zapier/Make (chap 10)
+│   │   └── cost-estimator.ts     # Matrice pricing 40+ services + estimateMonthlyCost
 │   └── supabase/
 │       ├── client.ts             # createBrowserClient
 │       ├── server.ts             # createServerClient (cookies SSR)
@@ -168,7 +273,13 @@ src/
 │           ├── 012_user_preferences.sql
 │           ├── 013_project_priority_position.sql
 │           ├── 014_design_colors_combos.sql       # saved_colors + custom_color_combos
-│           └── 015_design_system_presets.sql      # design_system_presets (preset DS complet par user/projet)
+│           ├── 015_design_system_presets.sql      # design_system_presets (preset DS complet par user/projet)
+│           ├── 016_design_ui_inspirations.sql     # bucket Storage `inspirations` + table (chap 7 Design)
+│           ├── 017_user_experience_level.sql      # colonne experience_level dans user_preferences
+│           ├── 018_technique_stack_presets.sql    # snapshots stack complète (technique chap 7)
+│           ├── 019_technique_cost_projections.sql # snapshots historiques coûts
+│           ├── 020_technique_llm_usage.sql        # tracking usage LLM (tokens + coût + latency)
+│           └── 021_rename_tech_to_legacy_stack.sql# rename ancien tech section_key → legacy-stack
 └── middleware.ts                 # Refresh session Supabase
 ```
 
@@ -190,6 +301,36 @@ design/
 ├── a11y/                        # Chap 10 ✅
 ├── adaptivity/                  # Chap 11 ✅
 └── validation/                  # Chap 12 ✅
+```
+
+**Arbo des 12 chapitres Technique** (dans `src/app/project/[id]/technique/`) :
+```
+technique/
+├── index.tsx                    # Menu vertical (filtré par expertise) + badges % + routing + Cmd+K palette
+├── chapters.ts                  # Liste des 12 chaps avec status (tous ready)
+├── chapter-placeholder.tsx      # Fallback "bientôt"
+├── _shared/                     # Components et hooks partagés par les 12 chaps
+│   ├── ChapterShell.tsx         # Wrapper header + progress + issues + save state + a11y WCAG 2.2
+│   ├── CollapsibleSection.tsx   # Blocs pliables avec auto-collapse à 100%
+│   ├── BlockStatus.tsx          # Badge X/Y remplis
+│   ├── ModeToggle.tsx           # Toggle Débutant ⇄ Formulaire (ChapterMode)
+│   ├── ExportPanel.tsx          # Panneau exports générique
+│   ├── CommandPalette.tsx       # Cmd+K palette + useCmdK hook
+│   ├── CostEstimateCard.tsx     # Widget coût $/mois live
+│   ├── useChapterPersistence.ts # Hook save debounced 800ms avec guards unmount + error
+│   └── useHydratedLocalStorage.ts# Hook localStorage SSR-safe
+├── strategy/                    # Chap 1 ✅ (contraintes + objectifs + drivers + risques + ADR)
+├── architecture/                # Chap 2 ✅ (pattern + layers + data flow + entities + sécu)
+├── frontend/                    # Chap 3 ✅ (framework + rendering + styling + TS)
+├── backend/                     # Chap 4 ✅ (pattern + runtime + API + jobs)
+├── data/                        # Chap 5 ✅ (engine + hosting + ORM + migrations+backups)
+├── auth-security/               # Chap 6 ✅ (auth method + RBAC + OWASP + secrets)
+├── services/                    # Chap 7 ✅ (catalogue 30 catégories + Cost Calculator Live)
+├── hosting-devops/              # Chap 8 ✅ (platform + CI/CD + envs + deployment)
+├── observability/               # Chap 9 ✅ (errors + uptime + tests + metrics)
+├── ai-automation/               # Chap 10 ✅ (LLM + SDK + use cases + workflow)
+├── costs-compliance/            # Chap 11 ✅ (costs matrix + unit economics + RGPD)
+└── tooling/                     # Chap 12 ✅ (OS + outils variant par type projet)
 ```
 
 ## Modèle de données (Supabase)
@@ -312,7 +453,7 @@ Gradient de fond via `body::before` (3 radial-gradients floutés).
 
 ## Conventions spécifiques à ce projet
 
-- **Sections de brainstorming** : `src/lib/sections.ts` est la source de vérité. Chaque section a un `defaultForTypes: ProjectType[]` qui détermine si elle apparaît selon le type de projet. `RESOURCES_SECTION_KEYS = ["tech", "resources"]` sont affichées dans leurs onglets dédiés, pas dans l'éditeur brainstorm.
+- **Sections de brainstorming** : `src/lib/sections.ts` est la source de vérité. Chaque section a un `defaultForTypes: ProjectType[]` qui détermine si elle apparaît selon le type de projet. `DEDICATED_TAB_SECTION_KEYS = ["tech", "resources", "design"]` sont affichées dans leurs onglets dédiés, pas dans l'éditeur brainstorm. `tech` est la clé legacy renommée en `legacy-stack` par la migration 021 — le nouvel onglet Technique utilise 12 clés `tech-{chap}` distinctes.
 - **Types de champs** (`FieldType`) : `text`, `question`, `choice`, `links`, `score`.
 - **UI française** : tous les labels, placeholders, hints en français. Code / variables / fonctions en anglais.
 - **Auth** : pages protégées par `supabase.auth.getUser()` + `redirect("/login")` dans les Server Components. Ne pas utiliser `getSession()` côté serveur. Auth callback vérifie les erreurs et valide le type OTP.
@@ -355,6 +496,10 @@ Les migrations sont **incrémentales et idempotentes** (`create table if not exi
 - `016_design_ui_inspirations.sql` — prérequis pour bloc V4 Inspirations du chap 7 Design System
   - **+ bucket Storage `inspirations`** à créer manuellement (Storage > New bucket, privé, 5MB, MIME images) + 4 policies RLS sur `storage.objects` (SELECT/INSERT/UPDATE/DELETE où `bucket_id = 'inspirations' and (storage.foldername(name))[1] = auth.uid()::text`)
 - `017_user_experience_level.sql` — ajoute la colonne `experience_level` à `user_preferences`
+- `018_technique_stack_presets.sql` — sauvegarde stack complète (onglet Technique)
+- `019_technique_cost_projections.sql` — snapshots coûts historiques
+- `020_technique_llm_usage.sql` — tracking usage LLM (tokens + coût + latency)
+- `021_rename_tech_to_legacy_stack.sql` — rename ancien `sections.tech` → `legacy-stack` (nouveau onglet Technique utilise des clés `tech-{chap}` distinctes)
 
 ## À savoir avant de coder
 

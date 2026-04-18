@@ -41,7 +41,6 @@ export default function TechniquePanel({
     if (typeof window === "undefined") return;
     const saved = localStorage.getItem(lsKey);
     if (saved && TECHNIQUE_CHAPTERS.some((c) => c.key === saved)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveKey(saved as TechniqueChapterKey);
     }
   }, [lsKey]);
@@ -69,7 +68,6 @@ export default function TechniquePanel({
   // Si le chapitre courant est masqué par le niveau d'expertise, bascule vers le premier visible.
   useEffect(() => {
     if (!activeChapterKeys.includes(activeKey) && visibleChapters.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveKey(visibleChapters[0].key);
     }
   }, [activeChapterKeys, activeKey, visibleChapters]);
