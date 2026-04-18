@@ -14,6 +14,7 @@ import BackendChapter from "./backend";
 import DataChapter from "./data";
 import AuthSecurityChapter from "./auth-security";
 import ServicesChapter from "./services";
+import HostingDevopsChapter from "./hosting-devops";
 
 const LS_ACTIVE_CHAPTER_PREFIX = "mindeck_technique_active_chapter_";
 
@@ -187,6 +188,13 @@ export default function TechniquePanel({
           />
         ) : activeKey === "services" ? (
           <ServicesChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : activeKey === "hosting-devops" ? (
+          <HostingDevopsChapter
             project={project}
             initialSections={initialSections}
             onProjectUpdate={onProjectUpdate}
