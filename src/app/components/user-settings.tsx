@@ -63,6 +63,8 @@ export default function UserSettings({
   initialPreferences: UserPreferences | null;
 }) {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const wasOpenRef = useRef(false);
   const [section, setSection] = useState<SettingsSection>("profile");
 
   const [prefs, setPrefs] = useState({
@@ -133,6 +135,14 @@ export default function UserSettings({
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  // ---- Refocus trigger button at close (a11y) ----
+  useEffect(() => {
+    if (wasOpenRef.current && !open) {
+      triggerRef.current?.focus();
+    }
+    wasOpenRef.current = open;
   }, [open]);
 
   // ---- Portal container ----
@@ -640,8 +650,12 @@ export default function UserSettings({
     <>
       {/* Avatar button */}
       <button
+        ref={triggerRef}
+        type="button"
         onClick={() => setOpen(true)}
-        className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold hover:bg-accent-hover transition-colors"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold hover:bg-accent-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2"
         title="Paramètres"
       >
         {initials}
