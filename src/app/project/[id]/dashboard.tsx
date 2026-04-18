@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SectionDef } from "@/lib/sections";
 import type { Project, ProjectStatus, ProjectType, Todo, Decision, RoadmapItem, Risk, UserPreferences } from "@/lib/types";
 import { PROJECT_STATUSES, PROJECT_TYPES } from "@/lib/types";
@@ -73,6 +73,17 @@ export default function ProjectDashboard({
   const [risks, setRisks] = useState<Risk[]>(initialRisks);
   const [tab, setTab] = useState<Tab>(
     initialTab && VALID_TABS.has(initialTab) ? (initialTab as Tab) : "cockpit"
+  );
+  const navigateTab = useCallback(
+    (next: Tab) => {
+      setTab(next);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", next);
+        window.history.replaceState(window.history.state, "", url.toString());
+      }
+    },
+    []
   );
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(project.name);
@@ -358,7 +369,7 @@ export default function ProjectDashboard({
           return (
             <button
               key={t.value}
-              onClick={() => setTab(t.value)}
+              onClick={() => navigateTab(t.value)}
               className={`flex-1 px-2 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all inline-flex items-center justify-center gap-1 ${
                 tab === t.value
                   ? "bg-accent text-white shadow-sm"
@@ -393,8 +404,8 @@ export default function ProjectDashboard({
           onUpdate={updateProject}
           onRoadmapChange={setRoadmap}
           onRisksChange={setRisks}
-          onGoToTasks={() => setTab("tasks")}
-          onGoToDesign={() => setTab("design")}
+          onGoToTasks={() => navigateTab("tasks")}
+          onGoToDesign={() => navigateTab("design")}
         />
       )}
 
