@@ -12,6 +12,7 @@ import A11yCheckBlock from "./blocks/A11yCheckBlock";
 import DensitySwitcherBlock from "./blocks/DensitySwitcherBlock";
 import TokenVersioningBlock from "./blocks/TokenVersioningBlock";
 import DsExportBlock from "./blocks/ExportBlock";
+import UiInspirationsBlock from "./blocks/UiInspirationsBlock";
 import ModeToggle from "./components/ModeToggle";
 import BeginnerChat from "./components/BeginnerChat";
 import PrintableDsCard from "./components/PrintableCard";
@@ -192,6 +193,9 @@ export default function DesignSystemChapter({
 
           {/* V3 NICE */}
           <TokenVersioningBlock state={state} onChange={updateState} />
+
+          {/* V4 — Banque d'inspirations UI (Supabase table design_ui_inspirations) */}
+          <UiInspirationsBlock projectId={project.id} />
         </>
       )}
 
