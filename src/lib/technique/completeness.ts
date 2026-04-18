@@ -7,6 +7,10 @@
 // dans `src/app/project/[id]/technique/{chap}/state.ts` et sera wire ici.
 
 import type { TechniqueChapterKey } from "@/app/project/[id]/technique/chapters";
+import {
+  computeStrategyCompleteness,
+  parseStrategyState,
+} from "@/app/project/[id]/technique/strategy/state";
 
 // Clés canoniques dans la table `sections` (JSON dans `content`).
 export const TECHNIQUE_SECTION_KEYS: Record<TechniqueChapterKey, string> = {
@@ -31,7 +35,7 @@ type ChapterComputer = (content: string | undefined | null) => number;
 const DEFAULT_COMPUTER: ChapterComputer = () => 0;
 
 const CHAPTER_COMPUTERS: Record<TechniqueChapterKey, ChapterComputer> = {
-  strategy: DEFAULT_COMPUTER,
+  strategy: (c) => computeStrategyCompleteness(parseStrategyState(c)),
   architecture: DEFAULT_COMPUTER,
   frontend: DEFAULT_COMPUTER,
   backend: DEFAULT_COMPUTER,

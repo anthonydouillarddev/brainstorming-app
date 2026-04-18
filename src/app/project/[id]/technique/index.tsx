@@ -7,12 +7,15 @@ import { getActiveChapters } from "@/lib/technique/gating";
 import { useExperienceLevel } from "@/lib/design/use-experience-level";
 import { TECHNIQUE_CHAPTERS, type TechniqueChapterKey } from "./chapters";
 import ChapterPlaceholder from "./chapter-placeholder";
+import StrategyChapter from "./strategy";
 
 const LS_ACTIVE_CHAPTER_PREFIX = "mindeck_technique_active_chapter_";
 
 export default function TechniquePanel({
   project,
   initialSections,
+  onProjectUpdate,
+  onSectionsChange,
 }: {
   project: Project;
   initialSections: Record<string, string>;
@@ -134,7 +137,16 @@ export default function TechniquePanel({
           </div>
         )}
 
-        <ChapterPlaceholder chapter={activeChapter} />
+        {activeKey === "strategy" ? (
+          <StrategyChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : (
+          <ChapterPlaceholder chapter={activeChapter} />
+        )}
       </main>
     </div>
   );
