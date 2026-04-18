@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Project } from "@/lib/types";
+import { computeAllChaptersCompleteness } from "@/lib/design-completeness";
+import { getActiveChapters } from "@/lib/design/gating";
+import { useExperienceLevel } from "@/lib/design/use-experience-level";
 import { DESIGN_CHAPTERS, type DesignChapterKey } from "./chapters";
 import ChapterPlaceholder from "./chapter-placeholder";
 import VisualChapter from "./visual";
@@ -11,6 +14,11 @@ import InfoNavChapter from "./info-nav";
 import FlowsChapter from "./flows";
 import PrinciplesChapter from "./principles";
 import DesignSystemChapter from "./design-system";
+import StatesChapter from "./states";
+import MicrocopyChapter from "./microcopy";
+import A11yChapter from "./a11y";
+import AdaptivityChapter from "./adaptivity";
+import ValidationChapter from "./validation";
 
 const LS_ACTIVE_CHAPTER = "mindeck_design_active_chapter";
 
@@ -46,14 +54,38 @@ export default function DesignPanel({
 
   const activeChapter = DESIGN_CHAPTERS.find((c) => c.key === activeKey)!;
 
+  const experience = useExperienceLevel();
+  const activeChapterKeys = useMemo(
+    () => getActiveChapters(experience),
+    [experience]
+  );
+
+  const visibleChapters = useMemo(
+    () => DESIGN_CHAPTERS.filter((c) => activeChapterKeys.includes(c.key)),
+    [activeChapterKeys]
+  );
+
+  // Si le chapitre courant est masqué par le niveau d'expertise, bascule vers le premier visible.
+  useEffect(() => {
+    if (!activeChapterKeys.includes(activeKey) && visibleChapters.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveKey(visibleChapters[0].key);
+    }
+  }, [activeChapterKeys, activeKey, visibleChapters]);
+
+  const completenessByChapter = useMemo(
+    () => computeAllChaptersCompleteness(initialSections),
+    [initialSections]
+  );
+
   return (
     <div className="flex flex-col lg:flex-row gap-5 items-start">
       {/* ─── MENU VERTICAL (12 chapitres) ─── */}
       <aside className="w-full lg:w-56 shrink-0 lg:sticky lg:top-4">
         <nav className="bg-card/60 border border-border rounded-xl p-2 space-y-0.5">
-          {DESIGN_CHAPTERS.map((chapter) => {
+          {visibleChapters.map((chapter) => {
             const isActive = chapter.key === activeKey;
-            const isReady = chapter.status === "ready";
+            const pct = completenessByChapter[chapter.key] ?? 0;
             return (
               <button
                 key={chapter.key}
@@ -69,31 +101,11 @@ export default function DesignPanel({
                   <span className="opacity-60 mr-1">{chapter.num}.</span>
                   {chapter.label}
                 </span>
-                {isReady ? (
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      isActive ? "bg-white" : "bg-green-500"
-                    }`}
-                    title="Prêt"
-                  />
-                ) : (
-                  <span
-                    className={`text-[9px] font-mono uppercase px-1 py-0.5 rounded ${
-                      isActive ? "bg-white/20" : "bg-amber-500/20 text-amber-700 dark:text-amber-400"
-                    }`}
-                  >
-                    soon
-                  </span>
-                )}
+                <ChapterProgress percent={pct} isActive={isActive} />
               </button>
             );
           })}
         </nav>
-
-        <div className="mt-3 text-[11px] text-muted px-2 leading-relaxed">
-          12 chapitres issus de la recherche design. <strong>7 prêts</strong> (Fondations,
-          Identité, Info &amp; Nav, Parcours, Principes UX, Visuel, Design System) · 5 en dev.
-        </div>
       </aside>
 
       {/* ─── CONTENU DU CHAPITRE ACTIF ─── */}
@@ -147,10 +159,81 @@ export default function DesignPanel({
             onProjectUpdate={onProjectUpdate}
             onSectionsChange={onSectionsChange}
           />
+        ) : activeKey === "states" ? (
+          <StatesChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : activeKey === "microcopy" ? (
+          <MicrocopyChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : activeKey === "a11y" ? (
+          <A11yChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : activeKey === "adaptivity" ? (
+          <AdaptivityChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : activeKey === "validation" ? (
+          <ValidationChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
         ) : (
           <ChapterPlaceholder chapter={activeChapter} />
         )}
       </main>
     </div>
+  );
+}
+
+function progressTone(percent: number): {
+  text: string;
+  bar: string;
+} {
+  if (percent >= 70) return { text: "text-green-600 dark:text-green-400", bar: "bg-green-500" };
+  if (percent >= 30) return { text: "text-amber-600 dark:text-amber-400", bar: "bg-amber-500" };
+  return { text: "text-muted", bar: "bg-muted/60" };
+}
+
+function ChapterProgress({ percent, isActive }: { percent: number; isActive: boolean }) {
+  const tone = progressTone(percent);
+  const labelClass = isActive ? "text-white/90" : tone.text;
+  const barClass = isActive ? "bg-white" : tone.bar;
+  const trackClass = isActive ? "bg-white/20" : "bg-card/80 border border-border";
+  return (
+    <span
+      className="flex items-center gap-1.5 shrink-0"
+      title={`${percent}% complété`}
+      aria-label={`Complétude ${percent}%`}
+    >
+      <span
+        className={`h-1 w-8 rounded-full overflow-hidden ${trackClass}`}
+        aria-hidden
+      >
+        <span
+          className={`block h-full transition-all duration-500 ${barClass}`}
+          style={{ width: `${percent}%` }}
+        />
+      </span>
+      <span className={`text-[10px] font-mono tabular-nums ${labelClass}`}>
+        {percent}%
+      </span>
+    </span>
   );
 }

@@ -140,7 +140,7 @@ export function parseDesignSystemState(
   }
 }
 
-export function computeDsCompleteness(state: DesignSystemState): number {
+export function computeDesignSystemCompleteness(state: DesignSystemState): number {
   let score = 0;
   if (state.semanticTokens.length >= 5) score += 25;
   if (state.components.length >= 8) score += 25;

@@ -17,7 +17,7 @@ import BeginnerChat from "./components/BeginnerChat";
 import PrintableCard from "./components/PrintableCard";
 import {
   FOUNDATIONS_SECTION_KEY,
-  computeCompleteness,
+  computeFoundationsCompleteness,
   mergeFoundationsState,
   parseFoundationsState,
   type FoundationsMode,
@@ -63,7 +63,7 @@ export default function FoundationsChapter({
     window.localStorage.setItem(LS_MODE, m);
   }
 
-  const completeness = computeCompleteness(state);
+  const completeness = computeFoundationsCompleteness(state);
   const issues = validateFoundations(state);
   const errorCount = issues.filter((i) => i.severity === "error").length;
   const warnCount = issues.filter((i) => i.severity === "warn").length;

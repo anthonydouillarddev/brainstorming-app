@@ -17,7 +17,7 @@ import BeginnerChat from "./components/BeginnerChat";
 import PrintableDsCard from "./components/PrintableCard";
 import {
   DESIGN_SYSTEM_SECTION_KEY,
-  computeDsCompleteness,
+  computeDesignSystemCompleteness,
   mergeDesignSystemState,
   parseDesignSystemState,
   type DesignSystemMode,
@@ -60,7 +60,7 @@ export default function DesignSystemChapter({
     window.localStorage.setItem(LS_MODE, m);
   }
 
-  const completeness = computeDsCompleteness(state);
+  const completeness = computeDesignSystemCompleteness(state);
   const issues = validateDesignSystem(state);
   const errorCount = issues.filter((i) => i.severity === "error").length;
   const warnCount = issues.filter((i) => i.severity === "warn").length;

@@ -170,7 +170,7 @@ export function parseFoundationsState(content: string | undefined | null): Found
 
 // Score de complétude 0-100 basé sur les 4 MUST (V1)
 // JTBD: 25, persona: 25, aha: 25, principes: 25
-export function computeCompleteness(state: FoundationsState): number {
+export function computeFoundationsCompleteness(state: FoundationsState): number {
   let score = 0;
   if (state.jtbdCore.trim().length >= 20) score += 25;
   const primary = state.personas.find((p) => p.id === state.primaryPersonaId) ?? state.personas[0];

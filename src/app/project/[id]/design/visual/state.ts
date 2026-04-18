@@ -59,3 +59,36 @@ export function parseVisualState(content: string | undefined | null): VisualStat
 }
 
 export const VISUAL_SECTION_KEY = "design_visual";
+
+export function computeVisualCompleteness(state: VisualState): number {
+  let score = 0;
+  if (
+    state.customColor.trim().toLowerCase() !==
+    DEFAULT_VISUAL_STATE.customColor.toLowerCase()
+  ) {
+    score += 25;
+  }
+  const t = state.tuning;
+  const d = DEFAULT_VISUAL_STATE.tuning;
+  if (
+    t.contrast !== d.contrast ||
+    t.chromaPeakIndex !== d.chromaPeakIndex ||
+    t.chromaAmount !== d.chromaAmount
+  ) {
+    score += 25;
+  }
+  if (state.selected.length >= 3) score += 25;
+  else if (state.selected.length >= 1) score += 12;
+  const dt = DEFAULT_TOKENS;
+  const tokensChanged =
+    state.tokens.typoBaseSize !== dt.typoBaseSize ||
+    state.tokens.typoRatio !== dt.typoRatio ||
+    state.tokens.spacingPreset !== dt.spacingPreset ||
+    state.tokens.spacingDensity !== dt.spacingDensity ||
+    state.tokens.radius !== dt.radius ||
+    state.tokens.shadow !== dt.shadow ||
+    state.tokens.fontPairingId !== dt.fontPairingId ||
+    state.tokens.fontMode !== dt.fontMode;
+  if (tokensChanged) score += 25;
+  return Math.min(100, score);
+}

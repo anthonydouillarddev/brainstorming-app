@@ -302,6 +302,7 @@ export type Theme = "light" | "dark" | "system";
 export type DisplayDensity = "compact" | "normal" | "comfortable";
 export type DefaultTaskView = "list" | "kanban";
 export type UserRole = "admin" | "free" | "demo" | "pro" | "vip";
+export type ExperienceLevel = "beginner" | "intermediate" | "expert";
 
 export interface UserPreferences {
   id: string;
@@ -310,6 +311,7 @@ export interface UserPreferences {
   display_density: DisplayDensity;
   default_task_view: DefaultTaskView;
   role: UserRole;
+  experience_level: ExperienceLevel;
   locale: string;
   created_at: string;
   updated_at: string;
@@ -332,5 +334,6 @@ export const DEFAULT_PREFERENCES: Omit<UserPreferences, "id" | "user_id" | "crea
   display_density: "normal",
   default_task_view: "list",
   role: "admin",
+  experience_level: "intermediate",
   locale: "fr",
 };
