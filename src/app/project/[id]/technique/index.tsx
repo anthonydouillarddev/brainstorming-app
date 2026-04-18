@@ -18,6 +18,7 @@ import HostingDevopsChapter from "./hosting-devops";
 import ObservabilityChapter from "./observability";
 import AiAutomationChapter from "./ai-automation";
 import CostsComplianceChapter from "./costs-compliance";
+import ToolingChapter from "./tooling";
 
 const LS_ACTIVE_CHAPTER_PREFIX = "mindeck_technique_active_chapter_";
 
@@ -139,9 +140,9 @@ export default function TechniquePanel({
             <div className="flex-1">
               <div className="font-semibold mb-1">Ancienne saisie Technique disponible</div>
               <p className="text-muted text-xs leading-relaxed">
-                Une saisie de l&apos;ancien onglet Technique existe pour ce projet. Elle est conservée
-                en lecture seule. La migration vers les 12 nouveaux chapitres sera proposée dès que
-                le chap 1 Stratégie sera livré.
+                Une saisie de l&apos;ancien onglet Technique existe pour ce projet et est conservée
+                en lecture seule. Tu peux maintenant la retaper dans les 12 chapitres (commence par
+                Chap 1 Stratégie). Migration SQL 021 renomme la clé en <code>legacy-stack</code>.
               </p>
             </div>
           </div>
@@ -219,6 +220,13 @@ export default function TechniquePanel({
           />
         ) : activeKey === "costs-compliance" ? (
           <CostsComplianceChapter
+            project={project}
+            initialSections={initialSections}
+            onProjectUpdate={onProjectUpdate}
+            onSectionsChange={onSectionsChange}
+          />
+        ) : activeKey === "tooling" ? (
+          <ToolingChapter
             project={project}
             initialSections={initialSections}
             onProjectUpdate={onProjectUpdate}

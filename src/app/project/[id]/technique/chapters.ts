@@ -36,5 +36,5 @@ export const TECHNIQUE_CHAPTERS: TechniqueChapter[] = [
   { key: "observability", num: 9, emoji: "📊", label: "Observability & Qualité", hint: "Error tracking, uptime, logs, tests, DORA metrics", status: "ready" },
   { key: "ai-automation", num: 10, emoji: "🤖", label: "IA & Automation", hint: "Claude, Vercel AI SDK, prompt caching, n8n workflows", status: "ready" },
   { key: "costs-compliance", num: 11, emoji: "💰", label: "Coûts & Compliance", hint: "Coûts infra+LLM, unit economics, RGPD, mentions légales", status: "ready" },
-  { key: "tooling", num: 12, emoji: "🛠️", label: "Outillage & Knowledge", hint: "IDE+AI, Obsidian, launcher, variant par type projet", status: "bientot" },
+  { key: "tooling", num: 12, emoji: "🛠️", label: "Outillage & Knowledge", hint: "IDE+AI, Obsidian, launcher, variant par type projet", status: "ready" },
 ];

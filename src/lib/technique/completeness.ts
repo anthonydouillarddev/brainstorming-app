@@ -51,6 +51,11 @@ import {
   computeCostsCompleteness,
   parseCostsState,
 } from "@/app/project/[id]/technique/costs-compliance/state";
+import {
+  computeToolingCompleteness,
+  parseToolingState,
+} from "@/app/project/[id]/technique/tooling/state";
+import { COMMON_TOOLS, TOOLS_BY_PROJECT_TYPE } from "@/lib/technique/tooling-presets";
 
 // Clés canoniques dans la table `sections` (JSON dans `content`).
 export const TECHNIQUE_SECTION_KEYS: Record<TechniqueChapterKey, string> = {
@@ -86,7 +91,12 @@ const CHAPTER_COMPUTERS: Record<TechniqueChapterKey, ChapterComputer> = {
   observability: (c) => computeObservabilityCompleteness(parseObservabilityState(c)),
   "ai-automation": (c) => computeAiCompleteness(parseAiState(c)),
   "costs-compliance": (c) => computeCostsCompleteness(parseCostsState(c)),
-  tooling: DEFAULT_COMPUTER,
+  // Tooling : on compte sur les COMMON_TOOLS (6) pour le % global. Les tools
+  // spécifiques au type projet s'affichent dans l'UI mais ne pénalisent pas le score.
+  tooling: (c) => {
+    const sample = COMMON_TOOLS.length + TOOLS_BY_PROJECT_TYPE.saas.length;
+    return computeToolingCompleteness(parseToolingState(c), sample);
+  },
 };
 
 export function computeChapterCompleteness(
