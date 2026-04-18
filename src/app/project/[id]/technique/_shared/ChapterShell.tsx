@@ -54,12 +54,20 @@ export default function ChapterShell({
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[200px]" aria-live="polite">
             <div className="flex items-baseline justify-between mb-1">
               <span className="text-xs text-muted">Complétude</span>
-              <span className="text-sm font-bold">{completeness}%</span>
+              <span className="text-sm font-bold" aria-label={`${completeness} pourcent complété`}>
+                {completeness}%
+              </span>
             </div>
-            <div className="h-1.5 bg-background/60 rounded-full overflow-hidden">
+            <div
+              className="h-1.5 bg-background/60 rounded-full overflow-hidden"
+              role="progressbar"
+              aria-valuenow={completeness}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
               <div
                 className="h-full bg-accent rounded-full transition-all duration-500"
                 style={{ width: `${completeness}%` }}

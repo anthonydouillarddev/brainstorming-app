@@ -4,7 +4,7 @@
 // Phase 0 : squelette minimal. Phase 3 enrichira chaque entrée avec pricing, docs, pros/cons.
 
 export type ServiceScore = "populaire" | "emergent" | "legacy";
-export type ServiceGroup = "monetisation" | "communications" | "contenu-medias" | "growth-support";
+export type ServiceGroup = "monetisation" | "communications" | "contenu-medias" | "growth-support" | "ai-dev";
 export type ProjectType = "saas" | "outil" | "appli" | "logiciel" | "business";
 
 export interface ServiceOption {
@@ -49,7 +49,7 @@ export const SERVICES_CATALOG: ServiceCategory[] = [
     alternatives: [
       { name: "Paddle", score: "populaire", note: "MoR 5% — gère TVA EU" },
       { name: "LemonSqueezy", score: "emergent", note: "MoR 3.5% — indie-friendly" },
-      { name: "Polar", score: "emergent" },
+      { name: "Polar.sh", score: "emergent", note: "🌱 Dev-first MoR 4% + $0.40, 120+ pays, open-source" },
     ],
   },
   {
@@ -352,6 +352,75 @@ export const SERVICES_CATALOG: ServiceCategory[] = [
       { name: "DIY retry logic", score: "legacy" },
     ],
   },
+  {
+    id: "feature-flags",
+    group: "growth-support",
+    label: "Feature Flags (dédié)",
+    hint: "Toggle features runtime, rollouts progressifs, A/B cohort — standalone vs full analytics",
+    fitFor: ["saas", "appli"],
+    recommended: { name: "PostHog Feature Flags", score: "populaire", note: "🔥 Inclus dans PostHog free tier, combo avec analytics" },
+    alternatives: [
+      { name: "DevCycle", score: "emergent", note: "🌱 Acquis Dynatrace 2026, replace LaunchDarkly" },
+      { name: "Statsig", score: "populaire", note: "Gratuit jusqu'à 1M events/mois" },
+      { name: "LaunchDarkly", score: "legacy", note: "🪦 Leader historique, cher" },
+    ],
+  },
+  {
+    id: "compliance-automation",
+    group: "growth-support",
+    label: "Compliance automation",
+    hint: "SOC 2, ISO, GDPR — automation audits et questionnaires",
+    fitFor: ["saas"],
+    recommended: { name: "Vanta", score: "emergent", note: "🌱 AI agent policies, 400+ intégrations, mainstream 2026" },
+    alternatives: [
+      { name: "Drata", score: "emergent", note: "Per-framework pricing, deep customization" },
+      { name: "Delve", score: "emergent", note: "Newcomer, lean pour startups" },
+    ],
+  },
+
+  // ═══ 🤖 AI-DEV (nouveau groupe 2026) ═══
+  {
+    id: "ai-eval-observability",
+    group: "ai-dev",
+    label: "AI Eval & Observability",
+    hint: "Tracer + évaluer les LLM calls, détecter hallucinations, régressions quality",
+    fitFor: ["saas", "outil", "appli"],
+    recommended: { name: "Braintrust", score: "populaire", note: "🔥 Evals + observability, 1M spans/mois free" },
+    alternatives: [
+      { name: "Langfuse", score: "populaire", note: "🔥 Acquis ClickHouse jan 2026, 19/63 Fortune 50/500" },
+      { name: "Pydantic Logfire", score: "emergent", note: "🌱 Full-stack observability AI-native" },
+      { name: "Helicone", score: "emergent", note: "🌱 OSS, setup minimal" },
+      { name: "LangSmith", score: "populaire", note: "LangChain-first" },
+    ],
+  },
+  {
+    id: "ai-gateway",
+    group: "ai-dev",
+    label: "AI Gateway & Routing",
+    hint: "Multi-model routing, fallback, guardrails, rate limit, governance",
+    fitFor: ["saas", "appli"],
+    recommended: { name: "Portkey", score: "populaire", note: "🔥 2T tokens/jour, OSS, routing + guardrails" },
+    alternatives: [
+      { name: "OpenRouter", score: "populaire", note: "🔥 200+ LLMs unified API, routing stateless" },
+      { name: "LiteLLM", score: "emergent", note: "🌱 OSS proxy, 100+ providers, self-host" },
+      { name: "Vercel AI Gateway", score: "populaire", note: "Claude Opus 4.7, Qwen 3.6, team privacy controls" },
+    ],
+  },
+  {
+    id: "ai-coding-assistant",
+    group: "ai-dev",
+    label: "AI Coding Assistant",
+    hint: "IDE/terminal AI-native pour le dev solo — choisir l'outil(s) quotidien",
+    fitFor: ["saas", "outil", "appli", "logiciel"],
+    recommended: { name: "Cursor 3", score: "populaire", note: "🔥 Composer 2, 61.3 CursorBench, 200+ tokens/sec" },
+    alternatives: [
+      { name: "Claude Code", score: "populaire", note: "🔥 1M context gratuit, prompt caching, batch API, terminal agentic" },
+      { name: "Windsurf", score: "populaire", note: "🔥 Wave 13, Plan Mode, Parallel Multi-Agent (acquis Cognition)" },
+      { name: "Zed", score: "emergent", note: "🌱 Rust-native, AI inline, ultra-rapide" },
+      { name: "GitHub Copilot", score: "populaire", note: "Inline completions, 29% adoption (déclinant)" },
+      { name: "GitHub Copilot Workspace", score: "legacy", note: "🪦 Dépassé par Cursor + Claude Code" },
+    ],
+  },
 ];
 
 // Helpers
@@ -367,6 +436,7 @@ export const SERVICE_GROUP_META: Record<ServiceGroup, { emoji: string; label: st
   monetisation: { emoji: "💰", label: "Monétisation" },
   communications: { emoji: "📬", label: "Communications" },
   "contenu-medias": { emoji: "🗃️", label: "Contenu & Médias" },
+  "ai-dev": { emoji: "🤖", label: "AI & Dev Tools" },
   "growth-support": { emoji: "🤝", label: "Growth & Support" },
 };
 
