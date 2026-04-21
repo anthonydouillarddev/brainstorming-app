@@ -21,7 +21,7 @@ type Props = {
   tasks: Todo[];
   ideas: Todo[];
   decisions: Decision[];
-  onNavigate: (slug: string) => void;
+  onNavigate: (slug: string, options?: { id?: string }) => void;
 };
 
 export default function AtelierPanel({

@@ -1,8 +1,10 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { Decision } from "@/lib/types";
+import { useDeepLinkScroll } from "./_shared/useDeepLinkScroll";
 
 export default function DecisionsPanel({
   projectId,
@@ -17,6 +19,16 @@ export default function DecisionsPanel({
   const [adding, setAdding] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const supabase = createClient();
+
+  const searchParams = useSearchParams();
+  const focusId = searchParams?.get("id") ?? null;
+  useDeepLinkScroll(focusId, "decision-id");
+  useEffect(() => {
+    if (focusId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setExpandedId(focusId);
+    }
+  }, [focusId]);
 
   const [form, setForm] = useState({
     title: "",
@@ -201,6 +213,7 @@ export default function DecisionsPanel({
             return (
               <div
                 key={d.id}
+                data-decision-id={d.id}
                 className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl overflow-hidden shadow-sm"
               >
                 <button

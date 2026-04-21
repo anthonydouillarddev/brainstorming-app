@@ -88,14 +88,19 @@ export default function ProjectDashboard({
   const tab =
     userTab && validSlugs.has(userTab) ? userTab : tabSlugs[0] ?? "cockpit";
 
-  const navigateTab = useCallback((next: string) => {
-    setUserTab(next);
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      url.searchParams.set("tab", next);
-      window.history.replaceState(window.history.state, "", url.toString());
-    }
-  }, []);
+  const navigateTab = useCallback(
+    (next: string, options?: { id?: string }) => {
+      setUserTab(next);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", next);
+        if (options?.id) url.searchParams.set("id", options.id);
+        else url.searchParams.delete("id");
+        window.history.replaceState(window.history.state, "", url.toString());
+      }
+    },
+    []
+  );
 
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(project.name);

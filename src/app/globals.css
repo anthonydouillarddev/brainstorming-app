@@ -82,3 +82,14 @@ html.density-comfortable { font-size: 17px; }
 @view-transition {
   navigation: auto;
 }
+
+/* Atelier — highlight flash pour deep links (?tab=xxx&id=yyy) */
+@keyframes mindeck-deep-link-flash {
+  0%   { box-shadow: 0 0 0 0 var(--ac); background-color: color-mix(in oklab, var(--ac) 18%, transparent); }
+  70%  { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; background-color: transparent; }
+}
+.mindeck-deep-link-flash {
+  animation: mindeck-deep-link-flash 1.5s ease-out;
+  border-radius: 12px;
+}

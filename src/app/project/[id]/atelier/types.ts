@@ -43,6 +43,7 @@ export type Note = {
   title: string;
   content: string;
   pinned: boolean;
+  tags: string[];
   linked_todo_id: string | null;
   linked_decision_id: string | null;
   linked_dev_item_id: string | null;

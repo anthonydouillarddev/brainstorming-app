@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { SCHEMA_TEMPLATES } from "../types";
 import type { SchemaRow, SchemaTemplate } from "../types";
+import TemplateModal from "./TemplateModal";
 
 type Props = {
   schemas: SchemaRow[];
@@ -18,6 +20,13 @@ export default function Gallery({
   onCreate,
   onDelete,
 }: Props) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  function handlePick(template: SchemaTemplate) {
+    setPickerOpen(false);
+    onCreate(template);
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -26,7 +35,7 @@ export default function Gallery({
         </h3>
         <button
           type="button"
-          onClick={() => onCreate("blank")}
+          onClick={() => setPickerOpen(true)}
           disabled={creating}
           className="px-4 py-2 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent-hover transition-colors disabled:opacity-60"
         >
@@ -35,7 +44,7 @@ export default function Gallery({
       </div>
 
       {schemas.length === 0 ? (
-        <EmptyState onCreate={onCreate} creating={creating} />
+        <EmptyState onOpenPicker={() => setPickerOpen(true)} creating={creating} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {schemas.map((s) => (
@@ -47,6 +56,10 @@ export default function Gallery({
             />
           ))}
         </div>
+      )}
+
+      {pickerOpen && (
+        <TemplateModal onClose={() => setPickerOpen(false)} onPick={handlePick} />
       )}
     </div>
   );
@@ -115,10 +128,10 @@ function SchemaCard({
 }
 
 function EmptyState({
-  onCreate,
+  onOpenPicker,
   creating,
 }: {
-  onCreate: (template: SchemaTemplate) => void;
+  onOpenPicker: () => void;
   creating: boolean;
 }) {
   return (
@@ -130,7 +143,7 @@ function EmptyState({
       </p>
       <button
         type="button"
-        onClick={() => onCreate("blank")}
+        onClick={onOpenPicker}
         disabled={creating}
         className="px-5 py-2.5 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent-hover transition-colors disabled:opacity-60"
       >

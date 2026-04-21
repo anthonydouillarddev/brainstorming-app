@@ -542,6 +542,7 @@ export default function TodoList({
                     {doneTodos.map((todo) => (
                       <div
                         key={todo.id}
+                        data-todo-id={todo.id}
                         className="px-4 py-2 flex items-center gap-3 opacity-50"
                       >
                         <button
@@ -603,6 +604,7 @@ export default function TodoList({
                     return (
                       <button
                         key={todo.id}
+                        data-todo-id={todo.id}
                         type="button"
                         onClick={() => {
                           setExpandedId(todo.id);
@@ -699,7 +701,10 @@ function TodoRow({
           : "";
 
   return (
-    <div className={`border-l-4 ${priorityBg[todo.priority]} ${highlight}`}>
+    <div
+      data-todo-id={todo.id}
+      className={`border-l-4 ${priorityBg[todo.priority]} ${highlight}`}
+    >
       <div
         role="button"
         tabIndex={0}

@@ -15,7 +15,7 @@ type Props = {
   onSchemasChange: (schemas: SchemaRow[]) => void;
   tasks: Todo[];
   ideas: Todo[];
-  onNavigate: (slug: string) => void;
+  onNavigate: (slug: string, options?: { id?: string }) => void;
 };
 
 export default function SchemasView({

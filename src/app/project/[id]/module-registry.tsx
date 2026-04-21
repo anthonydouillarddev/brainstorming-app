@@ -33,7 +33,7 @@ export type ModuleContext = {
   onDecisionsChange: (decisions: Decision[]) => void;
   onRoadmapChange: (items: RoadmapItem[]) => void;
   onRisksChange: (risks: Risk[]) => void;
-  onNavigate: (slug: string) => void;
+  onNavigate: (slug: string, options?: { id?: string }) => void;
 };
 
 type ModuleRenderer = (ctx: ModuleContext) => ReactNode;

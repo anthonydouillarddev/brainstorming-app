@@ -16,7 +16,7 @@ type Props = {
   devItems: DevItem[];
   onPatch: (patch: Partial<Note>) => void;
   onDelete: () => void;
-  onNavigate: (slug: string) => void;
+  onNavigate: (slug: string, options?: { id?: string }) => void;
 };
 
 type Mode = "edit" | "preview";
@@ -35,6 +35,7 @@ export default function NoteEditor({
   const [content, setContent] = useState(note.content);
   const [mode, setMode] = useState<Mode>("edit");
   const [linkerOpen, setLinkerOpen] = useState(false);
+  const [tagInput, setTagInput] = useState("");
 
   const { save, saving, lastSaved, saveError } = useDebouncedRowSave<Note>({
     table: "notes",
@@ -53,6 +54,19 @@ export default function NoteEditor({
     },
     [onPatch, save]
   );
+
+  const tags = note.tags ?? [];
+
+  function addTag(raw: string) {
+    const cleaned = raw.trim().toLowerCase().replace(/\s+/g, "-").slice(0, 30);
+    if (!cleaned || tags.includes(cleaned)) return;
+    patch({ tags: [...tags, cleaned] });
+    setTagInput("");
+  }
+
+  function removeTag(tag: string) {
+    patch({ tags: tags.filter((t) => t !== tag) });
+  }
 
   function handleTitle(value: string) {
     setTitle(value);
@@ -89,8 +103,9 @@ export default function NoteEditor({
   function navigateToLink() {
     const link = currentLink();
     if (!link) return;
-    if (link.kind === "todo") onNavigate("tasks");
-    else if (link.kind === "decision") onNavigate("decisions");
+    if (link.kind === "todo") onNavigate("tasks", { id: link.id });
+    else if (link.kind === "decision")
+      onNavigate("decisions", { id: link.id });
     // dev_item : pas d'onglet dédié dans le projet, fallback sur l'accueil
   }
 
@@ -159,6 +174,40 @@ export default function NoteEditor({
               ✕
             </button>
           )}
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {tags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-accent/10 border border-accent/40 text-accent"
+            >
+              <span>🏷️ {tag}</span>
+              <button
+                type="button"
+                onClick={() => removeTag(tag)}
+                className="opacity-70 hover:opacity-100"
+                aria-label={`Retirer le tag ${tag}`}
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+          <input
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === ",") {
+                e.preventDefault();
+                addTag(tagInput);
+              } else if (e.key === "Backspace" && !tagInput && tags.length) {
+                removeTag(tags[tags.length - 1]);
+              }
+            }}
+            placeholder={tags.length === 0 ? "+ Ajouter un tag…" : "+ Tag"}
+            className="flex-1 min-w-[120px] text-xs bg-transparent border-none outline-none placeholder:text-muted focus:ring-0"
+            aria-label="Ajouter un tag"
+          />
         </div>
       </div>
 

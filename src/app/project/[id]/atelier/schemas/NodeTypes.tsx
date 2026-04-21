@@ -1,7 +1,26 @@
 "use client";
 
+import { createContext, useContext } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { SchemaNodeData } from "../types";
+
+type NodeNavigate = (todoId: string) => void;
+
+const NodeNavigateContext = createContext<NodeNavigate | null>(null);
+
+export function NodeNavigateProvider({
+  navigate,
+  children,
+}: {
+  navigate: NodeNavigate;
+  children: React.ReactNode;
+}) {
+  return (
+    <NodeNavigateContext.Provider value={navigate}>
+      {children}
+    </NodeNavigateContext.Provider>
+  );
+}
 
 const BASE_CLASSES =
   "px-4 py-2.5 rounded-xl border text-center text-sm font-medium shadow-sm min-w-[110px] max-w-[220px] transition-colors";
@@ -24,6 +43,7 @@ function classesFor(nodeType: SchemaNodeData["nodeType"], selected: boolean) {
 export default function AtelierNode({ data, selected }: NodeProps) {
   const nd = data as SchemaNodeData;
   const linked = !!nd.linkedTodoId;
+  const navigate = useContext(NodeNavigateContext);
   return (
     <div className={classesFor(nd.nodeType, !!selected)}>
       <Handle
@@ -34,13 +54,18 @@ export default function AtelierNode({ data, selected }: NodeProps) {
       <div className="flex items-center justify-center gap-1.5 break-words">
         <span>{nd.label || "Sans libellé"}</span>
         {linked && (
-          <span
-            aria-label="Lié à une tâche"
-            title="Lié à une tâche"
-            className="text-xs opacity-80"
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (navigate && nd.linkedTodoId) navigate(nd.linkedTodoId);
+            }}
+            aria-label="Ouvrir la tâche liée"
+            title="Ouvrir la tâche liée"
+            className="text-xs opacity-80 hover:opacity-100 cursor-pointer"
           >
             🔗
-          </span>
+          </button>
         )}
       </div>
       <Handle

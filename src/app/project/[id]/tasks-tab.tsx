@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { Project, Todo } from "@/lib/types";
 import { TAG_PRESETS, countTags, mergeTagSuggestions, uniqueTags } from "@/lib/tags";
 import TagFilter from "@/app/components/tag-filter";
 import TodoList from "@/app/components/todolist";
+import { useDeepLinkScroll } from "./_shared/useDeepLinkScroll";
 
 export default function TasksTab({
   userId,
@@ -29,6 +31,9 @@ export default function TasksTab({
   );
   const tagCounts = useMemo(() => countTags(allTodos), [allTodos]);
   const [activeTags, setActiveTags] = useState<string[]>([]);
+
+  const searchParams = useSearchParams();
+  useDeepLinkScroll(searchParams?.get("id") ?? null, "todo-id");
 
   return (
     <div className="space-y-8">

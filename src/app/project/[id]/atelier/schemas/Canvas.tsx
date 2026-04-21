@@ -35,7 +35,7 @@ import type {
 } from "../types";
 import { NODE_TYPES } from "../types";
 import { useDebouncedRowSave } from "../_shared/useDebouncedRowSave";
-import { nodeTypes } from "./NodeTypes";
+import { nodeTypes, NodeNavigateProvider } from "./NodeTypes";
 
 type Props = {
   schema: SchemaRow;
@@ -44,7 +44,7 @@ type Props = {
   onRename: (name: string) => void;
   onDataUpdate: (patch: Partial<SchemaRow>) => void;
   onBack: () => void;
-  onNavigate: (slug: string) => void;
+  onNavigate: (slug: string, options?: { id?: string }) => void;
 };
 
 type FlowNode = Node<SchemaNodeData>;
@@ -229,7 +229,7 @@ function CanvasInner({
 
   function navigateToTodo(todoId: string) {
     if (!todoId) return;
-    onNavigate("tasks");
+    onNavigate("tasks", { id: todoId });
   }
 
   return (
@@ -294,22 +294,24 @@ function CanvasInner({
         </aside>
 
         <div className="relative bg-background/20 min-h-[400px]">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onSelectionChange={onSelectionChange}
-            nodeTypes={nodeTypes}
-            fitView
-            fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
-            proOptions={{ hideAttribution: true }}
-          >
-            <Background gap={24} size={1} />
-            <Controls showInteractive={false} />
-            <MiniMap pannable zoomable className="!bg-card !border-border" />
-          </ReactFlow>
+          <NodeNavigateProvider navigate={navigateToTodo}>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onSelectionChange={onSelectionChange}
+              nodeTypes={nodeTypes}
+              fitView
+              fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
+              proOptions={{ hideAttribution: true }}
+            >
+              <Background gap={24} size={1} />
+              <Controls showInteractive={false} />
+              <MiniMap pannable zoomable className="!bg-card !border-border" />
+            </ReactFlow>
+          </NodeNavigateProvider>
         </div>
 
         <aside className="hidden md:flex flex-col border-l border-border p-4 gap-3 bg-background/30 overflow-y-auto">

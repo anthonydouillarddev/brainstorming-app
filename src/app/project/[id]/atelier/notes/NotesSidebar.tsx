@@ -10,6 +10,9 @@ type Props = {
   onCreate: () => void;
   creating: boolean;
   error: string | null;
+  tags: { tag: string; count: number }[];
+  activeTag: string | null;
+  onTagToggle: (tag: string) => void;
 };
 
 function formatRelativeDate(iso: string): string {
@@ -42,6 +45,9 @@ export default function NotesSidebar({
   onCreate,
   creating,
   error,
+  tags,
+  activeTag,
+  onTagToggle,
 }: Props) {
   const [query, setQuery] = useState("");
 
@@ -83,10 +89,24 @@ export default function NotesSidebar({
         </div>
       )}
 
+      {activeTag && (
+        <div className="flex items-center justify-between text-xs bg-accent/10 border border-accent/40 rounded-lg px-3 py-1.5">
+          <span className="text-accent">🏷️ {activeTag}</span>
+          <button
+            type="button"
+            onClick={() => onTagToggle(activeTag)}
+            className="text-muted hover:text-foreground"
+            aria-label="Retirer le filtre"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto space-y-1 -mx-1 px-1">
         {filtered.length === 0 ? (
           <div className="text-sm text-muted text-center py-6">
-            {query ? "Aucune note ne matche" : "Aucune note pour l'instant"}
+            {query || activeTag ? "Aucune note ne matche" : "Aucune note pour l'instant"}
           </div>
         ) : (
           filtered.map((note) => {
@@ -125,6 +145,38 @@ export default function NotesSidebar({
           })
         )}
       </div>
+
+      {tags.length > 0 && (
+        <div className="border-t border-border pt-3 -mx-1 px-1">
+          <div className="text-[10px] uppercase tracking-wider text-muted font-semibold mb-2">
+            Tags
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {tags.slice(0, 20).map(({ tag, count }) => {
+              const active = activeTag === tag;
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => onTagToggle(tag)}
+                  className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md border transition-colors ${
+                    active
+                      ? "bg-accent text-white border-accent"
+                      : "bg-background/60 border-border text-muted hover:border-accent/60 hover:text-accent"
+                  }`}
+                >
+                  <span>🏷️ {tag}</span>
+                  <span
+                    className={`text-[10px] ${active ? "opacity-80" : "opacity-60"}`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

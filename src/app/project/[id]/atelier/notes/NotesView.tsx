@@ -16,7 +16,7 @@ type Props = {
   ideas: Todo[];
   decisions: Decision[];
   devItems: DevItem[];
-  onNavigate: (slug: string) => void;
+  onNavigate: (slug: string, options?: { id?: string }) => void;
 };
 
 export default function NotesView({
@@ -38,6 +38,7 @@ export default function NotesView({
   );
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
 
   useEffect(() => {
     setNotes(initialNotes);
@@ -52,12 +53,27 @@ export default function NotesView({
   );
 
   const sorted = useMemo(() => {
-    return [...notes].sort((a, b) => {
+    const base = activeTag
+      ? notes.filter((n) => (n.tags ?? []).includes(activeTag))
+      : notes;
+    return [...base].sort((a, b) => {
       if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
       return (
         new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       );
     });
+  }, [notes, activeTag]);
+
+  const allTags = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const n of notes) {
+      for (const t of n.tags ?? []) {
+        counts.set(t, (counts.get(t) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()]
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
   }, [notes]);
 
   const selectedNote = useMemo(
@@ -77,6 +93,7 @@ export default function NotesView({
         title: "Sans titre",
         content: "",
         pinned: false,
+        tags: [],
       })
       .select("*")
       .single();
@@ -126,6 +143,9 @@ export default function NotesView({
         onCreate={handleCreate}
         creating={creating}
         error={error}
+        tags={allTags}
+        activeTag={activeTag}
+        onTagToggle={(tag) => setActiveTag(activeTag === tag ? null : tag)}
       />
       {selectedNote ? (
         <NoteEditor
