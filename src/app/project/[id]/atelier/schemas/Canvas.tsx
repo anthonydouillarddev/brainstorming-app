@@ -118,7 +118,15 @@ function CanvasInner({
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const mountedRef = useRef(false);
-  const idCounterRef = useRef(0);
+  // Init id counter au max des ids existants pour éviter les collisions
+  // quand on ferme/rouvre un canvas (idCounterRef sinon repart à 0 et peut
+  // recréer un id déjà utilisé).
+  const idCounterRef = useRef(
+    schema.data.nodes.reduce((acc, n) => {
+      const match = n.id.match(/-(\d+)$/);
+      return match ? Math.max(acc, Number(match[1])) : acc;
+    }, 0)
+  );
 
   const { save, saving, lastSaved, saveError } = useDebouncedRowSave<SchemaRow>({
     table: "schemas",
