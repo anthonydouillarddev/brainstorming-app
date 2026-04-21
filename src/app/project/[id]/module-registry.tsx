@@ -14,6 +14,7 @@ import SingleSectionPanel from "./resources";
 import DesignPanel from "./design";
 import TechniquePanel from "./technique";
 import TasksTab from "./tasks-tab";
+import AtelierPanel from "./atelier";
 
 export type ModuleContext = {
   userId: string;
@@ -103,6 +104,16 @@ export const MODULE_COMPONENTS: Record<string, ModuleRenderer> = {
       initialSections={ctx.sections}
       onProjectUpdate={ctx.onProjectUpdate}
       onSectionsChange={ctx.onSectionsChange}
+    />
+  ),
+  atelier: (ctx) => (
+    <AtelierPanel
+      userId={ctx.userId}
+      project={ctx.project}
+      tasks={ctx.tasks}
+      ideas={ctx.ideas}
+      decisions={ctx.decisions}
+      onNavigate={ctx.onNavigate}
     />
   ),
 };
