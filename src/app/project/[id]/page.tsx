@@ -1,7 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { SECTIONS } from "@/lib/sections";
-import type { Project, Todo, Decision, RoadmapItem, Risk, UserPreferences } from "@/lib/types";
+import { getProjectModules } from "@/lib/taxonomy";
+import type {
+  Project,
+  Todo,
+  Decision,
+  RoadmapItem,
+  Risk,
+  UserPreferences,
+} from "@/lib/types";
 import ProjectDashboard from "./dashboard";
 
 export default async function ProjectPage({
@@ -35,6 +43,7 @@ export default async function ProjectPage({
     { data: roadmap },
     { data: risks },
     { data: preferences },
+    modules,
   ] = await Promise.all([
     supabase.from("sections").select("*").eq("project_id", id),
     supabase.from("todos").select("*").eq("project_id", id),
@@ -60,6 +69,7 @@ export default async function ProjectPage({
       .select("*")
       .eq("user_id", user.id)
       .single(),
+    getProjectModules(supabase, id),
   ]);
 
   const sectionMap: Record<string, string> = {};
@@ -79,6 +89,7 @@ export default async function ProjectPage({
       initialDecisions={(decisions ?? []) as Decision[]}
       initialRoadmap={(roadmap ?? []) as RoadmapItem[]}
       initialRisks={(risks ?? []) as Risk[]}
+      initialModules={modules}
       initialTab={query.tab}
     />
   );

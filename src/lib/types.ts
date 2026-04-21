@@ -1,5 +1,51 @@
 export type ProjectType = "outil" | "saas" | "appli" | "logiciel" | "business";
 
+// ---------- Taxonomy (migration 022) ----------
+
+export interface ProjectWorld {
+  id: string;
+  slug: string;
+  name: string;
+  icon: string;
+  displayOrder: number;
+}
+
+export interface ProjectTypeDef {
+  id: string;
+  worldId: string;
+  slug: string;
+  name: string;
+  icon: string;
+  description: string;
+  keywords: string[];
+  displayOrder: number;
+}
+
+export interface TabModule {
+  id: string;
+  slug: string;
+  name: string;
+  icon: string;
+  isUniversal: boolean;
+  isMandatory: boolean;
+  componentKey: string;
+}
+
+export interface TypeModulePreset {
+  typeId: string;
+  moduleId: string;
+  displayOrder: number;
+  isRecommended: boolean;
+}
+
+export interface ProjectModule {
+  id: string;
+  projectId: string;
+  moduleId: string;
+  enabled: boolean;
+  displayOrder: number;
+}
+
 export type ProjectStatus =
   | "idea"
   | "validating"

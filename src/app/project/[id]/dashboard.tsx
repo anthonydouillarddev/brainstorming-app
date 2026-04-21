@@ -4,34 +4,26 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SectionDef } from "@/lib/sections";
-import type { Project, ProjectStatus, ProjectType, Todo, Decision, RoadmapItem, Risk, UserPreferences } from "@/lib/types";
+import type {
+  Project,
+  ProjectStatus,
+  ProjectType,
+  Todo,
+  Decision,
+  RoadmapItem,
+  Risk,
+  UserPreferences,
+} from "@/lib/types";
 import { PROJECT_STATUSES, PROJECT_TYPES } from "@/lib/types";
 import { deadlineStatus } from "@/lib/deadline";
-import { TAG_PRESETS, countTags, mergeTagSuggestions, uniqueTags } from "@/lib/tags";
-import TagFilter from "@/app/components/tag-filter";
 import ThemeToggle from "@/app/components/theme-toggle";
 import UserSettings from "@/app/components/user-settings";
-import Cockpit from "./cockpit";
-import BrainstormEditor from "./editor";
-import DecisionsPanel from "./decisions";
-import SingleSectionPanel from "./resources";
-import DesignPanel from "./design";
-import TechniquePanel from "./technique";
-import TodoList from "@/app/components/todolist";
+import { renderModule, type ModuleContext } from "./module-registry";
+import ModulesManager, { type ProjectModuleWithMeta } from "./ModulesManager";
 
-type Tab = "cockpit" | "brainstorm" | "tasks" | "decisions" | "technique" | "design" | "resources";
-
-const TABS: { value: Tab; label: string; emoji: string }[] = [
-  { value: "cockpit", label: "Cockpit", emoji: "📊" },
-  { value: "brainstorm", label: "Brainstorm", emoji: "💡" },
-  { value: "tasks", label: "Tâches", emoji: "✅" },
-  { value: "decisions", label: "Décisions", emoji: "🧭" },
-  { value: "technique", label: "Technique", emoji: "⚙️" },
-  { value: "design", label: "Design", emoji: "🎨" },
-  { value: "resources", label: "Ressources", emoji: "🔗" },
-];
-
-const VALID_TABS = new Set<string>(TABS.map((t) => t.value));
+const LEGACY_TAB_ALIASES: Record<string, string> = {
+  tech: "technique",
+};
 
 export default function ProjectDashboard({
   userId,
@@ -44,6 +36,7 @@ export default function ProjectDashboard({
   initialDecisions,
   initialRoadmap,
   initialRisks,
+  initialModules,
   initialTab,
 }: {
   userId: string;
@@ -56,6 +49,7 @@ export default function ProjectDashboard({
   initialDecisions: Decision[];
   initialRoadmap: RoadmapItem[];
   initialRisks: Risk[];
+  initialModules: ProjectModuleWithMeta[];
   initialTab?: string;
 }) {
   const router = useRouter();
@@ -72,26 +66,42 @@ export default function ProjectDashboard({
   const [decisions, setDecisions] = useState<Decision[]>(initialDecisions);
   const [roadmap, setRoadmap] = useState<RoadmapItem[]>(initialRoadmap);
   const [risks, setRisks] = useState<Risk[]>(initialRisks);
-  const [tab, setTab] = useState<Tab>(() => {
-    // Rétrocompat : ancien ?tab=tech → nouvel onglet technique
-    const normalized = initialTab === "tech" ? "technique" : initialTab;
-    return normalized && VALID_TABS.has(normalized) ? (normalized as Tab) : "cockpit";
+  const [modules, setModules] = useState<ProjectModuleWithMeta[]>(initialModules);
+
+  const enabledModules = useMemo(() => {
+    const filtered = modules.filter((m) => m.enabled);
+    if (filtered.length > 0) {
+      return [...filtered].sort((a, b) => a.displayOrder - b.displayOrder);
+    }
+    return [];
+  }, [modules]);
+
+  const tabSlugs = useMemo(() => enabledModules.map((m) => m.module.slug), [enabledModules]);
+  const validSlugs = useMemo(() => new Set(tabSlugs), [tabSlugs]);
+
+  const [userTab, setUserTab] = useState<string | null>(() => {
+    const raw = initialTab ?? "";
+    const normalized = LEGACY_TAB_ALIASES[raw] ?? raw;
+    return normalized ? normalized : null;
   });
-  const navigateTab = useCallback(
-    (next: Tab) => {
-      setTab(next);
-      if (typeof window !== "undefined") {
-        const url = new URL(window.location.href);
-        url.searchParams.set("tab", next);
-        window.history.replaceState(window.history.state, "", url.toString());
-      }
-    },
-    []
-  );
+
+  const tab =
+    userTab && validSlugs.has(userTab) ? userTab : tabSlugs[0] ?? "cockpit";
+
+  const navigateTab = useCallback((next: string) => {
+    setUserTab(next);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", next);
+      window.history.replaceState(window.history.state, "", url.toString());
+    }
+  }, []);
+
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(project.name);
   const [typeMenuOpen, setTypeMenuOpen] = useState(false);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const [modulesOpen, setModulesOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const typeMenuRef = useRef<HTMLDivElement>(null);
   const actionsMenuRef = useRef<HTMLDivElement>(null);
@@ -119,15 +129,18 @@ export default function ProjectDashboard({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  async function updateProject(patch: Partial<Project>) {
-    const previous = project;
-    setProject((prev) => ({ ...prev, ...patch }));
-    const { error } = await supabase.from("projects").update(patch).eq("id", project.id);
-    if (error) {
-      setProject(previous);
-      alert("Erreur de sauvegarde : " + error.message);
-    }
-  }
+  const updateProject = useCallback(
+    async (patch: Partial<Project>) => {
+      const previous = project;
+      setProject((prev) => ({ ...prev, ...patch }));
+      const { error } = await supabase.from("projects").update(patch).eq("id", project.id);
+      if (error) {
+        setProject(previous);
+        alert("Erreur de sauvegarde : " + error.message);
+      }
+    },
+    [project, supabase]
+  );
 
   async function commitName() {
     const trimmed = nameDraft.trim();
@@ -169,12 +182,46 @@ export default function ProjectDashboard({
     router.push("/?tab=trash");
   }
 
+  const activeModule = enabledModules.find((m) => m.module.slug === tab) ?? enabledModules[0];
+
+  const ctx = useMemo<ModuleContext>(
+    () => ({
+      userId,
+      project,
+      sections,
+      sectionDefs,
+      tasks,
+      ideas,
+      decisions,
+      roadmap,
+      risks,
+      onProjectUpdate: updateProject,
+      onSectionsChange: setSections,
+      onTasksChange: setTasks,
+      onIdeasChange: setIdeas,
+      onDecisionsChange: setDecisions,
+      onRoadmapChange: setRoadmap,
+      onRisksChange: setRisks,
+      onNavigate: navigateTab,
+    }),
+    [
+      userId,
+      project,
+      sections,
+      sectionDefs,
+      tasks,
+      ideas,
+      decisions,
+      roadmap,
+      risks,
+      updateProject,
+      navigateTab,
+    ]
+  );
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 w-full">
-      {/* Top bar */}
-      <div
-        className="flex items-center justify-between mb-6 sticky top-0 z-20 -mx-4 px-4 py-2 backdrop-blur-2xl [mask-image:linear-gradient(black_80%,transparent)]"
-      >
+      <div className="flex items-center justify-between mb-6 sticky top-0 z-20 -mx-4 px-4 py-2 backdrop-blur-2xl [mask-image:linear-gradient(black_80%,transparent)]">
         <button
           onClick={() => {
             router.push("/");
@@ -184,17 +231,29 @@ export default function ProjectDashboard({
         >
           ← Retour
         </button>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setModulesOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl bg-card/60 border border-border text-muted hover:text-foreground hover:border-muted transition-colors text-sm"
+            title="Gérer les modules du projet"
+            aria-label="Gérer les modules"
+          >
+            <span>⚙️</span>
+            <span className="hidden sm:inline">Modules</span>
+          </button>
           <ThemeToggle />
-          <UserSettings userEmail={userEmail} userId={userId} initialPreferences={initialPreferences} />
+          <UserSettings
+            userEmail={userEmail}
+            userId={userId}
+            initialPreferences={initialPreferences}
+          />
         </div>
       </div>
 
-      {/* Project header */}
       <div className="mb-6">
         <div className="flex items-start gap-3">
           <div className="flex-1 min-w-0">
-            {/* Primary title — official_name ou name */}
             {hasOfficialName ? (
               <h1
                 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-[1.2] pb-1 break-words"
@@ -233,7 +292,6 @@ export default function ProjectDashboard({
               </button>
             )}
 
-            {/* Secondary — nom de travail si official_name existe */}
             {hasOfficialName && (
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-[10px] uppercase tracking-wider text-muted font-semibold">
@@ -270,7 +328,6 @@ export default function ProjectDashboard({
               </div>
             )}
 
-            {/* Type badge — cliquable */}
             <div className="flex items-center gap-2 mt-2 flex-wrap relative" ref={typeMenuRef}>
               <button
                 type="button"
@@ -314,7 +371,6 @@ export default function ProjectDashboard({
             </div>
           </div>
 
-          {/* Menu actions */}
           <div className="relative shrink-0" ref={actionsMenuRef}>
             <button
               type="button"
@@ -341,7 +397,6 @@ export default function ProjectDashboard({
           </div>
         </div>
 
-        {/* Status picker */}
         <div className="flex gap-1.5 mt-5 flex-wrap">
           {PROJECT_STATUSES.map((s) => (
             <button
@@ -359,170 +414,64 @@ export default function ProjectDashboard({
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-card/60 backdrop-blur-sm border border-border rounded-2xl p-1 shadow-sm">
-        {TABS.map((t) => {
-          const count =
-            t.value === "tasks"
-              ? tasks.filter((todo) => todo.status !== "done").length +
-                ideas.filter((todo) => todo.status !== "done").length
-              : t.value === "decisions"
-              ? decisions.length
-              : null;
-          return (
-            <button
-              key={t.value}
-              onClick={() => navigateTab(t.value)}
-              className={`flex-1 px-2 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all inline-flex items-center justify-center gap-1 ${
-                tab === t.value
-                  ? "bg-accent text-white shadow-sm"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              <span>{t.emoji}</span>
-              <span className="hidden sm:inline">{t.label}</span>
-              {count !== null && count > 0 && (
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    tab === t.value ? "bg-white/25" : "bg-accent/15 text-accent"
-                  }`}
-                >
-                  {count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Panels */}
-      {tab === "cockpit" && (
-        <Cockpit
-          project={project}
-          sections={sections}
-          todos={tasks}
-          decisions={decisions}
-          roadmap={roadmap}
-          risks={risks}
-          onUpdate={updateProject}
-          onRoadmapChange={setRoadmap}
-          onRisksChange={setRisks}
-          onGoToTasks={() => navigateTab("tasks")}
-          onGoToDesign={() => navigateTab("design")}
-          onGoToTechnique={() => navigateTab("technique")}
-        />
+      {enabledModules.length > 0 ? (
+        <div className="flex gap-1 mb-6 bg-card/60 backdrop-blur-sm border border-border rounded-2xl p-1 shadow-sm overflow-x-auto">
+          {enabledModules.map((m) => {
+            const slug = m.module.slug;
+            const count =
+              slug === "tasks"
+                ? tasks.filter((todo) => todo.status !== "done").length +
+                  ideas.filter((todo) => todo.status !== "done").length
+                : slug === "decisions"
+                ? decisions.length
+                : null;
+            const active = tab === slug;
+            return (
+              <button
+                key={m.id}
+                onClick={() => navigateTab(slug)}
+                className={`flex-shrink-0 px-2 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all inline-flex items-center justify-center gap-1 ${
+                  active
+                    ? "bg-accent text-white shadow-sm"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                <span>{m.module.icon}</span>
+                <span className="hidden sm:inline">{m.module.name}</span>
+                {count !== null && count > 0 && (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      active ? "bg-white/25" : "bg-accent/15 text-accent"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="mb-6 bg-card/60 border border-border rounded-2xl p-4 text-sm text-muted text-center">
+          Aucun module activé. Clique sur ⚙️ Modules pour en activer.
+        </div>
       )}
 
-      {tab === "brainstorm" && (
-        <BrainstormEditor
-          project={project}
-          initialSections={sections}
-          sectionDefs={sectionDefs}
-          onProjectUpdate={updateProject}
-          onSectionsChange={setSections}
-        />
-      )}
+      {activeModule
+        ? renderModule(
+            activeModule.module.componentKey,
+            ctx,
+            activeModule.module.name,
+            activeModule.module.icon
+          )
+        : null}
 
-      {tab === "tasks" && (
-        <TasksTab
-          userId={userId}
-          project={project}
-          tasks={tasks}
-          ideas={ideas}
-          onTasksChange={setTasks}
-          onIdeasChange={setIdeas}
-        />
-      )}
-
-      {tab === "decisions" && (
-        <DecisionsPanel
-          projectId={project.id}
-          initialDecisions={decisions}
-          onChange={setDecisions}
-        />
-      )}
-
-      {tab === "technique" && (
-        <TechniquePanel
-          project={project}
-          initialSections={sections}
-          onProjectUpdate={updateProject}
-          onSectionsChange={setSections}
-        />
-      )}
-
-      {tab === "design" && (
-        <DesignPanel
-          project={project}
-          initialSections={sections}
-          onProjectUpdate={updateProject}
-          onSectionsChange={setSections}
-        />
-      )}
-
-      {tab === "resources" && (
-        <SingleSectionPanel
-          project={project}
-          sectionKey="resources"
-          initialSections={sections}
-          onProjectUpdate={updateProject}
-          onSectionsChange={setSections}
-        />
-      )}
-    </div>
-  );
-}
-
-function TasksTab({
-  userId,
-  project,
-  tasks,
-  ideas,
-  onTasksChange,
-  onIdeasChange,
-}: {
-  userId: string;
-  project: Project;
-  tasks: Todo[];
-  ideas: Todo[];
-  onTasksChange: (todos: Todo[]) => void;
-  onIdeasChange: (todos: Todo[]) => void;
-}) {
-  const allTodos = useMemo(() => [...tasks, ...ideas], [tasks, ideas]);
-  const knownTags = useMemo(() => uniqueTags(allTodos), [allTodos]);
-  const tagSuggestions = useMemo(
-    () => mergeTagSuggestions(TAG_PRESETS, knownTags),
-    [knownTags]
-  );
-  const tagCounts = useMemo(() => countTags(allTodos), [allTodos]);
-  const [activeTags, setActiveTags] = useState<string[]>([]);
-
-  return (
-    <div className="space-y-8">
-      <TagFilter
-        knownTags={tagSuggestions}
-        activeTags={activeTags}
-        onChange={setActiveTags}
-        tagCounts={tagCounts}
-        label="Filtrer tâches + idées par tag"
-      />
-      <TodoList
-        userId={userId}
-        scope={{ kind: "project", projectId: project.id, projectType: project.type }}
-        kind="task"
-        initialTodos={tasks}
-        onTodosChange={onTasksChange}
-        tagFilter={activeTags}
-        tagSuggestions={tagSuggestions}
-      />
-      <TodoList
-        userId={userId}
-        scope={{ kind: "project", projectId: project.id, projectType: project.type }}
-        kind="idea"
-        initialTodos={ideas}
-        onTodosChange={onIdeasChange}
-        tagFilter={activeTags}
-        tagSuggestions={tagSuggestions}
+      <ModulesManager
+        open={modulesOpen}
+        projectId={project.id}
+        initialModules={modules}
+        onClose={() => setModulesOpen(false)}
+        onModulesChange={setModules}
       />
     </div>
   );
