@@ -1,0 +1,46 @@
+/* Override BlockNote pour matcher la palette Mindeck (beige/moka / navy/caramel). */
+
+.bn-container {
+  --bn-colors-editor-background: transparent;
+  --bn-colors-editor-text: var(--fg);
+  --bn-colors-menu-background: var(--card);
+  --bn-colors-menu-text: var(--fg);
+  --bn-colors-tooltip-background: var(--card);
+  --bn-colors-tooltip-text: var(--fg);
+  --bn-colors-hovered-background: color-mix(in oklab, var(--ac) 12%, transparent);
+  --bn-colors-hovered-text: var(--fg);
+  --bn-colors-selected-background: color-mix(in oklab, var(--ac) 20%, transparent);
+  --bn-colors-selected-text: var(--fg);
+  --bn-colors-disabled-background: var(--bg);
+  --bn-colors-disabled-text: var(--mt);
+  --bn-colors-side-menu: var(--mt);
+  --bn-colors-border: var(--bd);
+  --bn-colors-highlight-background: color-mix(in oklab, var(--ac) 14%, transparent);
+  --bn-colors-highlight-text: var(--fg);
+  --bn-colors-highlights-gray-background: transparent;
+  --bn-border-radius: 10px;
+  font-family: inherit;
+}
+
+.bn-container .bn-editor {
+  background: transparent;
+  padding: 20px 24px;
+}
+
+.bn-container .bn-block-content h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.bn-container .bn-block-content h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.bn-container .bn-block-content h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.bn-container a {
+  color: var(--ac);
+  text-decoration: underline;
+}

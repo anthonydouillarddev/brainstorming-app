@@ -85,8 +85,15 @@ function SchemaCard({
         className="block w-full text-left"
         aria-label={`Ouvrir ${schema.name}`}
       >
-        <div className="aspect-[4/3] bg-background/40 border-b border-border flex items-center justify-center text-5xl">
-          {meta?.emoji ?? "⬜"}
+        <div className="aspect-[4/3] bg-background/40 border-b border-border flex items-center justify-center relative overflow-hidden">
+          {schema.thumbnail ? (
+            <div
+              className="w-full h-full flex items-center justify-center p-4"
+              dangerouslySetInnerHTML={{ __html: schema.thumbnail }}
+            />
+          ) : (
+            <span className="text-5xl">{meta?.emoji ?? "⬜"}</span>
+          )}
         </div>
         <div className="p-4">
           <div className="font-medium text-sm truncate">

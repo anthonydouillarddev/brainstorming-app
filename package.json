@@ -9,10 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@blocknote/core": "^0.48.1",
+    "@blocknote/mantine": "^0.48.1",
+    "@blocknote/react": "^0.48.1",
+    "@dagrejs/dagre": "^3.0.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.0",
     "@xyflow/react": "^12.10.2",
     "culori": "^4.0.2",
+    "html-to-image": "^1.11.13",
     "next": "16.2.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",

@@ -42,6 +42,7 @@ export type Note = {
   project_id: string;
   title: string;
   content: string;
+  content_blocks: unknown | null;
   pinned: boolean;
   tags: string[];
   linked_todo_id: string | null;

@@ -1,12 +1,23 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Decision, DevItem, Todo } from "@/lib/types";
 import type { LinkTarget, Note } from "../types";
 import { useDebouncedRowSave } from "../_shared/useDebouncedRowSave";
 import LinkPicker from "./LinkPicker";
+
+// BlockNote est lourd (ProseMirror + Mantine) — chargement dynamique côté client uniquement.
+const BlockNoteEditor = dynamic(() => import("./BlockNoteEditor"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex-1 min-h-[400px] bg-background/40 border border-border rounded-xl p-6 text-sm text-muted">
+      Chargement de l&apos;éditeur riche…
+    </div>
+  ),
+});
 
 type Props = {
   note: Note;
@@ -19,7 +30,18 @@ type Props = {
   onNavigate: (slug: string, options?: { id?: string }) => void;
 };
 
-type Mode = "edit" | "preview";
+type Mode = "rich" | "markdown" | "preview";
+
+function readInitialMode(note: Note): Mode {
+  if (note.content_blocks) return "rich";
+  // Notes legacy sans blocks : privilégier markdown pour éviter la conversion auto.
+  return note.content.trim() ? "markdown" : "rich";
+}
+
+function detectTheme(): "light" | "dark" {
+  if (typeof document === "undefined") return "light";
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
 
 export default function NoteEditor({
   note,
@@ -33,9 +55,25 @@ export default function NoteEditor({
 }: Props) {
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
-  const [mode, setMode] = useState<Mode>("edit");
+  const [mode, setMode] = useState<Mode>(() => readInitialMode(note));
   const [linkerOpen, setLinkerOpen] = useState(false);
   const [tagInput, setTagInput] = useState("");
+  const [theme, setTheme] = useState<"light" | "dark">(() => detectTheme());
+
+  useEffect(() => {
+    const sync = () => setTheme(detectTheme());
+    window.addEventListener("mindeck:theme-changed", sync);
+    // Observer la classe dark sur <html> pour suivre le système aussi.
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => {
+      window.removeEventListener("mindeck:theme-changed", sync);
+      observer.disconnect();
+    };
+  }, []);
 
   const { save, saving, lastSaved, saveError } = useDebouncedRowSave<Note>({
     table: "notes",
@@ -212,8 +250,14 @@ export default function NoteEditor({
       </div>
 
       <div className="flex items-center gap-2">
-        <ModeButton active={mode === "edit"} onClick={() => setMode("edit")}>
-          ✏️ Éditer
+        <ModeButton active={mode === "rich"} onClick={() => setMode("rich")}>
+          ✨ Riche
+        </ModeButton>
+        <ModeButton
+          active={mode === "markdown"}
+          onClick={() => setMode("markdown")}
+        >
+          ✏️ Markdown
         </ModeButton>
         <ModeButton
           active={mode === "preview"}
@@ -223,7 +267,22 @@ export default function NoteEditor({
         </ModeButton>
       </div>
 
-      {mode === "edit" ? (
+      {mode === "rich" ? (
+        <BlockNoteEditor
+          initialBlocks={
+            (note.content_blocks as import("@blocknote/core").PartialBlock[] | null) ?? null
+          }
+          initialMarkdown={content}
+          theme={theme}
+          onChange={({ content_blocks, content: md }) => {
+            setContent(md);
+            patch({
+              content_blocks: content_blocks as unknown,
+              content: md,
+            });
+          }}
+        />
+      ) : mode === "markdown" ? (
         <textarea
           value={content}
           onChange={(e) => handleContent(e.target.value)}

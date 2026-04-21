@@ -9,6 +9,8 @@ import {
   addEdge,
   applyEdgeChanges,
   applyNodeChanges,
+  getNodesBounds,
+  getViewportForBounds,
   type Connection,
   type Edge,
   type EdgeChange,
@@ -16,6 +18,7 @@ import {
   type NodeChange,
   type OnConnect,
 } from "@xyflow/react";
+import { toPng, toSvg } from "html-to-image";
 import "@xyflow/react/dist/style.css";
 import {
   useCallback,
@@ -36,6 +39,8 @@ import type {
 import { NODE_TYPES } from "../types";
 import { useDebouncedRowSave } from "../_shared/useDebouncedRowSave";
 import { nodeTypes, NodeNavigateProvider } from "./NodeTypes";
+import { autoLayout } from "@/lib/atelier/layout";
+import { buildThumbnailSvg } from "@/lib/atelier/thumbnail";
 
 type Props = {
   schema: SchemaRow;
@@ -128,7 +133,9 @@ function CanvasInner({
       mountedRef.current = true;
       return;
     }
-    save({ data: toPayload(nodes, edges) });
+    const payload = toPayload(nodes, edges);
+    const thumbnail = buildThumbnailSvg(payload);
+    save({ data: payload, thumbnail });
   }, [nodes, edges, save]);
 
   const selected = useMemo(
@@ -217,6 +224,46 @@ function CanvasInner({
     setSelectedId(null);
   }
 
+  function applyAutoLayout() {
+    if (nodes.length < 2) return;
+    const next = autoLayout(nodes, edges, "LR") as FlowNode[];
+    setNodes(next);
+  }
+
+  async function exportImage(format: "png" | "svg") {
+    if (nodes.length === 0) return;
+    const viewportEl = document.querySelector<HTMLElement>(
+      `[data-schema-id="${schema.id}"] .react-flow__viewport`
+    );
+    if (!viewportEl) return;
+
+    const bounds = getNodesBounds(nodes);
+    const width = Math.max(800, bounds.width + 160);
+    const height = Math.max(600, bounds.height + 160);
+    const { x, y, zoom } = getViewportForBounds(bounds, width, height, 0.5, 2, 40);
+
+    const exporter = format === "png" ? toPng : toSvg;
+    const dataUrl = await exporter(viewportEl, {
+      backgroundColor:
+        getComputedStyle(document.documentElement)
+          .getPropertyValue("--card")
+          .trim() || "#ffffff",
+      width,
+      height,
+      style: {
+        width: `${width}px`,
+        height: `${height}px`,
+        transform: `translate(${x}px, ${y}px) scale(${zoom})`,
+      },
+    });
+
+    const link = document.createElement("a");
+    const safeName = (schema.name || "schema").replace(/[^a-z0-9\-_]+/gi, "-");
+    link.download = `${safeName}.${format}`;
+    link.href = dataUrl;
+    link.click();
+  }
+
   function commitName() {
     const trimmed = nameDraft.trim();
     if (trimmed && trimmed !== schema.name) {
@@ -286,6 +333,14 @@ function CanvasInner({
           </div>
           <button
             type="button"
+            onClick={applyAutoLayout}
+            disabled={nodes.length < 2}
+            className="text-left text-sm px-3 py-2 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ✨ Auto-layout
+          </button>
+          <button
+            type="button"
             onClick={clearAll}
             className="text-left text-sm px-3 py-2 rounded-lg border border-border text-muted hover:text-red-500 hover:border-red-500/40 transition-colors"
           >
@@ -293,7 +348,10 @@ function CanvasInner({
           </button>
         </aside>
 
-        <div className="relative bg-background/20 min-h-[400px]">
+        <div
+          data-schema-id={schema.id}
+          className="relative bg-background/20 min-h-[400px]"
+        >
           <NodeNavigateProvider navigate={navigateToTodo}>
             <ReactFlow
               nodes={nodes}
@@ -387,8 +445,28 @@ function CanvasInner({
         </aside>
       </div>
 
-      <div className="px-4 py-2.5 border-t border-border bg-background/30 text-xs text-muted">
-        💡 Astuce : tire depuis la pastille à droite d&apos;un nœud pour créer une liaison.
+      <div className="px-4 py-2.5 border-t border-border bg-background/30 flex items-center justify-between gap-3 flex-wrap">
+        <span className="text-xs text-muted">
+          💡 Astuce : tire depuis la pastille à droite d&apos;un nœud pour créer une liaison.
+        </span>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => void exportImage("png")}
+            disabled={nodes.length === 0}
+            className="text-xs px-2.5 py-1.5 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            📥 PNG
+          </button>
+          <button
+            type="button"
+            onClick={() => void exportImage("svg")}
+            disabled={nodes.length === 0}
+            className="text-xs px-2.5 py-1.5 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            📥 SVG
+          </button>
+        </div>
       </div>
     </div>
   );
